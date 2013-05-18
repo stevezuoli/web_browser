@@ -242,7 +242,7 @@ void ScreenManager::onBusyTimeout()
     }
 
     // TODO, we may need to rotate here.
-    QImage & busy_image = busyImage(busy_index_++);
+    QImage busy_image = busyImage(busy_index_++);
     int x = (screen_width_  - busy_image.width()) / 2;
     int y = (screen_height_  - busy_image.height()) / 2;
     QRect rc(x, y, busy_image.width(), busy_image.height());
