@@ -1,4 +1,4 @@
-#include "onyx/base/base_model.h"
+#include "base_model.h"
 
 namespace vbf
 {

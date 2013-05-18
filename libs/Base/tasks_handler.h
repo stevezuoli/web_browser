@@ -1,9 +1,8 @@
 #ifndef NABOO_TASKS_HANDLER_H_
 #define NABOO_TASKS_HANDLER_H_
 
-#include "onyx/base/base_tasks.h"
-
-using namespace ui;
+#include "base_tasks.h"
+#include <QtCore/QtCore>
 
 namespace vbf
 {

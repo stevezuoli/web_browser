@@ -1,6 +1,4 @@
-#include "onyx/base/tasks_handler.h"
-
-using namespace ui;
+#include "tasks_handler.h"
 
 namespace vbf
 {

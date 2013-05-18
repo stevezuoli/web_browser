@@ -1,9 +1,8 @@
 #ifndef BASE_MODEL_H_
 #define BASE_MODEL_H_
 
-#include "onyx/base/base.h"
+#include "base.h"
 #include <QtCore/QtCore>
-#include "onyx/data/configuration.h"
 
 namespace vbf
 {
@@ -44,9 +43,6 @@ public:
 
     /// Close this document
     virtual bool close() = 0;
-
-    /// Retrieve the configuration.
-    virtual Configuration & getConf() = 0;
 
 
 Q_SIGNALS:

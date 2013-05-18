@@ -1,10 +1,7 @@
 #ifndef BASE_TASKS_H_
 #define BASE_TASKS_H_
 
-#include "onyx/base/base.h"
-#include "onyx/ui/ui.h"
-
-using namespace ui;
+#include "base.h"
 
 namespace vbf
 {

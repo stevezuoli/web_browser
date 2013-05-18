@@ -13,6 +13,7 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 ADD_LIBRARY(screen ${SRCS})
 
 TARGET_LINK_LIBRARIES(screen
+  duokan_base
   drivers
   ${QT_LIBRARIES}
   ${ADD_LIB})
