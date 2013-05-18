@@ -222,7 +222,7 @@ CFbBitDc::CFbBitDc()
     m_fb = open("/dev/fb0", O_RDWR);
     if (m_fb < 0 )
     {
-        qDebug(, "Can not open frame buffer fb0!!!");
+        qDebug( "Can not open frame buffer fb0!!!");
         goto err0;
     }
     
