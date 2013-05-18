@@ -11,7 +11,7 @@
     #include <windows.h>
     #include "swWinError.h"
     #endif
-#elif (defined LINUX) || (defined PLATFORM_KINDLE)
+#elif (defined LINUX) || (defined BUILD_FOR_ARM)
     #define RUN_PLATFORM                PLATFORM_LINUX
 #else
     #define RUN_PLATFORM                PLATFORM_DSP_BIOS
