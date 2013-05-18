@@ -190,7 +190,7 @@ void ScreenManager::blit(const QRect & rc,
 
 void ScreenManager::onScreenUpdate(duokan::screen::ScreenCommand& command)
 {
-    // qDebug("onReadyRead at %s sleeping %d", qPrintable(QTime::currentTime().toString("mm:ss.zzz")), sleeping_);
+    qDebug("onScreenUpdate at %s sleeping %d", qPrintable(QTime::currentTime().toString("mm:ss.zzz")), sleeping_);
 
     // Wakeup controller.
     ensureRunning();
