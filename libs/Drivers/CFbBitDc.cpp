@@ -29,7 +29,7 @@
 using DkFormat::StopWatch;
 #endif
 
-#include "drivers/DeviceInfo.h"
+#include "DeviceInfo.h"
 #include "interface.h"
 //#include "Utility.h"
 #include "dkRect.h"
