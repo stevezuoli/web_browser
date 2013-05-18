@@ -63,7 +63,7 @@ private:
 
     QVector<QRgb> & colorTable();
     QImage imageFromScreen();
-    QImage & busyImage(int index = 0);
+    QImage busyImage(int index = 0);
 
     QDir screenSaverDir();
     QImage nextScreenSaverImage();

@@ -478,7 +478,7 @@ void ScreenManager::fillScreen(ScreenCommand & command)
     updateScreen(command);
 }
 
-QImage & ScreenManager::busyImage(int index)
+QImage ScreenManager::busyImage(int index)
 {
     return QImage();
 }
