@@ -1,4 +1,4 @@
-#include "drivers/DeviceInfo.h"
+#include "DeviceInfo.h"
 #include "stdio.h"
 #include "interface.h"
 #include "stdlib.h"
