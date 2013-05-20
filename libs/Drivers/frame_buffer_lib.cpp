@@ -246,16 +246,8 @@ void Fblib::blit4BppFast(const QRect& area, const QImage& srcImg, int isX, int i
     }
 }
 
-void Fblib::BitBlt(const QRect& area, const QImage& srcImg, int isX, int isY, ScreenProxy::Waveform paintFlag)
+void Fblib::blit(const QRect& area, const QImage& srcImg, int isX, int isY, ScreenProxy::Waveform paintFlag)
 {
-//     qDebug(DLC_DIAGNOSTIC, "Fblib::BitBlt, (%d,%d)~(%d,%d),%08X", iX, iY, iWidth, iHeight, paintFlag);
-#ifdef _X86_LINUX
-    if (0 != addr_)
-    {
-        memcpy(addr_, srcImg.pbData, width_ * height_);
-    }
-    return;
-#endif
     int iX = area.left();
     int iY = area.top();
     int iWidth = area.width();
@@ -264,13 +256,13 @@ void Fblib::BitBlt(const QRect& area, const QImage& srcImg, int isX, int isY, Sc
     qDebug("Fblib::BitBlt(iX=%d, iY=%d, iWidth=%d, iHeight=%d, isX=%d, isY=%d)", iX, iY, iWidth, iHeight, isX, isY);
 
     //clock_t start = clock();
-    if(srcImg.isEmpty() || NULL == addr_)
+    if(srcImg.isNull() || NULL == addr_)
     {
         qDebug(" Fblib::BitBlt failed @ 1");
         return;
     }
 
-    QRect targetRect = GetRect().intersected(QRect(iX, iY, iWidth, iHeight)); 
+    QRect targetRect = rect().intersected(QRect(iX, iY, iWidth, iHeight)); 
     if (targetRect.isEmpty())
     {
         qDebug(" Fblib::BitBlt failed @ 2");
@@ -284,25 +276,27 @@ void Fblib::BitBlt(const QRect& area, const QImage& srcImg, int isX, int isY, Sc
         return;
     }
 
-    qint32 nCopyWidth = std::min(srcRect.width(), targetRect.width());
-    qint32 nCopyHeight = std::min(srcRect.height(), targetRect.height());
+    int copy_width = std::min(srcRect.width(), targetRect.width());
+    int copy_height = std::min(srcRect.height(), targetRect.height());
+
+    QRect update_area(iX, iY, copy_width, copy_height);
 
 //#ifdef BUILD_FOR_ARM
     if (DeviceInfo::IsK4NT() ) {
         qDebug(" Fblib::BitBlt on Kindle 4 non-touch");
-		blit8BppFast(iX, iY, nCopyWidth, nCopyHeight, srcImg, isX, isY);
+		blit8BppFast(update_area, srcImg, isX, isY);
     }else if (DeviceInfo::IsK4Touch())
     {
         qDebug(" Fblib::BitBlt on Kindle 4 Touch");
-		blit8BppFast(iX, iY, nCopyWidth, nCopyHeight, srcImg, isX, isY);
+		blit8BppFast(update_area, srcImg, isX, isY);
     }else if (DeviceInfo::IsKPW())
 	{
         qDebug(" Fblib::BitBlt on Kindle Paperwhite");
-		blit8BppFast(iX, iY, nCopyWidth, nCopyHeight, srcImg, isX, isY);
+		blit8BppFast(update_area, srcImg, isX, isY);
 	}
     else    
     {
-		blit4BppFast(iX, iY, nCopyWidth, nCopyHeight, srcImg, isX, isY);
+		blit4BppFast(update_area, srcImg, isX, isY);
 	}
 
     //qDebug(DLC_TIME, "Fblib::BitBlt() Time elapsed=%d ms.",

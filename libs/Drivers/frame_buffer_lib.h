@@ -25,6 +25,8 @@ private:
     void flashKindleTouch510(const QRect& area, ScreenProxy::Waveform paintFlag);
     void flashKindlePaperwhite(const QRect& area, ScreenProxy::Waveform paintFlag);
 
+    QRect rect() { return QRect(0, 0, width_, height_); }
+
 private:
     int width_;
     int height_;
