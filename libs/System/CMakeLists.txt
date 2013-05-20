@@ -13,6 +13,7 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 
 ADD_LIBRARY(system ${SRCS})
 TARGET_LINK_LIBRARIES(system
+ fblib
  screen
  ${QT_LIBRARIES}
  ${ADD_LIB} )

@@ -15,12 +15,16 @@ public:
     void* mmap(unsigned long * size);
     void blit(const QRect& area, const QImage& srcImg, int isX, int isY, ScreenProxy::Waveform paintFlag);
     void flash(const QRect& area, ScreenProxy::Waveform paintFlag);
+    void screenRefresh();
 
+    int  width() { return width_; }
+    int  height() { return height_; }
 private:
     bool updateScreenInfo();
     void blit4BppFast(const QRect& area, const QImage& srcImg, int isX, int isY);
 	void blit8BppFast(const QRect& area, const QImage& srcImg, int isX, int isY);
 
+    void flashOtherDevice(const QRect& area, ScreenProxy::Waveform paintFlag);
     void flashKindleTouch(const QRect& area, ScreenProxy::Waveform paintFlag);
     void flashKindleTouch510(const QRect& area, ScreenProxy::Waveform paintFlag);
     void flashKindlePaperwhite(const QRect& area, ScreenProxy::Waveform paintFlag);

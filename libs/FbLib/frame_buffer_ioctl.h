@@ -174,3 +174,5 @@ struct update_area_t
 };
 
 typedef struct update_area_t update_area_t;
+
+#endif

@@ -33,8 +33,8 @@ ScreenManager::ScreenManager()
 , screen_saver_index_(-1)
 , sleeping_(true)
 , enable_(true)
-, screen_width_(fb_controller_.GetWidth())
-, screen_height_(fb_controller_.GetHeight())
+, screen_width_(fb_controller_.width())
+, screen_height_(fb_controller_.height())
 {
     start();
 
@@ -55,12 +55,9 @@ void ScreenManager::enableUpdate(bool enable)
 
 void ScreenManager::start()
 {
-    // Using current screen data as the image.
-    if (!screen_buffer_)
-    {
-        QImage image(imageFromScreen());
-        screen_buffer_.reset(new QImage(image.bits(), image.width(), image.height(), image.bytesPerLine(), image.format()));
-    }
+    fb_buffer_size_ = 0;
+    fb_buffer_ = (uchar *)fb_controller_.mmap((unsigned long *)&fb_buffer_size_);
+    qDebug("FB init done. Buffer %p size %d", fb_buffer_, fb_buffer_size_);
 
     duokan::screen::ScreenProxy & screen_proxy = duokan::screen::instance();
     connect(&screen_proxy, SIGNAL(screenUpdate(const ScreenCommand&)), this, SLOT(onScreenUpdate(const ScreenCommand&)));
@@ -185,7 +182,7 @@ void ScreenManager::blit(const QRect & rc,
 {
     // Convert from Qt framebuffer to marvell buffer.
     //flashScreen(waveform);
-    fb_controller_.BitBlt(rc.left(), rc.top(), rc.width(), rc.height(), image, rc.left(), rc.top(), waveform);
+    fb_controller_.blit(rc, image, rc.left(), rc.top(), waveform);
 }
 
 void ScreenManager::onScreenUpdate(duokan::screen::ScreenCommand& command)
@@ -263,11 +260,9 @@ void ScreenManager::ensureUpdateFinished()
 /// This function copies data from Qt framebuffer to controller.
 void ScreenManager::sync(ScreenCommand & command)
 {
-    if (screen_buffer_ == 0)
-        return;
     qDebug("sync data now...%d %d %d %d", command.left, command.top, command.width, command.height);
-    QTime t;t.start();
-    uchar * dst  = (uchar*)screen_buffer_->constBits() + command.top * screen_width_ / 2 + command.left / 2;
+    QTime t; t.start();
+    uchar * dst  = fb_buffer_ + command.top * screen_width_ / 2 + command.left / 2;
     uchar * base = QScreen::instance()->base();
     base = base + command.top * QScreen::instance()->linestep() + command.left * 4;
     for(int i = 0; i < command.height; ++i)
@@ -282,6 +277,15 @@ void ScreenManager::sync(ScreenCommand & command)
         dst += screen_width_ / 2;
         base += QScreen::instance()->linestep();
     }
+
+#if 0
+    fb_controller_.blit(QRect(command.left, command.top, command.width, command.height),
+        imageFromScreen(),
+        command.left,
+        command.top,
+        static_cast<ScreenProxy::Waveform>(command.waveform));
+#endif
+
     qDebug("elapsed %d ms", t.elapsed());
 }
 
@@ -534,8 +538,8 @@ void ScreenManager::flashScreen(int waveform)
     //}
     //kermit_display_on();
     //kermit_display_off();
-    QImage image(*screen_buffer_);
-    fb_controller_.BitBlt(0, 0, screen_width_, screen_height_, image, 0, 0, static_cast<duokan::screen::ScreenProxy::Waveform>(waveform));
+    fb_controller_.flash(QRect(0, 0, screen_width_, screen_height_),
+        static_cast<ScreenProxy::Waveform>(waveform));
 }
 
 QImage ScreenManager::imageFromScreen()

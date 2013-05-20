@@ -119,7 +119,7 @@ Fblib::~Fblib()
 
 void* Fblib::mmap(unsigned long * size)
 {
-    if (fb < 0)
+    if (fb_ < 0)
     {
         *size = -1;
         return 0;
@@ -302,26 +302,26 @@ void Fblib::blit(const QRect& area, const QImage& srcImg, int isX, int isY, Scre
     //qDebug(DLC_TIME, "Fblib::BitBlt() Time elapsed=%d ms.",
     //        1000*(clock()-start)/CLOCKS_PER_SEC);
 
-    if (DeviceInfo::IsK4Touch())
-    {
-        qDebug( " Fblib::BitBlt update screen on Kindle Touch");
-		if(DeviceInfo::IsTouch510()) 
-		{
+ //   if (DeviceInfo::IsK4Touch())
+ //   {
+ //       qDebug( " Fblib::BitBlt update screen on Kindle Touch");
+	//	if(DeviceInfo::IsTouch510()) 
+	//	{
 
-			UpdateToScreenKindleTouch510(targetRect.left(), targetRect.top(), nCopyWidth, nCopyHeight, paintFlag);
-		}else 
-		{
-			UpdateToScreenKindleTouch(targetRect.left(), targetRect.top(), nCopyWidth, nCopyHeight, paintFlag);
-		}
-    }
-    else if (DeviceInfo::IsKPW())
-	{
-		UpdateToScreenKindlePaperwhite(targetRect.left(), targetRect.top(), nCopyWidth, nCopyHeight, paintFlag);
-	}
-	else 
-	{
-        UpdateToScreen(targetRect.left(), targetRect.top(), nCopyWidth, nCopyHeight, paintFlag);
-	}
+	//		UpdateToScreenKindleTouch510(targetRect.left(), targetRect.top(), nCopyWidth, nCopyHeight, paintFlag);
+	//	}else 
+	//	{
+	//		UpdateToScreenKindleTouch(targetRect.left(), targetRect.top(), nCopyWidth, nCopyHeight, paintFlag);
+	//	}
+ //   }
+ //   else if (DeviceInfo::IsKPW())
+	//{
+	//	UpdateToScreenKindlePaperwhite(targetRect.left(), targetRect.top(), nCopyWidth, nCopyHeight, paintFlag);
+	//}
+	//else 
+	//{
+ //       UpdateToScreen(targetRect.left(), targetRect.top(), nCopyWidth, nCopyHeight, paintFlag);
+	//}
 
 
 //#endif
@@ -331,60 +331,55 @@ void Fblib::blit(const QRect& area, const QImage& srcImg, int isX, int isY, Scre
 // 猜想: the difference between FBIO_EINK_UPDATE_DISPLAY_AREA and FBIO_EINK_UPDATE_DISPLAY,
 // Maybe FBIO_EINK_UPDATE_DISPLAY won't do a full pixel compare before sending to EPSON for refreshing.
 
-void Fblib::ScreenRefresh()
+void Fblib::screenRefresh()
 {
-#ifdef BUILD_FOR_ARM
-    StopWatch watch(StopWatch::INIT_START);
-#endif
-    qDebug( "Fblib::ScreenRefresh()");
+    qDebug("Fblib::ScreenRefresh()");
+    flash(rect(), ScreenProxy::GC);
+    //ioctl(fb_, FBIO_EINK_RESTORE_DISPLAY, fx_update_full);
+    //ioctl(fb_, FBIO_EINK_RESTORE_DISPLAY, fx_update_full);
+}
+
+void Fblib::flash(const QRect& area, ScreenProxy::Waveform paintFlag)
+{
     if (DeviceInfo::IsK4Touch())
     {
-        qDebug( " Fblib::BitBlt update screen on Kindle Touch");
+        qDebug( "Fblib::BitBlt update screen on Kindle Touch");
         if(DeviceInfo::IsTouch510()) 
         {
 
-            UpdateToScreenKindleTouch510(0, 0, GetWidth(), GetHeight(), duokan::screen::ScreenProxy::GC);
+            flashKindleTouch510(area, paintFlag);
         }else 
         {
-            UpdateToScreenKindleTouch(0, 0, GetWidth(), GetHeight(), duokan::screen::ScreenProxy::GC);
+            flashKindleTouch(area, paintFlag);
         }
     }
 	else if (DeviceInfo::IsKPW())
 	{
-		UpdateToScreenKindlePaperwhite(0, 0, GetWidth(), GetHeight(), duokan::screen::ScreenProxy::GC);
+		flashKindlePaperwhite(area, paintFlag);
 	}
     else
     {
-        UpdateToScreen(0, 0, GetWidth(), GetHeight(), duokan::screen::ScreenProxy::GC);
+        flash(area, paintFlag);
     }
-    //ioctl(fb_, FBIO_EINK_RESTORE_DISPLAY, fx_update_full);
-    //ioctl(fb_, FBIO_EINK_RESTORE_DISPLAY, fx_update_full);
-#ifdef BUILD_FOR_ARM
-    watch.Stop();
-    qDebug( "Fblib::ScreenRefresh() Time elapsed=%d ms.",
-      watch.DurationInMs());
-    qDebug( "Fblib::ScreenRefresh() Time elapsed=%d ms.",
-        watch.DurationInMs());
-#endif
 }
 
-
-void Fblib::UpdateToScreen(INT32 iX,  INT32 iY, INT32 iWidth, INT32 iHeight, duokan::screen::ScreenProxy::Waveform paintFlag)
+void Fblib::flashOtherDevice(const QRect& area, duokan::screen::ScreenProxy::Waveform paintFlag)
 {
-#ifdef BUILD_FOR_ARM
-    StopWatch watch(StopWatch::INIT_START);
-#endif
-    qDebug( "Fblib::UpdateToScreen(iX=%d, iY=%d, iWidth=%d, iHeight=%d)",
+    int iX = area.left();
+    int iY = area.top();
+    int iWidth = area.width();
+    int iHeight = area.height();
+    qDebug( "Fblib::flash(iX=%d, iY=%d, iWidth=%d, iHeight=%d)",
         iX,  iY, iWidth, iHeight);
 
     struct update_area_t update_area;
-    memset(&update_area,0,sizeof(update_area_t));
+    memset(&update_area, 0, sizeof(update_area_t));
     update_area.x1 = iX;
     update_area.y1 = iY;
     update_area.x2 = iX + iWidth;
     update_area.y2 = iY + iHeight;
     update_area.buffer = 0;
-    if(paintFlag & duokan::screen::ScreenProxy::GC)
+    if(paintFlag == duokan::screen::ScreenProxy::GC)
     {
         qDebug( "Fblib::UpdateToScreen PAINT_FLAG_FULL");
         ++addr_[0]; // 如果CRC不发生改变，驱动不会刷屏
@@ -404,25 +399,15 @@ void Fblib::UpdateToScreen(INT32 iX,  INT32 iY, INT32 iWidth, INT32 iHeight, duo
             ioctl(fb_, FBIO_EINK_UPDATE_DISPLAY_AREA, (unsigned long)&update_area);
 #endif
     }
-
-#ifdef BUILD_FOR_ARM
-    watch.Stop();
-    qDebug( "Fblib::UpdateToScreen() Time elapsed=%d ms.",
-        watch.DurationInMs());
-
-    qDebug( "Fblib::UpdateToScreen() Time elapsed=%d ms.",
-        watch.DurationInMs());
-#endif
 }
 
 
-void Fblib::UpdateToScreenKindleTouch(INT32 iX,  INT32 iY, INT32 iWidth, INT32 iHeight, duokan::screen::ScreenProxy::Waveform paintFlag)
+void Fblib::flashKindleTouch(const QRect& area, duokan::screen::ScreenProxy::Waveform paintFlag)
 {
-#ifdef BUILD_FOR_ARM
-    StopWatch watch(StopWatch::INIT_START);
-#endif
-    qDebug( "Fblib::UpdateToScreenKindleTouch(iX=%d, iY=%d, iWidth=%d, iHeight=%d)",
-        iX,  iY, iWidth, iHeight);
+    int iX = area.left();
+    int iY = area.top();
+    int iWidth = area.width();
+    int iHeight = area.height();
 
     mxcfb_update_data update_data;
     mxcfb_rect update_region;
@@ -431,9 +416,9 @@ void Fblib::UpdateToScreenKindleTouch(INT32 iX,  INT32 iY, INT32 iWidth, INT32 i
     update_region.width = iWidth;
     update_region.height = iHeight;
 
-    qDebug( " Fblib::UpdateToScreenKindleTouch with (%d,%d,%d,%d)",iY,iX,iWidth,iHeight);
+    qDebug("Fblib::UpdateToScreenKindleTouch with (%d,%d,%d,%d)", iY, iX, iWidth, iHeight);
 
-    memset(&update_data,0,sizeof(update_data));
+    memset(&update_data, 0, sizeof(update_data));
     update_data.update_region = update_region;
     update_data.waveform_mode = WAVEFORM_MODE_AUTO;
     update_data.temp = TEMP_USE_AMBIENT;
@@ -448,7 +433,7 @@ void Fblib::UpdateToScreenKindleTouch(INT32 iX,  INT32 iY, INT32 iWidth, INT32 i
 
     if(paintFlag == duokan::screen::ScreenProxy::GC)
     {
-        update_data.update_mode =   UPDATE_MODE_FULL;
+        update_data.update_mode   = UPDATE_MODE_FULL;
 		update_data.waveform_mode = WAVEFORM_MODE_GC16;
     }
     else
@@ -474,24 +459,15 @@ void Fblib::UpdateToScreenKindleTouch(INT32 iX,  INT32 iY, INT32 iWidth, INT32 i
     //    else
     //        ioctl(fb_, MXCFB_SEND_UPDATE,  (unsigned long)&update_data);
     //}
-#ifdef BUILD_FOR_ARM
-    watch.Stop();
-    qDebug( "Fblib::UpdateToScreenKindleTouch() Time elapsed=%d ms.",
-        watch.DurationInMs());
-
-    qDebug( "Fblib::UpdateToScreenKindleTouch() Time elapsed=%d ms.",
-        watch.DurationInMs());
-#endif
 }
 
 // Touch v5.1.0 mxcfb_update_data结构体参数改为mxcfb_update_data_v510
-void Fblib::UpdateToScreenKindleTouch510(INT32 iX,  INT32 iY, INT32 iWidth, INT32 iHeight, duokan::screen::ScreenProxy::Waveform paintFlag)
+void Fblib::flashKindleTouch510(const QRect& area, duokan::screen::ScreenProxy::Waveform paintFlag)
 {
-#ifdef BUILD_FOR_ARM
-	StopWatch watch(StopWatch::INIT_START);
-#endif
-	qDebug("Fblib::UpdateToScreenKindleTouch510(iX=%d, iY=%d, iWidth=%d, iHeight=%d)",
-		iX,  iY, iWidth, iHeight);
+    int iX = area.left();
+    int iY = area.top();
+    int iWidth = area.width();
+    int iHeight = area.height();
 
 	mxcfb_update_data_v510 update_data;
 	mxcfb_rect update_region;
@@ -500,9 +476,9 @@ void Fblib::UpdateToScreenKindleTouch510(INT32 iX,  INT32 iY, INT32 iWidth, INT3
 	update_region.width = iWidth;
 	update_region.height = iHeight;
 
-	qDebug(" Fblib::UpdateToScreenKindleTouch510 with (%d,%d,%d,%d)",iY,iX,iWidth,iHeight);
+	qDebug(" Fblib::UpdateToScreenKindleTouch510 with (%d, %d, %d, %d)",iY, iX, iWidth, iHeight);
 
-	memset(&update_data,0,sizeof(update_data));
+	memset(&update_data, 0, sizeof(update_data));
 	update_data.update_region = update_region;
 	update_data.waveform_mode = WAVEFORM_MODE_AUTO;
 	update_data.temp = TEMP_USE_AMBIENT;
@@ -520,7 +496,7 @@ void Fblib::UpdateToScreenKindleTouch510(INT32 iX,  INT32 iY, INT32 iWidth, INT3
 
     if(paintFlag == duokan::screen::ScreenProxy::GC)
 	{
-		update_data.update_mode =   UPDATE_MODE_FULL;
+		update_data.update_mode   = UPDATE_MODE_FULL;
 		update_data.waveform_mode = WAVEFORM_MODE_GC16;
 	}
 	else
@@ -530,72 +506,15 @@ void Fblib::UpdateToScreenKindleTouch510(INT32 iX,  INT32 iY, INT32 iWidth, INT3
 
 #ifdef BUILD_FOR_ARM
 	ioctl(fb_, MXCFB_SEND_UPDATE_V510,  (unsigned long)&update_data);
-	watch.Stop();
-	qDebug("Fblib::UpdateToScreenKindleTouch510() Time elapsed=%d ms.",
-		watch.DurationInMs());
-
-	qDebug("Fblib::UpdateToScreenKindleTouch510() Time elapsed=%d ms.",
-		watch.DurationInMs());
 #endif
 }
 
-void Fblib::UpdateToScreenKindlePaperwhite(INT32 iX,  INT32 iY, INT32 iWidth, INT32 iHeight, duokan::screen::ScreenProxy::Waveform paintFlag)
+void Fblib::flashKindlePaperwhite(const QRect& area, duokan::screen::ScreenProxy::Waveform paintFlag)
 {
-	UpdateToScreenKindleTouch510(iX, iY, iWidth, iHeight, paintFlag);
+	flashKindleTouch510(area, paintFlag);
 }
 
-bool Fblib::SetOrientation(orientation_t orientation)
-{
-    return UpdateHardwareScreenInfo();
-}
-
-bool Fblib::GetOrientation(orientation_t* orientation) const
-{
-    if (NULL == orientation)
-    {
-        return false;
-    }
-
-#ifdef BUILD_FOR_ARM
-    if (ioctl(fb_, FBIO_EINK_GET_DISPLAY_ORIENTATION, orientation))
-    {
-        qWarning( "Set orientation failed\n");
-        return false;
-    }
-#endif
-    return true;
-}
-
-bool Fblib::SetRebootBehavior(reboot_behavior_t reboot_behavior)
-{
-#ifdef BUILD_FOR_ARM
-    if (ioctl(fb_, FBIO_EINK_SET_REBOOT_BEHAVIOR, reboot_behavior))
-    {
-        qWarning( "Fblib::SetRebootBehavior() failed\n");
-        return false;
-    }
-#endif
-    return true;
-}
-
-bool Fblib::GetRebootBehavior(reboot_behavior_t* reboot_behavior) const
-{
-    if (NULL == reboot_behavior)
-    {
-        return false;
-    }
-
-#ifdef BUILD_FOR_ARM
-    if (ioctl(fb_, FBIO_EINK_GET_REBOOT_BEHAVIOR, reboot_behavior))
-    {
-        qWarning( "Fblib::GetRebootBehavior() failed");
-        return false;
-    }
-#endif
-    return true;
-}
-
-bool Fblib::UpdateHardwareScreenInfo()
+bool Fblib::updateScreenInfo()
 {
 #ifdef BUILD_FOR_ARM
     fb_var_screeninfo fb_var;

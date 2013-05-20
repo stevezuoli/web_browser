@@ -10,9 +10,9 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 
 # Resources.
 
-ADD_LIBRARY(drivers ${SRCS})
+ADD_LIBRARY(fblib ${SRCS})
 
-TARGET_LINK_LIBRARIES(drivers
+TARGET_LINK_LIBRARIES(fblib
   DkReader
   ${QT_LIBRARIES}
   ${ADD_LIB})

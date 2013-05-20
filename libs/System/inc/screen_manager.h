@@ -4,7 +4,7 @@
 #include <QColor>
 #include <QtNetwork/QtNetwork>
 #include "Screen/screen_proxy.h"
-#include "Drivers/CFbBitDc.h"
+#include "Fblib/frame_buffer_lib.h"
 #include "Base/base.h"
 
 class ScreenManager : public QObject
@@ -72,12 +72,13 @@ private:
     void flashScreen(int waveform);
 
 private:
-    CFbBitDc fb_controller_;
+    Fblib  fb_controller_;
+    uchar* fb_buffer_;
+    int    fb_buffer_size_;
 
     bool busy_;
     int busy_index_;
     scoped_ptr<QImage> busy_canvas_;
-    scoped_ptr<QImage> screen_buffer_;
 
     int screen_saver_index_;
 

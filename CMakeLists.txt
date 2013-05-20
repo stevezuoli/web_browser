@@ -51,5 +51,5 @@ SET(QT_PLUGINS_OUTPUT_PATH ${PROJECT_BINARY_DIR}/plugins)
 add_subdirectory(system_manager)
 add_subdirectory(web_browser)
 add_subdirectory(libs)
-
+add_subdirectory(drivers/screen)
 
