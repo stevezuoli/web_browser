@@ -222,6 +222,9 @@ void DuokanScreen::blit12To4(const QImage &image,
             ++y;
         }
     }
+
+    QImage trans_image((const uchar*)(base()), dw, dh, pixelFormat());
+    trans_image.save("/mnt/us/DK_System/duokan/c.png", "png");
 }
 
 
