@@ -274,13 +274,15 @@ void DuokanScreen::blit(const QImage& image, const QPoint& topLeft, const QRegio
 #endif
 
     //if ((isKindle4) || (isKindle5))
-    {
-        blit_K4( imageInverted, topLeft, region);
-    }
-    /*else
+    //{
+    //    blit_K4( imageInverted, topLeft, region);
+    //}
+    //else
     {
         QScreen::blit(imageInverted, topLeft, region);
-    }*/
+    }
+    QImage trans_image((const uchar*)(base()), dw, dh, pixelFormat());
+    trans_image.save("/mnt/us/DK_System/duokan/d.png", "png");
 }
 
 void DuokanScreen::blit_K4(const QImage &img, const QPoint &topLeft,
