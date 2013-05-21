@@ -52,4 +52,5 @@ add_subdirectory(system_manager)
 add_subdirectory(web_browser)
 add_subdirectory(libs)
 add_subdirectory(drivers/screen)
+add_subdirectory(drivers/kermit)
 
