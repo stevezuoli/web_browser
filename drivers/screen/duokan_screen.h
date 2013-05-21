@@ -34,6 +34,13 @@ public:
     void solidFill(const QColor &color, const QRegion &region);
 
 private:
+    void k4_hline(int x1, int y, int x2, int c) ;
+    void blit_K4(const QImage& image, const QPoint& topLeft, const QRegion& region);
+    void blit12To4(const QImage &image, const QPoint &topLeft, const QRegion &region);
+    void blit16To4(const QImage &image, const QPoint &topLeft, const QRegion &region);
+    void blit32To4(const QImage &image, const QPoint &topLeft, const QRegion &region);
+
+private:
     uchar *memory_;
 };
 
