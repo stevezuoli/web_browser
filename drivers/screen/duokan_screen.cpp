@@ -67,7 +67,7 @@ bool DuokanScreen::connect(const QString &displaySpec)
     QScreen::data = memory_;
 
     // Maybe need to change the dpi later.
-    const int dpi = 212;
+    const int dpi = 72;
     QScreen::physWidth = qRound(QScreen::dw * 25.4 / dpi);
     QScreen::physHeight = qRound(QScreen::dh * 25.4 / dpi);
     return true;
@@ -102,22 +102,22 @@ void DuokanScreen::blit(const QImage &img, const QPoint &topLeft, const QRegion 
 
     // Only handle the indexed 8, as the eink screen works best with that.
     // Not sure yet. It should be gray color instead of indexed 8.
-    // qDebug("blit img format %d image color depth %d indexed8 %d",
-    //         img.format(), img.depth(), QImage::Format_Indexed8);
+     qDebug("blit img format %d image color depth %d format %d",
+             img.format(), img.depth(), img.format());
     if (depth() == 8 && img.format() == QImage::Format_Indexed8)
         do_fallback = false;
 
-    if (do_fallback)
+    //if (do_fallback)
     {
-        // qDebug( "call QScreen::blit now topLeft (%d,%d)- (%d,%d)",
-        //         topLeft.x(), topLeft.y(),
-        //         reg.boundingRect().width(), reg.boundingRect().height());
+        qDebug( "call QScreen::blit now topLeft (%d,%d)- (%d,%d)",
+                 topLeft.x(), topLeft.y(),
+                 reg.boundingRect().width(), reg.boundingRect().height());
         QScreen::blit(img, topLeft, reg);
     }
-    else
+    /*else
     {
         qDebug("Implement it later.");
-    }
+    }*/
 
     if (screen_debug)
     {
