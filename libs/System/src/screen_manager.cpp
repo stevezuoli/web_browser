@@ -185,7 +185,7 @@ void ScreenManager::blit(const QRect & rc,
     fb_controller_.blit(rc, image, rc.left(), rc.top(), waveform);
 }
 
-void ScreenManager::onScreenUpdate(duokan::screen::ScreenCommand& command)
+void ScreenManager::onScreenUpdate(ScreenCommand& command)
 {
     qDebug("onScreenUpdate at %s sleeping %d", qPrintable(QTime::currentTime().toString("mm:ss.zzz")), sleeping_);
 

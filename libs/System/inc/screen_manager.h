@@ -44,7 +44,7 @@ public:
     void drawLine(duokan::screen::ScreenCommand & command);
 
 private Q_SLOTS:
-    void onScreenUpdate(duokan::screen::ScreenCommand& command);
+    void onScreenUpdate(ScreenCommand& command);
     void onBusyTimeout();
 
 private:
