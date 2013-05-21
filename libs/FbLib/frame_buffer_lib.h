@@ -12,7 +12,7 @@ public:
     Fblib();
     ~Fblib();
 
-    void* mmap(unsigned long * size);
+    void* mmapFb(unsigned long * size);
     void blit(const QRect& area, const QImage& srcImg, int isX, int isY, ScreenProxy::Waveform paintFlag);
     void flash(const QRect& area, ScreenProxy::Waveform paintFlag);
     void screenRefresh();

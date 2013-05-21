@@ -56,7 +56,7 @@ void ScreenManager::enableUpdate(bool enable)
 void ScreenManager::start()
 {
     fb_buffer_size_ = 0;
-    fb_buffer_ = (uchar *)fb_controller_.mmap((unsigned long *)&fb_buffer_size_);
+    fb_buffer_ = (uchar *)fb_controller_.mmapFb((unsigned long *)&fb_buffer_size_);
     qDebug("FB init done. Buffer %p size %d", fb_buffer_, fb_buffer_size_);
 
     duokan::screen::ScreenProxy & screen_proxy = duokan::screen::instance();
