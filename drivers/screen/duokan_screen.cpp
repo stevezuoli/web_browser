@@ -53,7 +53,7 @@ bool DuokanScreen::connect(const QString &displaySpec)
     QScreen::d = 8;                     // Color depth.
     QScreen::size = width * height;
     QScreen::grayscale = true;
-    QScreen::screencols = 256;
+    QScreen::screencols = 16;
 
     setPixelFormat(QImage::Format_Indexed8);
 
