@@ -14,6 +14,6 @@ ADD_LIBRARY(screen ${SRCS})
 
 TARGET_LINK_LIBRARIES(screen
   duokan_base
-  drivers
+  fblib
   ${QT_LIBRARIES}
   ${ADD_LIB})
