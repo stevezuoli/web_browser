@@ -117,7 +117,7 @@ Fblib::~Fblib()
 #endif
 }
 
-void* Fblib::mmap(unsigned long * size)
+void* Fblib::mmapFb(unsigned long * size)
 {
     if (fb_ < 0)
     {
