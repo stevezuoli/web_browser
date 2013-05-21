@@ -60,13 +60,13 @@ void ScreenManager::start()
     qDebug("FB init done. Buffer %p size %d", fb_buffer_, fb_buffer_size_);
 
     duokan::screen::ScreenProxy & screen_proxy = duokan::screen::instance();
-    connect(&screen_proxy, SIGNAL(screenUpdate(const ScreenCommand&)), this, SLOT(onScreenUpdate(const ScreenCommand&)));
+    connect(&screen_proxy, SIGNAL(screenUpdate(ScreenCommand&)), this, SLOT(onScreenUpdate(ScreenCommand&)));
 }
 
 void ScreenManager::stop()
 {
     duokan::screen::ScreenProxy & screen_proxy = duokan::screen::instance();
-    disconnect(&screen_proxy, SIGNAL(screenUpdate(const ScreenCommand&)), this, SLOT(onScreenUpdate(const ScreenCommand&)));
+    disconnect(&screen_proxy, SIGNAL(screenUpdate(ScreenCommand&)), this, SLOT(onScreenUpdate(ScreenCommand&)));
 }
 
 bool ScreenManager::setGrayScale(int colors)
