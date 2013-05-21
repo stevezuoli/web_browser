@@ -12,7 +12,7 @@ add_definitions(-DQT_SHARED)
 add_definitions(-DQT_NO_DEBUG)
 
 add_library(kermitscreen SHARED ${SCREEN_PLUGIN_SRCS})
-target_link_libraries(kermitscreen kermit ${QT_LIBRARIES} ${ADD_LIB})
+target_link_libraries(kermitscreen ${QT_LIBRARIES} ${ADD_LIB})
 
 # Install the plugin to QT_PLUGINS_OUTPUT_PATH
 SET_TARGET_PROPERTIES(kermitscreen PROPERTIES  RUNTIME_OUTPUT_DIRECTORY ${QT_PLUGINS_OUTPUT_PATH})
