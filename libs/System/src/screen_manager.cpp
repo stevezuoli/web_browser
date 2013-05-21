@@ -560,6 +560,7 @@ QImage ScreenManager::imageFromScreen()
         std::swap(width, height);
     }
     QImage image(data, width, height, instance->pixelFormat());
+    qDebug("imageFromScreen(), data:%x, width:%d, height:%d, format:%d", data, width, height, instance->pixelFormat());
 
     // Necessary to check as when rotation, it uses different pixel format.
     if (instance->pixelFormat() == QImage::Format_Indexed8)
