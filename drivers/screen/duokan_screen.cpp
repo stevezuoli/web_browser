@@ -193,6 +193,7 @@ void DuokanScreen::blit16To4(const QImage &image,
 void DuokanScreen::blit12To4(const QImage &image,
                              const QPoint &topLeft, const QRegion &region)
 {
+    image.save("/mnt/us/DK_System/duokan/b.png", "png");
     const int imageStride = image.bytesPerLine() / 2;
     const QVector<QRect> rects = region.rects();
     int scolor ;
