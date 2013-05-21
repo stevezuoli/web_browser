@@ -261,6 +261,9 @@ void ScreenManager::ensureUpdateFinished()
 void ScreenManager::sync(ScreenCommand & command)
 {
     qDebug("sync data now...%d %d %d %d", command.left, command.top, command.width, command.height);
+
+    snapshot("/mnt/us/DK_System/duokan/a.png");
+
     QTime t; t.start();
     uchar * dst  = fb_buffer_ + command.top * screen_width_ / 2 + command.left / 2;
     uchar * base = QScreen::instance()->base();
@@ -538,6 +541,7 @@ void ScreenManager::flashScreen(int waveform)
     //}
     //kermit_display_on();
     //kermit_display_off();
+    qDebug("Flash Screen:%d, width:%d, height:%d", waveform, screen_width_, screen_height_);
     fb_controller_.flash(QRect(0, 0, screen_width_, screen_height_),
         static_cast<ScreenProxy::Waveform>(waveform));
 }
