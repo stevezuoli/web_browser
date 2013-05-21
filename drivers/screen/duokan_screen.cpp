@@ -67,7 +67,7 @@ bool DuokanScreen::connect(const QString &displaySpec)
     QScreen::data = memory_;
 
     // Maybe need to change the dpi later.
-    const int dpi = 72;
+    const int dpi = 212;
     QScreen::physWidth = qRound(QScreen::dw * 25.4 / dpi);
     QScreen::physHeight = qRound(QScreen::dh * 25.4 / dpi);
     return true;
