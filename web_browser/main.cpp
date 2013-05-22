@@ -17,6 +17,7 @@ int main(int argc, char * argv[])
         path = QString::fromLocal8Bit(argv[1]);
     }
 
+    app.setFont(QFont("Arial", 20, QFont::Bold));
     //adaptor.open(path);
     app.open(path);
     int ret = app.exec();
