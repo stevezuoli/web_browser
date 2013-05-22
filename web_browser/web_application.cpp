@@ -107,6 +107,9 @@ void WebApplication::loadSettings()
     default_settings->setAttribute(QWebSettings::PluginsEnabled, true);
     default_settings->setAttribute(QWebSettings::AutoLoadImages, settings.value(QLatin1String("autoLoadImages"), true).toBool());
 
+    QString font = default_settings->fontFamily(QWebSettings::StandardFont);
+    qDebug("Default Font:%s", qPrintable(font));
+
     settings.endGroup();
 }
 
