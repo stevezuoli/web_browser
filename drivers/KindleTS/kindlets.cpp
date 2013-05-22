@@ -11,8 +11,7 @@ KindleTS::KindleTS(const QString & driver, const QString & device, QObject* pare
     width = Device::getWidth();
     height = Device::getHeight();
 
-    if (_debug)
-        qDebug("KindleTS(%s, %s)", (const char*)driver.toAscii(), (const char*)device.toAscii());
+    qDebug("KindleTS(%s, %s)", (const char*)driver.toAscii(), (const char*)device.toAscii());
 
     if (isKT) {
         _fd = open("/dev/input/event3", O_RDONLY);
@@ -25,18 +24,15 @@ KindleTS::KindleTS(const QString & driver, const QString & device, QObject* pare
         _fd = open("/dev/input/event0", O_RDONLY);
     }
 
-    if (_debug)
-    {
-        if (_fd == -1)
-            qDebug("TOUCH open FAILED");
-        else
-            qDebug("TOUCH open SUCCESS");
+    if (_fd == -1)
+        qDebug("TOUCH open FAILED");
+    else
+        qDebug("TOUCH open SUCCESS");
 
-        if (kt_fd == -1)
-            qDebug("KBD open FAILED");
-        else
-            qDebug("KBD open SUCCESS");
-    }
+    if (kt_fd == -1)
+        qDebug("KBD open FAILED");
+    else
+        qDebug("KBD open SUCCESS");
 
     _sn = new QSocketNotifier(_fd, QSocketNotifier::Read);
 
@@ -91,11 +87,8 @@ void KindleTS::kt_activity(int)
 
     if (in.type == 1)
     {
-        if (_debug)
-        {
-            QString debugText = QString("Keyboard: type %1, code %2, value %3").arg(in.type).arg(in.code).arg(in.value) ;
-            qDebug("%s", (const char*)debugText.toAscii());
-        }
+        QString debugText = QString("Keyboard: type %1, code %2, value %3").arg(in.type).arg(in.code).arg(in.value) ;
+        qDebug("%s", (const char*)debugText.toAscii());
 
         if (in.code == KT_HOME) {
             processKeyEvent(0, Qt::Key_Home, Qt::NoModifier, in.value != 0, in.value != 2);
@@ -115,8 +108,7 @@ void KindleTS::activity(int)
 
     size = read(_fd, &in, sizeof(input_event_t));
 
-    if (_debug)
-        qDebug("TS data: type %X, code %X, value %d", in.type, in.code, in.value);
+    qDebug("TS data: type %X, code %X, value %d", in.type, in.code, in.value);
 
     switch(in.type)
     {
@@ -158,12 +150,9 @@ void KindleTS::activity(int)
         break ;
     }
 
-    if (_debug)
-    {
-        qDebug("x=%d, y=%d, touch=%d %d, doubletap=%d %d", p.x(), p.y(), touch, newtouch, doubletap, newdoubletap);
-        if (in.type == EV_SYN)
-            qDebug("________________") ;
-    }
+    qDebug("x=%d, y=%d, touch=%d %d, doubletap=%d %d", p.x(), p.y(), touch, newtouch, doubletap, newdoubletap);
+    if (in.type == EV_SYN)
+        qDebug("________________") ;
 
     _sn->setEnabled(true);
 }
@@ -174,22 +163,19 @@ void KindleTS::capture_input(void)
 
     if (!input_captured )
     {
-        if (_debug)
-            qDebug("attempting to capture input...");
+        qDebug("attempting to capture input...");
 
         if (_fd != -1)
         {
             if (ioctl(_fd, EVIOCGRAB, on)) {
-                if (_debug)
-                    qDebug("Capture touch input: error");
+                qDebug("Capture touch input: error");
             }
         }
 
         if (isKT && kt_fd != -1)
         {
             if (ioctl(kt_fd, EVIOCGRAB, on)) {
-                if (_debug)
-                    qDebug("Capture touch input: error");
+                qDebug("Capture touch input: error");
             }
         }
 
@@ -203,20 +189,17 @@ void KindleTS::release_input(void)
 
     if (input_captured )
     {
-        if (_debug)
-            qDebug("attempting to release input...");
+        qDebug("attempting to release input...");
         if (_fd != -1)
         {
             if (ioctl(_fd, EVIOCGRAB, off)) {
-                if (_debug)
-                    qDebug("Release touch input: error");
+                qDebug("Release touch input: error");
             }
         }
 
         if (isKT && kt_fd != -1)
         {
             if (ioctl(kt_fd, EVIOCGRAB, off)) {
-                if (_debug)
                     qDebug("Release kbd input: error");
             }
         }
