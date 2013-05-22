@@ -92,9 +92,9 @@ void KindleTS::kt_activity(int)
         QString debugText = QString("Keyboard: type %1, code %2, value %3").arg(in.type).arg(in.code).arg(in.value) ;
         qDebug("%s", (const char*)debugText.toAscii());
 
-        if (in.code == KT_HOME) {
+        /*if (in.code == KT_HOME) {
             processKeyEvent(0, Qt::Key_Home, Qt::NoModifier, in.value != 0, in.value != 2);
-        }
+        }*/
     }
 
     kt_sn->setEnabled(true);
