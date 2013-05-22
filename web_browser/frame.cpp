@@ -142,54 +142,6 @@ bool BrowserFrame::event(QEvent *e)
     }
 
     bool ret = QWidget::event(e);
-    //if (e->type() == QEvent::UpdateRequest)
-    //{
-    //    // Check region.
-    //    QRect rc = view_.updateRect();
-    //    rc = rc.intersected(view_.rect());
-
-    //    view_.resetUpdateRect();
-    //    int area = rc.width() * rc.height();
-    //    if (area > 0 && duokan::screen::instance().isUpdateEnabled())
-    //    {
-    //        qDebug("update rectange:(%d, %d, %d, %d)", rc.left(), rc.top(), rc.width(), rc.height());
-    //        int max = view_.rect().width() * view_.rect().height();
-    //        /*if (area < (max >> 3))
-    //        {
-    //            qDebug("Ignored the request");
-    //            return true;
-    //        }
-    //        else*/
-    //        if (rc.width() < (view_.width() - (view_.width() >> 2)) ||
-    //            rc.height() < (view_.height() - (view_.height() >> 2)))
-    //        {
-    //            qDebug("using gu waveform");
-    //            duokan::screen::instance().updateWidget(this, duokan::screen::ScreenProxy::GU);
-    //            return true;
-    //        }
-
-    //        if (area > (max - (max >> 2)))
-    //        {
-    //            if (!view_.isLoadingFinished())
-    //            {
-    //                qDebug("using gc waveform");
-    //                duokan::screen::instance().flush(this, duokan::screen::ScreenProxy::GC);
-    //                return true;
-    //            }
-    //        }
-    //    }
-
-    //    if (duokan::screen::watcher().isQueueEmpty())
-    //    {
-    //        // qDebug("Fallback to use raw API directly. using default waveform.");
-    //        duokan::screen::instance().updateWidget(this);
-    //    }
-    //    else
-    //    {
-    //        duokan::screen::watcher().updateScreen();
-    //    }
-    //    return true;
-    //}
     return ret;
 }
 

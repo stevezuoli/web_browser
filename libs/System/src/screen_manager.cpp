@@ -260,10 +260,8 @@ void ScreenManager::ensureUpdateFinished()
 /// This function copies data from Qt framebuffer to controller.
 void ScreenManager::sync(ScreenCommand & command)
 {
+#ifdef BUILD_FOR_ARM
     qDebug("sync data now...%d %d %d %d", command.left, command.top, command.width, command.height);
-
-    snapshot("/mnt/us/DK_System/duokan/a.png");
-
     QTime t; t.start();
     uchar * dst  = fb_buffer_ + command.top * screen_width_ / 2 + command.left / 2;
     uchar * base = QScreen::instance()->base();
@@ -288,8 +286,8 @@ void ScreenManager::sync(ScreenCommand & command)
         command.top,
         static_cast<ScreenProxy::Waveform>(command.waveform));
 #endif
-
     qDebug("elapsed %d ms", t.elapsed());
+#endif
 }
 
 /// This function copies data for the specified widget from Qt framebuffer
@@ -548,6 +546,7 @@ void ScreenManager::flashScreen(int waveform)
 
 QImage ScreenManager::imageFromScreen()
 {
+#ifdef BUILD_FOR_ARM
     // Takes a non-const data buffer, this version will never alter the contents of the buffer.
     QScreen *instance = QScreen::instance();
     const uchar *data = instance->base();
@@ -567,6 +566,9 @@ QImage ScreenManager::imageFromScreen()
     {
         image.setColorTable(colorTable());
     }
+#else
+    QImage image;
+#endif
     return image;
 }
 
