@@ -109,6 +109,9 @@ void WebApplication::loadSettings()
 
     QString font = default_settings->fontFamily(QWebSettings::StandardFont);
     qDebug("Default Font:%s", qPrintable(font));
+    default_settings->setFontFamily(QWebSettings::StandardFont, QLatin1String("arial"));
+    font = default_settings->fontFamily(QWebSettings::StandardFont);
+    qDebug("Updated Font:%s", qPrintable(font));
 
     settings.endGroup();
 }
