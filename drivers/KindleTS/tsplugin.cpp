@@ -18,8 +18,7 @@ QWSMouseHandler* TSPlugin::create(const QString & key, const QString & device)
 {
     if (key.toLower() == QLatin1String("kindlets"))
     {
-        if (device.contains("debug", Qt::CaseInsensitive))
-            qDebug("TSPlugin::create() found!");
+        qDebug("TSPlugin::create() found!");
         return new KindleTS(key, device);
     }
 
