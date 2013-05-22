@@ -3,8 +3,7 @@ ENABLE_QT()
 INCLUDE_DIRECTORIES(.)
 
 SET(TS_PLUGIN_HDRS
-  kindlets.h
-  tsplugin.h)
+  kindlets.h)
 
 SET(TS_PLUGIN_SRCS
   ${TS_PLUGIN_HDRS}

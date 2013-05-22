@@ -1,10 +1,22 @@
-#include "tsplugin.h"
+#include <QMouseDriverPlugin>
+#include <QWSMouseHandler>
+
 #include "kindlets.h"
 
+QT_BEGIN_NAMESPACE
+
+class TSPlugin : public QMouseDriverPlugin {
+    Q_OBJECT
+public:
+    TSPlugin(QObject* parent = 0);
+
+    QStringList keys() const;
+    QWSMouseHandler* create(const QString & key, const QString & device);
+};
 
 TSPlugin::TSPlugin(QObject* parent) : QMouseDriverPlugin(parent)
 {
-    //    qDebug("TSPlugin()");
+    qDebug("TSPlugin()");
 }
 
 QStringList TSPlugin::keys() const
@@ -25,4 +37,6 @@ QWSMouseHandler* TSPlugin::create(const QString & key, const QString & device)
     return 0;
 }
 
-Q_EXPORT_PLUGIN2(KindleFiveWay, TSPlugin)
+Q_EXPORT_PLUGIN2(KindleTS, TSPlugin)
+
+QT_END_NAMESPACE
