@@ -1,7 +1,9 @@
 #include "kindlets.h"
 
+QT_BEGIN_NAMESPACE
 
-KindleTS::KindleTS(const QString & driver, const QString & device, QObject* parent) : QObject(parent), QWSMouseHandler(driver, device), QWSKeyboardHandler(device)
+KindleTS::KindleTS(const QString & driver, const QString & device)
+: QWSMouseHandler(driver, device)
 {
     _debug = device.contains("debug", Qt::CaseInsensitive);
 
@@ -207,3 +209,5 @@ void KindleTS::release_input(void)
         input_captured = false ;
     }
 }
+
+QT_END_NAMESPACE
