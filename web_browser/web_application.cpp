@@ -106,13 +106,7 @@ void WebApplication::loadSettings()
     default_settings->setAttribute(QWebSettings::JavascriptEnabled, true);
     default_settings->setAttribute(QWebSettings::PluginsEnabled, true);
     default_settings->setAttribute(QWebSettings::AutoLoadImages, settings.value(QLatin1String("autoLoadImages"), true).toBool());
-
-    QString font = default_settings->fontFamily(QWebSettings::StandardFont);
-    qDebug("Default Font:%s", qPrintable(font));
-    default_settings->setFontFamily(QWebSettings::StandardFont, QLatin1String("arial"));
-    font = default_settings->fontFamily(QWebSettings::StandardFont);
-    qDebug("Updated Font:%s", qPrintable(font));
-
+    default_settings->setFontSize(QWebSettings::DefaultFontSize, 20);
     settings.endGroup();
 }
 
