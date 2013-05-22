@@ -30,8 +30,9 @@ QT_BEGIN_NAMESPACE
 
 QT_MODULE(Gui)
 
-class Q_GUI_EXPORT KindleTS : public QWSMouseHandler
+class Q_GUI_EXPORT KindleTS : public QObject, public QWSMouseHandler
 {
+    Q_OBJECT
 public:
     explicit KindleTS(const QString & driver = QString(), const QString & device = QString());
     virtual ~KindleTS();
