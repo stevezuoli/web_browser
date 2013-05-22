@@ -1,6 +1,6 @@
 #include "device.h"
 
-#include "qkindlefb.h"
+#include "QKindleFb/qkindlefb.h"
 
 const Device::Properties Device::PROPS[] = {
 //    x    y    DPI, KBD    JOY
