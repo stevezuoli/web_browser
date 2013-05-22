@@ -54,4 +54,5 @@ add_subdirectory(libs)
 add_subdirectory(drivers/screen)
 add_subdirectory(drivers/kermit)
 add_subdirectory(drivers/QKindleFb)
+add_subdirectory(drivers/KindleTS)
 
