@@ -43,7 +43,7 @@
 #define QKINDLEFB_H
 
 #include <QScreen>
-#include <device.h>
+#include "device.h"
 
 struct fb_cmap;
 struct fb_var_screeninfo;
