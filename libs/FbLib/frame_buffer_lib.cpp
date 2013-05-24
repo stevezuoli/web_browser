@@ -29,7 +29,6 @@
 #endif
 
 #include "DeviceInfo.h"
-#include "interface.h"
 
 using namespace std;
 

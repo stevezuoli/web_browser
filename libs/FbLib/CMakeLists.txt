@@ -13,6 +13,5 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 ADD_LIBRARY(fblib ${SRCS})
 
 TARGET_LINK_LIBRARIES(fblib
-  DkReader
   ${QT_LIBRARIES}
   ${ADD_LIB})
