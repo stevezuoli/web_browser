@@ -31,6 +31,7 @@ ENDIF(BUILD_FOR_ARM)
 INCLUDE_DIRECTORIES(BEFORE
     ${CMAKE_SOURCE_DIR}/inc
 	${CMAKE_SOURCE_DIR}/libs
+	${CMAKE_SOURCE_DIR}/drivers
 	${CMAKE_SOURCE_DIR}/libs/DkReader/inc
 )
 
@@ -53,4 +54,6 @@ add_subdirectory(web_browser)
 add_subdirectory(libs)
 add_subdirectory(drivers/screen)
 add_subdirectory(drivers/kermit)
+add_subdirectory(drivers/QKindleFb)
+add_subdirectory(drivers/KindleTS)
 

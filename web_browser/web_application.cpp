@@ -106,7 +106,7 @@ void WebApplication::loadSettings()
     default_settings->setAttribute(QWebSettings::JavascriptEnabled, true);
     default_settings->setAttribute(QWebSettings::PluginsEnabled, true);
     default_settings->setAttribute(QWebSettings::AutoLoadImages, settings.value(QLatin1String("autoLoadImages"), true).toBool());
-
+    default_settings->setFontSize(QWebSettings::DefaultFontSize, 20);
     settings.endGroup();
 }
 

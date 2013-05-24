@@ -10,8 +10,8 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 
 # Resources.
 
-ADD_LIBRARY(fblib ${SRCS})
+ADD_LIBRARY(device ${SRCS})
 
-TARGET_LINK_LIBRARIES(fblib
+TARGET_LINK_LIBRARIES(device
   ${QT_LIBRARIES}
   ${ADD_LIB})
