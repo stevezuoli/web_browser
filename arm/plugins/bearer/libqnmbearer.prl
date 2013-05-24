@@ -1,0 +1,6 @@
+QMAKE_PRL_BUILD_DIR = /opt/duokan/opensource/qt-everywhere-opensource-src-4.8.4/src/plugins/bearer/networkmanager/
+QMAKE_PRO_INPUT = networkmanager.pro
+QMAKE_PRL_TARGET = libqnmbearer.a
+QMAKE_PRL_CONFIG = lex yacc warn_on uic resources qt warn_on release incremental link_prl cross_compile def_files_disabled no_mocdepend release stl qt_no_framework cross_compile release static embedded stl precompile_header exceptions_off dylib create_prl link_prl depend_includepath fix_output_dirs QTDIR_build qt plugin hide_symbols moc thread dbusadaptors dbusinterfaces staticlib static dll
+QMAKE_PRL_VERSION = 4.8.4
+QMAKE_PRL_LIBS = -L/opt/duokan/release/lib -L/opt/duokan/opensource/qt-everywhere-opensource-src-4.8.4/lib  -lQtDBus -L/opt/duokan/release/lib -L/opt/duokan/opensource/qt-everywhere-opensource-src-4.8.4/lib -lQtXml -lQtNetwork -lQtCore -ldbus-1 -lm -ldl -lrt -lpthread  

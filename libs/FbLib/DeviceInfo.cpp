@@ -1,6 +1,5 @@
 #include "DeviceInfo.h"
 #include "stdio.h"
-#include "interface.h"
 #include "stdlib.h"
 #include "string.h"
 //#include "Common/DuoKanServer.h"
