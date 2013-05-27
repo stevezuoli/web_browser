@@ -9,7 +9,7 @@ namespace network_service
 
 NetworkAccessManager * getAccessManagerInstance()
 {
-    static NetworkAccessManager * instance = 0;
+    static NetworkAccessManager *instance = 0;
     if (instance == 0)
     {
         instance = new NetworkAccessManager();

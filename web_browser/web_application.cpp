@@ -1,5 +1,6 @@
 #include "web_application.h"
 
+using namespace network_service;
 
 namespace webbrowser
 {
@@ -69,6 +70,11 @@ void WebApplication::scan()
 
 void WebApplication::connectTo(const QString &ssid, const QString &psk)
 {
+}
+
+NetworkAccessManager* WebApplication::accessManager()
+{
+    return network_service::getAccessManagerInstance();
 }
 
 void WebApplication::initTheme()

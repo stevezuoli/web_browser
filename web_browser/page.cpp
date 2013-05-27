@@ -8,6 +8,7 @@ WebPage::WebPage(QObject *parent)
     : QWebPage(parent)
     , network_error_(QNetworkReply::NoError)
 {
+    setNetworkAccessManager(WebApplication::accessManager());
     connect(this, SIGNAL(unsupportedContent(QNetworkReply *)),
             this, SLOT(handleUnsupportedContent(QNetworkReply *)));
 }

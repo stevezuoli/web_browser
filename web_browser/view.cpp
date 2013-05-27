@@ -1,6 +1,11 @@
 #include <QtGui/QtGui>
+#include "NetworkService/auto_complete.h"
+#include "NetworkService/password_model.h"
+
 #include "view.h"
 #include "web_application.h"
+
+using namespace network_service;
 
 namespace webbrowser
 {
@@ -42,6 +47,9 @@ BrowserView::BrowserView(QWidget *parent)
     // Use queued connection to make sure selected text is reported correctly.
     connect(this, SIGNAL(selectionChanged()), this, SLOT(onSelectionChanged()),
             Qt::QueuedConnection);
+
+    connect(WebApplication::accessManager(), SIGNAL(requestSavePassword(const QByteArray &)),
+            this, SLOT(onSavePassword(const QByteArray &)));
 
     settings()->setAttribute(QWebSettings::JavascriptEnabled, true);
     settings()->setAttribute(QWebSettings::JavaEnabled, true);
@@ -128,6 +136,21 @@ void BrowserView::onLoadStarted(void)
 
 void BrowserView::onSavePassword(const QByteArray & data)
 {
+    QWebFrame * current_frame = page()->currentFrame();
+    if (current_frame == 0)
+    {
+        return;
+    }
+
+    QUrl url = current_frame->url();
+    AutoComplete::instance()->setFormData(url, data);
+
+    // setFormHtml at this moment?
+    if (!AutoComplete::instance()->existInForms(url))
+    {
+        AutoComplete::instance()->setFormHtml(url, current_frame->toHtml());
+    }
+    AutoComplete::instance()->evaluate(url);
 }
 
 void BrowserView::onLoadProgress(int progress)
@@ -163,6 +186,12 @@ void BrowserView::onLoadFinished(bool ok)
     if (ok)
     {
         storeUrl();
+
+        // Auto complete the form in web
+        if (WebApplication::accessManager()->autoComplete())
+        {
+            AutoComplete::instance()->complete(page()->mainFrame());
+        }
 
 #ifdef USE_JQUERY
         page()->mainFrame()->evaluateJavaScript(jquery_);
@@ -859,6 +888,7 @@ bool BrowserView::deletePassword()
 
 void BrowserView::clearCookies()
 {
+    WebApplication::accessManager()->clearCookies();
 }
 
 

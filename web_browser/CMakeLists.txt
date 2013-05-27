@@ -14,6 +14,7 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 # Executable file.
 ADD_EXECUTABLE(web_browser ${SRCS})
 TARGET_LINK_LIBRARIES(web_browser
+   network_service
    system
    screen
    ${QT_LIBRARIES}

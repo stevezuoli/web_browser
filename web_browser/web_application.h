@@ -9,6 +9,9 @@
 
 #include "frame.h"
 #include "bookmark_model.h"
+#include "NetworkService\access_manager.h"
+
+using namespace network_service;
 
 namespace webbrowser
 {
@@ -20,6 +23,8 @@ class WebApplication : public QApplication
 public:
     WebApplication(int &argc, char **argv);
     ~WebApplication(void);
+
+    static NetworkAccessManager * accessManager();
 
 public Q_SLOTS:
     bool open(const QString & path_name);
