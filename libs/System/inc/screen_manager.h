@@ -4,7 +4,7 @@
 #include <QColor>
 #include <QtNetwork/QtNetwork>
 #include "Screen/screen_proxy.h"
-#include "Fblib/frame_buffer_lib.h"
+#include "FbLib/frame_buffer_lib.h"
 #include "Base/base.h"
 
 class ScreenManager : public QObject

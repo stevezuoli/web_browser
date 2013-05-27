@@ -1,6 +1,6 @@
 #include <QtGui>
+#include <QString>
 #include "web_application.h"
-#include "view.h"
 #include "System/inc/system_manager.h"
 
 using namespace webbrowser;
@@ -17,6 +17,7 @@ int main(int argc, char * argv[])
         path = QString::fromLocal8Bit(argv[1]);
     }
 
+    Q_INIT_RESOURCE(res);
     //set font for QWebView
     app.setFont(QFont("Arial", 20, QFont::Bold));
     //adaptor.open(path);

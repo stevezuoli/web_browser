@@ -6,6 +6,7 @@
 #include "view.h"
 #include "keyboard_dialog.h"
 #include "bookmark_model.h"
+#include "url_lineedit.h"
 
 namespace webbrowser
 {
@@ -27,13 +28,13 @@ enum BrowserKeyboardStatus
     URL_INPUTTING
 };
 
-class BrowserFrame : public QWidget
+class BrowserMainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    BrowserFrame(QWidget *parent = 0);
-    ~BrowserFrame();
+    BrowserMainWindow(QWidget *parent = 0);
+    ~BrowserMainWindow();
 
 public Q_SLOTS:
     void load(const QString & url_str);
@@ -58,12 +59,18 @@ private Q_SLOTS:
     void onInputText();
 
 private:
-    void createLayout();
+    //void createLayout();
     void loadThumbnails();
     void thumbnailModel(QStandardItemModel & model);
+    void setupToolBar();
 
 private:
-    QVBoxLayout            layout_;
+    QAction                homepage_action_;
+    QAction                history_back_action_;
+    QAction                history_forward_action_;
+    QAction                menu_action;
+    UrlLineEdit            address_lineedit;
+    //QVBoxLayout            layout_;
     BrowserView            view_;
     KeyboardDialog         keyboard_;
     QStandardItemModel     model_;

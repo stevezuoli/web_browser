@@ -81,7 +81,7 @@ err0:
     virtual_height_ = height_;
     const char EMULATOR_FB_MAP[] = "/DuoKan/fb_shmem";
 #ifndef WIN32
-    fb_ = open(EMULATOR_FB_MAP, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    /* fb_ = open(EMULATOR_FB_MAP, O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fb_ >= 0)
     {
         lseek(fb_, width_ * height_, SEEK_SET);
@@ -91,7 +91,7 @@ err0:
         stat(EMULATOR_FB_MAP, &statbuf);
         chmod(EMULATOR_FB_MAP, statbuf.st_mode | flags);
         addr_ = (INT8*)mmap(NULL, width_ * height_, PROT_READ | PROT_WRITE, MAP_SHARED, fb_, 0);
-    }
+    }*/
 #endif
 
 #endif

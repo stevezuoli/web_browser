@@ -9,14 +9,17 @@ QT4_WRAP_CPP(MOC_SRCS ${HDRS})
 
 # Source files.
 FILE(GLOB SRCS *.cpp)
+SET(RESOURCE_SRCS res.qrc)
 SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
+QT4_ADD_RESOURCES(RES ${RESOURCE_SRCS})
 
 # Executable file.
-ADD_EXECUTABLE(web_browser ${SRCS})
+ADD_EXECUTABLE(web_browser ${SRCS} ${RES})
 TARGET_LINK_LIBRARIES(web_browser
    network_service
    system
    screen
+   ui
    ${QT_LIBRARIES}
    ${ADD_LIB}
 )

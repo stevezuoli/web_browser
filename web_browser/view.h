@@ -34,6 +34,10 @@ public:
 
     void myLoad(const QUrl & url);
 
+    int progress() const
+    {
+        return progress_;
+    }
 protected:
     virtual QWebView *createWindow(QWebPage::WebWindowType type);
     virtual void mousePressEvent (QMouseEvent * );

@@ -8,6 +8,7 @@ SET(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules")
 Project(Duokan CXX C)
 ENABLE_TESTING()
 
+
 # Global definitions
 SET(ADD_LIB "")
 IF(UNIX OR BUILD_FOR_ARM)
@@ -18,21 +19,21 @@ ELSE (UNIX OR BUILD_FOR_ARM)
 ENDIF (UNIX OR BUILD_FOR_ARM)
 
 # Check to use arm toolchain or not
-IF(BUILD_FOR_ARM)
-    INCLUDE(arm_toolchain)
-    USE_ARM_TOOLCHAIN()
-	include(FindTsLib)
-	#include(FindDBus)
-ELSE(BUILD_FOR_ARM)
+#IF(BUILD_FOR_ARM)
+#    INCLUDE(arm_toolchain)
+#    USE_ARM_TOOLCHAIN()
+#    include(FindTsLib)
+# #include(FindDBus)
+#ELSE(BUILD_FOR_ARM)
 link_directories("/usr/lib")
-ENDIF(BUILD_FOR_ARM)
+#ENDIF(BUILD_FOR_ARM)
 
 # Project include directories.
 INCLUDE_DIRECTORIES(BEFORE
-    ${CMAKE_SOURCE_DIR}/inc
-	${CMAKE_SOURCE_DIR}/libs
-	${CMAKE_SOURCE_DIR}/drivers
-	${CMAKE_SOURCE_DIR}/libs/DkReader/inc
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/libs
+    ${CMAKE_SOURCE_DIR}/drivers
+    ${CMAKE_SOURCE_DIR}/libs/DkReader/inc
 )
 
 # Find thread library for the current platform
@@ -56,4 +57,5 @@ add_subdirectory(drivers/screen)
 add_subdirectory(drivers/kermit)
 add_subdirectory(drivers/QKindleFb)
 add_subdirectory(drivers/KindleTS)
+add_subdirectory(ui)
 

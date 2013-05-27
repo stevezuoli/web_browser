@@ -1,20 +1,24 @@
 #include <QtGui/QtGui>
-#include "frame.h"
+#include "browser_mainwindow.h"
 #include "web_application.h"
 #include "Screen/screen_proxy.h"
 #include "Screen/screen_update_watcher.h"
 
 namespace webbrowser
 {
-
-BrowserFrame::BrowserFrame(QWidget *parent)
+BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 #ifdef Q_WS_QWS
-    : QWidget(parent, Qt::FramelessWindowHint)
+    : QMainWindow(parent, Qt::FramelessWindowHint)
 #else
-    : QWidget(parent)
+    : QMainWindow(parent)
 #endif
-    , layout_(this)
-    , view_(0)
+    , homepage_action_(QIcon(QLatin1String(":/res/browser@kt.png")), "", this)
+    , history_back_action_(QIcon(QLatin1String(":/res/back@kt.png")), "", this)
+    , history_forward_action_(QIcon(QLatin1String(":/res/forward@kt.png")), "", this)
+    , menu_action(QIcon(QLatin1String(":/res/menu@kt.png")), "", this)
+    , address_lineedit(this)
+    //, layout_(this)
+    , view_(NULL)
     , keyboard_status_(KEYBOARD_FREE)
 {
     // setAttribute(Qt::WA_DeleteOnClose, true);
@@ -23,11 +27,13 @@ BrowserFrame::BrowserFrame(QWidget *parent)
 #else
     resize(qApp->desktop()->screenGeometry().size());
 #endif
+    setupToolBar();
 
     setAutoFillBackground(true);
     setBackgroundRole(QPalette::Base);
 
-    createLayout();
+    setCentralWidget(&view_);
+    //createLayout();
 
     connect(&view_, SIGNAL(progressChangedSignal(const int, const int)),
             this, SLOT(onProgressChanged(const int, const int)));
@@ -55,7 +61,7 @@ BrowserFrame::BrowserFrame(QWidget *parent)
 #endif
 }
 
-BrowserFrame::~BrowserFrame()
+BrowserMainWindow::~BrowserMainWindow()
 {
 }
 
@@ -109,7 +115,7 @@ static QUrl guessUrlFromString(const QString &string)
     return url;
 }
 
-void BrowserFrame::load(const QString & url_str)
+void BrowserMainWindow::load(const QString & url_str)
 {
     // Depends on the url is local file or not, if the url is empty
     // we need to display the thumbnail view.
@@ -130,7 +136,7 @@ void BrowserFrame::load(const QString & url_str)
     }
 }
 
-bool BrowserFrame::event(QEvent *e)
+bool BrowserMainWindow::event(QEvent *e)
 {
     if (e->type() == QEvent::ToolTip ||
         e->type() == QEvent::HoverMove ||
@@ -145,16 +151,26 @@ bool BrowserFrame::event(QEvent *e)
     return ret;
 }
 
-void BrowserFrame::createLayout()
+void BrowserMainWindow::setupToolBar()
 {
-    layout_.setContentsMargins(0, 0, 0, 0);
-    layout_.setSpacing(1);
-    layout_.addWidget(&view_);
-    layout_.addWidget(&keyboard_);
-    keyboard_.setVisible(false);
+    QToolBar* navigationBar = addToolBar(tr("Navigation"));
+    navigationBar->addAction(&homepage_action_);
+    navigationBar->addAction(&history_back_action_);
+    navigationBar->addAction(&history_forward_action_);
+    navigationBar->addWidget(&address_lineedit);
+    navigationBar->addAction(&menu_action);
 }
 
-void BrowserFrame::keyReleaseEvent(QKeyEvent *ke)
+//void BrowserMainWindow::createLayout()
+//{
+    //layout_.setContentsMargins(0, 0, 0, 0);
+    //layout_.setSpacing(1);
+    //layout_.addWidget(&view_);
+    //layout_.addWidget(&keyboard_);
+    //keyboard_.setVisible(false);
+//}
+
+void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
 {
     ke->accept();
     switch (ke->key())
@@ -169,7 +185,7 @@ void BrowserFrame::keyReleaseEvent(QKeyEvent *ke)
 }
 
 /// The keyPressEvent could be sent from virtual keyboard.
-void BrowserFrame::keyPressEvent(QKeyEvent * ke)
+void BrowserMainWindow::keyPressEvent(QKeyEvent * ke)
 {
     ke->accept();
 
@@ -182,17 +198,17 @@ void BrowserFrame::keyPressEvent(QKeyEvent * ke)
     }
 }
 
-void BrowserFrame::closeEvent(QCloseEvent *e)
+void BrowserMainWindow::closeEvent(QCloseEvent *e)
 {
     QWidget::closeEvent(e);
 }
 
-void BrowserFrame::onScreenSizeChanged(int)
+void BrowserMainWindow::onScreenSizeChanged(int)
 {
     resize(qApp->desktop()->screenGeometry().size());
 }
 
-void BrowserFrame::onInputFormFocused(const QString& form_id,
+void BrowserMainWindow::onInputFormFocused(const QString& form_id,
                                       const QString& form_name,
                                       const QString& form_action,
                                       const QString& input_type,
@@ -212,7 +228,7 @@ void BrowserFrame::onInputFormFocused(const QString& form_id,
     keyboard_.setVisible(true);
 }
 
-void BrowserFrame::onTextFinished(const QString& text)
+void BrowserMainWindow::onTextFinished(const QString& text)
 {
     // reset keyboard status
     if (keyboard_status_ == FORM_FOCUSED)
@@ -237,7 +253,7 @@ void BrowserFrame::onTextFinished(const QString& text)
     keyboard_status_ = KEYBOARD_FREE;
 }
 
-void BrowserFrame::onInputUrl()
+void BrowserMainWindow::onInputUrl()
 {
     if (keyboard_status_ != URL_INPUTTING || keyboard_.isHidden())
     {
@@ -252,7 +268,7 @@ void BrowserFrame::onInputUrl()
     }
 }
 
-void BrowserFrame::onInputText()
+void BrowserMainWindow::onInputText()
 {
 }
 

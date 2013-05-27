@@ -1,4 +1,6 @@
 #include "web_application.h"
+#include "browser_mainwindow.h"
+#include "bookmark_model.h"
 
 using namespace network_service;
 
@@ -11,7 +13,7 @@ static const int TOTAL_CAPACITY = 4 * 1024 * 1024;
 
 WebApplication::WebApplication(int &argc, char **argv)
     : QApplication(argc, argv)
-    , main_window_(new BrowserFrame())
+    , main_window_(new BrowserMainWindow())
     , bookmark_model_(new BookmarkModel())
 {
     QCoreApplication::setOrganizationName(QLatin1String("Duokan"));
