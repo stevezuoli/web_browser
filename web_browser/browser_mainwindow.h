@@ -3,10 +3,14 @@
 #define WEB_BROWSER_FRAME_H_
 
 #include <QtGui/QtGui>
+#include "NetworkService/xiaomi_account_manager.h"
+
 #include "view.h"
 #include "keyboard_dialog.h"
 #include "bookmark_model.h"
 #include "url_lineedit.h"
+
+using namespace network_service;
 
 namespace webbrowser
 {
@@ -76,6 +80,8 @@ private:
     QStandardItemModel     model_;
     BrowserKeyboardPrivate keyboard_priv_;
     BrowserKeyboardStatus  keyboard_status_;
+
+    XiaomiAccountManager   xiaomi_account_manager_;
 };
 
 }   // namespace webbrowser

@@ -10,8 +10,12 @@ class XiaomiAccountManager : public QObject
 {
     Q_OBJECT
 public:
-    XiaomiAccountManager(QWebView* view);
+    XiaomiAccountManager();
     virtual ~XiaomiAccountManager();
+
+    bool isXiaomiAccountPath(const QString& path);
+    void connectWebView(QWebView* view);
+    void disconnectWebView();
 
 Q_SIGNALS:
     void startLogin();

@@ -132,6 +132,12 @@ void BrowserMainWindow::load(const QString & url_str)
             QString message = tr("%1");
             message = message.arg(host);
         }
+
+        if (xiaomi_account_manager_.isXiaomiAccountPath(url_str))
+        {
+            xiaomi_account_manager_.connectWebView(&view_);
+        }
+
         view_.myLoad(url);
     }
 }

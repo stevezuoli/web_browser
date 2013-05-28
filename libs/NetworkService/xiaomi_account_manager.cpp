@@ -5,6 +5,8 @@
 namespace network_service
 {
 
+#define TEST_SERVER
+
 static const QString BOOK_HOST = "http://book.duokan.com";
 static const QString LOGIN_HOST = "http://api.duokan.com";
 static const QString TEST_HOST = "dkmars";
@@ -12,7 +14,7 @@ static const QString TEST_HOST = "dkmars";
 static const QString XIAOMI_CHECKIN = "/dk_id/api/checkin";
 static const QString XIAOMI_EXCHANGE = "/dk_id/api/exchange";
 static const QString XIAOMI_WEB_REGISTER = "/dk_id/api/xiaomi_web_reg";
-static const QString XIAOMI_WEB_FOLLOWUP = "/dk_id/api/followup";
+static const QString XIAOMI_WEB_FOLLOWUP = "/dk_id/api/kindle_user_login";
 
 static const QString MI_ACCOUNT_SERVICE_LOGIN_URI = "https://account.xiaomi.com/pass/serviceLogin";
 static const QString MI_ACCOUNT_SERVICE_LOGIN_AUTH_URI = "https://account.xiaomi.com/pass/serviceLoginAuth";
@@ -76,13 +78,9 @@ public:
     }
 };
 
-XiaomiAccountManager::XiaomiAccountManager(QWebView* view)
-    : view_(view)
+XiaomiAccountManager::XiaomiAccountManager()
+    : view_(0)
 {
-    // Setup connections.
-    connect(view_, SIGNAL(loadStarted()), this, SLOT(onLoadStarted()));
-    connect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
-    connect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
 }
 
 XiaomiAccountManager::~XiaomiAccountManager()
@@ -160,10 +158,40 @@ void XiaomiAccountManager::onUrlChanged(const QUrl& url)
     }
 }
 
+bool XiaomiAccountManager::isXiaomiAccountPath(const QString& path)
+{
+    return path.contains(DuokanServerConfiguration::xiaomiWebRegisterUrl());
+}
+
+void XiaomiAccountManager::connectWebView(QWebView* view)
+{
+    view_ = view;
+
+    // Setup connections.
+    connect(view_, SIGNAL(loadStarted()), this, SLOT(onLoadStarted()));
+    connect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
+    connect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
+}
+
+void XiaomiAccountManager::disconnectWebView()
+{
+    if (view_ != 0)
+    {
+        // Setup connections.
+        disconnect(view_, SIGNAL(loadStarted()), this, SLOT(onLoadStarted()));
+        disconnect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
+        disconnect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
+
+        view_ = 0;
+    }
+}
+
 bool XiaomiAccountManager::exchangeDuokanToken(const QString& serviceToken)
 {
     // TODO. Parse Xiaomi ID from service Token.
     return false;
 }
+
+
 
 }
