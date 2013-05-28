@@ -2,6 +2,8 @@
 #include "cookie_jar.h"
 
 static const unsigned int JAR_VERSION = 23;
+static const QString XIAOMI_ACCOUNT_NAME = "account.xiaomi.com";
+
 
 QT_BEGIN_NAMESPACE
 QDataStream &operator<<(QDataStream &stream, const QList<QNetworkCookie> &list)
@@ -135,12 +137,14 @@ void CookieJar::save()
     }
     QSettings cookieSettings(directory + QLatin1String("/cookies.ini"), QSettings::IniFormat);
     QList<QNetworkCookie> cookies = allCookies();
-    for (int i = cookies.count() - 1; i >= 0; --i)
-    {
+    //for (int i = cookies.count() - 1; i >= 0; --i)
+    //{
         //if (cookies.at(i).isSessionCookie())
         //    cookies.removeAt(i);
-        qDebug("Cookie Name:%s, Value:%s", qPrintable(cookies.at(i).name()), qPrintable(cookies.at(i).value()));
-    }
+
+        // Get Token from Xiaomi.com and save it by QDomDocument.
+        //qDebug("Cookie Name:%s, Value:%s", qPrintable(cookies.at(i).name()), qPrintable(cookies.at(i).value()));
+    //}
     cookieSettings.setValue(QLatin1String("cookies"), qVariantFromValue<QList<QNetworkCookie> >(cookies));
     cookieSettings.beginGroup(QLatin1String("Exceptions"));
     cookieSettings.setValue(QLatin1String("block"), exceptions_block_);
