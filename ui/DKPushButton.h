@@ -2,7 +2,8 @@
 #define __UI_DKPUSHBUTTON_H__
 
 #include <QPushButton>
-
+namespace ui
+{
 class DKPushButton : public QPushButton
 {
 public:
@@ -11,4 +12,5 @@ public:
     DKPushButton(const QIcon& icon, const QString& text, QWidget* parent = 0);
 };//DKPushButton
 
+}
 #endif//__UI_DKPUSHBUTTON_H__

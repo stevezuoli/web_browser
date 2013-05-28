@@ -23,8 +23,10 @@ public:
     WebApplication(int &argc, char **argv);
     ~WebApplication(void);
 
+    static WebApplication* instance();
     static NetworkAccessManager * accessManager();
 
+    QIcon icon(const QUrl& url) const;
 public Q_SLOTS:
     bool open(const QString & path_name);
     bool close(const QString & path_name);
@@ -43,6 +45,8 @@ private:
 private:
     BrowserMainWindow* main_window_;
     BookmarkModel* bookmark_model_;
+
+    mutable QIcon default_icon_;
 };
 }  // namespace webbrowser
 

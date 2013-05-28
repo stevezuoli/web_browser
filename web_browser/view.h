@@ -34,10 +34,13 @@ public:
 
     void myLoad(const QUrl & url);
 
-    int progress() const
+    int getProgress() const
     {
         return progress_;
     }
+
+    int GetHistoryPageCounts() const;
+    int GetCurrentHistoryPageIndex() const;
 protected:
     virtual QWebView *createWindow(QWebPage::WebWindowType type);
     virtual void mousePressEvent (QMouseEvent * );
@@ -82,7 +85,6 @@ private Q_SLOTS:
 
     void changeFontFamily(const QString&);
     void changeFontSize(qreal size);
-    void onLinkClicked(const QUrl &);
     void reloadCurrentUrl();
 
     void onLoadStarted(void);
@@ -132,8 +134,8 @@ private Q_SLOTS:
 
 Q_SIGNALS:
     void progressChangedSignal(const int, const int);
-    void viewportRangeChangedSignal(const int, const int, const int);
-    void showHome();
+    //void viewportRangeChangedSignal(const int, const int, const int);
+    //void showHome();
 
     void inputFormFocused(const QString& form_id,
                           const QString& form_name,

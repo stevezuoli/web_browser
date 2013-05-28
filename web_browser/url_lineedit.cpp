@@ -1,12 +1,12 @@
 #include "url_lineedit.h"
 #include "view.h"
+#include "web_application.h"
 #include <QtCore/QEvent>
 #include <QtGui/QApplication>
 #include <QtGui/QCompleter>
 #include <QtGui/QFocusEvent>
 #include <QtGui/QHBoxLayout>
 #include <QtGui/QLabel>
-#include <QtGui/QLineEdit>
 #include <QtGui/QPainter>
 #include <QtGui/QStyle>
 #include <QtGui/QStyleOptionFrameV2>
@@ -16,7 +16,7 @@ namespace  webbrowser
 ExLineEdit::ExLineEdit(QWidget *parent)
     : QWidget(parent)
     , m_leftWidget(0)
-    , m_lineEdit(new QLineEdit(this))
+    , m_lineEdit(new DKLineEdit(this))
     //, m_clearButton(0)
 {
     setFocusPolicy(m_lineEdit->focusPolicy());
@@ -24,7 +24,7 @@ ExLineEdit::ExLineEdit(QWidget *parent)
     setSizePolicy(m_lineEdit->sizePolicy());
     setBackgroundRole(m_lineEdit->backgroundRole());
     setMouseTracking(true);
-    setAcceptDrops(true);
+    //setAcceptDrops(true);
     setAttribute(Qt::WA_MacShowFocusRect, true);
     QPalette p = m_lineEdit->palette();
     setPalette(p);
@@ -76,8 +76,8 @@ void ExLineEdit::updateGeometries()
                               m_leftWidget->width(), m_leftWidget->height());
 
     int clearButtonWidth = this->height();
-    m_lineEdit->setGeometry(m_leftWidget->x() + m_leftWidget->width(),        0,
-                            width - clearButtonWidth - m_leftWidget->width(), this->height());
+    m_lineEdit->setGeometry(m_leftWidget->x() + m_leftWidget->width() + 2,        1,
+                            width - clearButtonWidth - m_leftWidget->width(), this->height() - 1);
 
     //m_clearButton->setGeometry(this->width() - clearButtonWidth, 0,
                                //clearButtonWidth, this->height());
@@ -230,7 +230,7 @@ void UrlLineEdit::setWebView(BrowserView *webView)
         this, SLOT(webViewIconChanged()));
     connect(webView, SIGNAL(iconChanged()),
         this, SLOT(webViewIconChanged()));
-    connect(webView, SIGNAL(loadProgress(int)),
+    connect(webView, SIGNAL(progressChangedSignal(const int, const int)),
         this, SLOT(update()));
 }
 
@@ -242,10 +242,10 @@ void UrlLineEdit::webViewUrlChanged(const QUrl &url)
 
 void UrlLineEdit::webViewIconChanged()
 {
-    //QUrl url = (m_webView)  ? m_webView->url() : QUrl();
-    //QIcon icon = BrowserApplication::instance()->icon(url);
-    //QPixmap pixmap(icon.pixmap(16, 16));
-    //m_iconLabel->setPixmap(pixmap);
+    QUrl url = (m_webView)  ? m_webView->url() : QUrl();
+    QIcon icon = WebApplication::instance()->icon(url);
+    QPixmap pixmap(icon.pixmap(16, 16));
+    m_iconLabel->setPixmap(pixmap);
 }
 
 QLinearGradient UrlLineEdit::generateGradient(const QColor &color) const
@@ -283,7 +283,7 @@ void UrlLineEdit::paintEvent(QPaintEvent *event)
     initStyleOption(&panel);
     QRect backgroundRect = style()->subElementRect(QStyle::SE_LineEditContents, &panel, this);
     if (m_webView && !hasFocus()) {
-        int progress = m_webView->progress();
+        int progress = m_webView->getProgress();
         QColor loadingColor = QColor(116, 192, 250);
         painter.setBrush(generateGradient(loadingColor));
         painter.setPen(Qt::transparent);

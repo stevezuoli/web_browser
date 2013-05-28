@@ -31,10 +31,9 @@ BrowserView::BrowserView(QWidget *parent)
     page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
 
     // Setup connections.
-    connect(this, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
     connect(this, SIGNAL(loadStarted(void)), this, SLOT(onLoadStarted(void)));
-    connect(this, SIGNAL(loadProgress(int)), this, SLOT(onLoadProgress(int)));
     connect(this, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
+    connect(this, SIGNAL(loadProgress(int)), this, SLOT(onLoadProgress(int)));
     connect(page(), SIGNAL(repaintRequested(const QRect &)), this, SLOT(onRepaintRequested(const QRect&)));
     connect(page(), SIGNAL(loadingUrl(const QUrl&)), this, SIGNAL(urlChanged(const QUrl &)));
     connect(page(), SIGNAL(downloadRequested(const QNetworkRequest &)), this,
@@ -114,13 +113,6 @@ void BrowserView::hideScrollbar()
     page()->mainFrame()->evaluateJavaScript(code);
 }
 
-void BrowserView::onLinkClicked(const QUrl &new_url)
-{
-    storeConf(url());
-    qDebug("url clicked %s", qPrintable(new_url.toString()));
-    myLoad(new_url);
-}
-
 void BrowserView::onLoadStarted(void)
 {
     qDebug("Load Start");
@@ -151,28 +143,6 @@ void BrowserView::onSavePassword(const QByteArray & data)
         AutoComplete::instance()->setFormHtml(url, current_frame->toHtml());
     }
     AutoComplete::instance()->evaluate(url);
-}
-
-void BrowserView::onLoadProgress(int progress)
-{
-    // For both vertical and horizontal.
-    if (scrollbar_hidden_ <= 2)
-    {
-        QVariant var = page()->currentFrame()->evaluateJavaScript("document.body.style.overflow = 'hidden';");
-        if (!var.isNull())
-        {
-            ++scrollbar_hidden_;
-        }
-    }
-
-    // Reduce screen update.
-    int prev = progress_ / 10;
-    int now = progress / 10;
-    if (prev != now)
-    {
-        progress_ = progress;
-        reportCurrentProcess();
-    }
 }
 
 void BrowserView::onLoadFinished(bool ok)
@@ -618,11 +588,11 @@ QPointF BrowserView::currentOffset()
 void BrowserView::updateViewportRange()
 {
     // Get current location.
-    QSizeF s = page()->currentFrame()->contentsSize();
-    QPointF pt = currentOffset();
-    emit viewportRangeChangedSignal(static_cast<int>(pt.y()),
-                                    static_cast<int>(rect().height()),
-                                    static_cast<int>(s.height()));
+    //QSizeF s = page()->currentFrame()->contentsSize();
+    //QPointF pt = currentOffset();
+    //emit viewportRangeChangedSignal(static_cast<int>(pt.y()),
+                                    //static_cast<int>(rect().height()),
+                                    //static_cast<int>(s.height()));
 }
 
 void BrowserView::formFocusedAddValue (const QString& form_id,
@@ -891,6 +861,22 @@ void BrowserView::clearCookies()
     WebApplication::accessManager()->clearCookies();
 }
 
+int BrowserView::GetHistoryPageCounts() const
+{
+    return history() ? history()->count() : -1;
+}
 
+int BrowserView::GetCurrentHistoryPageIndex() const
+{
+    return history() ? history()->currentItemIndex() : -1;
+}
 
+void BrowserView::onLoadProgress(int progress)
+{
+    if (progress_/10 != progress/10)
+    {
+        progress_ = progress;
+        reportCurrentProcess();
+    }
+}
 }

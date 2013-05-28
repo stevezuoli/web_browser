@@ -3,10 +3,16 @@
 
 #include <QLineEdit>
 
+namespace ui
+{
 class DKLineEdit : public QLineEdit
 {
 public:
     DKLineEdit(QWidget* parent = 0);
     DKLineEdit(const QString& contents, QWidget* parent = 0);
+private:
+    void setDKStyleSheet();
+    void InitDKProperty();
 };//DKLineEdit
+}
 #endif//__UI_DKLINEEDIT_H__

@@ -4,8 +4,9 @@
 #include <QtCore/QUrl>
 #include <QtGui/QWidget>
 #include <QtGui/QStyleOptionFrame>
+#include "ui/DKLineEdit.h"
 
-class QLineEdit;
+using namespace ui;
 
 namespace webbrowser
 {
