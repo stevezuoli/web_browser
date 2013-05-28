@@ -1,6 +1,7 @@
 #include "web_application.h"
 #include "browser_mainwindow.h"
 #include "bookmark_model.h"
+#include "const_strings.h"
 
 using namespace network_service;
 
@@ -10,6 +11,11 @@ namespace webbrowser
 static const int CACHE_MIN_DEAD_CAPACITY = 1024 * 1024;
 static const int CACHE_MAX_DEAD = 3 * 1024 * 1024;
 static const int TOTAL_CAPACITY = 4 * 1024 * 1024;
+
+WebApplication* WebApplication::instance()
+{
+    return static_cast<WebApplication*>(QCoreApplication::instance());
+}
 
 WebApplication::WebApplication(int &argc, char **argv)
     : QApplication(argc, argv)
@@ -22,6 +28,13 @@ WebApplication::WebApplication(int &argc, char **argv)
     QWebSettings::setMaximumPagesInCache(4);
     QWebSettings::setObjectCacheCapacities(CACHE_MIN_DEAD_CAPACITY, CACHE_MAX_DEAD, TOTAL_CAPACITY);
 
+    QString dirName = QString(ConstStrings::WEBBROWSER_RES_PATH) + QLatin1String("/.") + QString(ConstStrings::FAVICONS);
+    QDir dir(dirName);
+    if (!dir.exists())
+    {
+        dir.mkpath(dirName);
+    }
+    QWebSettings::setIconDatabasePath(dirName);
     //main_window_->attachBookmarkModel(bookmark_model_.get());
     initTheme();
     loadExternalFonts();
@@ -118,6 +131,18 @@ void WebApplication::loadSettings()
     settings.endGroup();
 }
 
+QIcon WebApplication::icon(const QUrl& url) const
+{
+    QIcon icon = QWebSettings::iconForUrl(url);
+    if (!icon.isNull())
+    {
+        return icon.pixmap(16,16);
+    }
+    if (default_icon_.isNull())
+        default_icon_ = QIcon(QLatin1String(":/res/browser@kt.png"));
+
+    return default_icon_.pixmap(16,16);
+}
 } // namespace webbrowser
 
 

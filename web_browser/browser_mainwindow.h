@@ -9,6 +9,9 @@
 #include "keyboard_dialog.h"
 #include "bookmark_model.h"
 #include "url_lineedit.h"
+#include "ui/DKToolBar.h"
+
+using namespace ui;
 
 using namespace network_service;
 
@@ -61,9 +64,20 @@ private Q_SLOTS:
 
     void onInputUrl();
     void onInputText();
+    void onUrlChanged(const QUrl& url);
+    void onLinkClicked(const QUrl& url);
+    void openUrlInAddress();
 
+    void showHomePage();
+    void showBackHistoryPage();
+    void showForwardHistoryPage();
+    void showMenu();
+
+    void setHomePageUrl(const QString& url)
+    {
+        m_homePageUrl = url;
+    }
 private:
-    //void createLayout();
     void loadThumbnails();
     void thumbnailModel(QStandardItemModel & model);
     void setupToolBar();
@@ -72,9 +86,9 @@ private:
     QAction                homepage_action_;
     QAction                history_back_action_;
     QAction                history_forward_action_;
-    QAction                menu_action;
-    UrlLineEdit            address_lineedit;
-    //QVBoxLayout            layout_;
+    QAction                menu_action_;
+    UrlLineEdit            address_lineedit_;
+    DKToolBar              navigation_toolbar_;
     BrowserView            view_;
     KeyboardDialog         keyboard_;
     QStandardItemModel     model_;
@@ -82,6 +96,7 @@ private:
     BrowserKeyboardStatus  keyboard_status_;
 
     XiaomiAccountManager   xiaomi_account_manager_;
+    QString                m_homePageUrl;
 };
 
 }   // namespace webbrowser

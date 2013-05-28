@@ -14,6 +14,8 @@
     <file>res/forward_grey@kp.png</file>
     <file>res/browser@kt.png</file>
     <file>res/browser@kp.png</file>
+    <file>res/homepage@kt.png</file>
+    <file>res/homepage@kp.png</file>
     <file>res/jquery.min.js</file>
     <file>res/load_fail.html</file>
     <file>res/ota_status.html</file>

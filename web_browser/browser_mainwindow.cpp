@@ -1,6 +1,7 @@
 #include <QtGui/QtGui>
 #include "browser_mainwindow.h"
 #include "web_application.h"
+#include "const_strings.h"
 #include "Screen/screen_proxy.h"
 #include "Screen/screen_update_watcher.h"
 
@@ -12,14 +13,15 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 #else
     : QMainWindow(parent)
 #endif
-    , homepage_action_(QIcon(QLatin1String(":/res/browser@kt.png")), "", this)
+    , homepage_action_(QIcon(QLatin1String(":/res/homepage@kt.png")), "", this)
     , history_back_action_(QIcon(QLatin1String(":/res/back@kt.png")), "", this)
     , history_forward_action_(QIcon(QLatin1String(":/res/forward@kt.png")), "", this)
-    , menu_action(QIcon(QLatin1String(":/res/menu@kt.png")), "", this)
-    , address_lineedit(this)
-    //, layout_(this)
+    , menu_action_(QIcon(QLatin1String(":/res/menu@kt.png")), "", this)
+    , address_lineedit_(this)
+    , navigation_toolbar_(tr("Navigation"), this)
     , view_(NULL)
     , keyboard_status_(KEYBOARD_FREE)
+    , m_homePageUrl(ConstStrings::HOME_PAGE)
 {
     // setAttribute(Qt::WA_DeleteOnClose, true);
 #ifndef Q_WS_QWS
@@ -33,16 +35,16 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     setBackgroundRole(QPalette::Base);
 
     setCentralWidget(&view_);
-    //createLayout();
+    address_lineedit_.setWebView(&view_);
+    
+    connect(&homepage_action_, SIGNAL(triggered()), this, SLOT(showHomePage()));
+    connect(&history_back_action_, SIGNAL(triggered()), this, SLOT(showBackHistoryPage()));
+    connect(&history_forward_action_, SIGNAL(triggered()), this, SLOT(showForwardHistoryPage()));
+    connect(&menu_action_, SIGNAL(triggered()), this, SLOT(showMenu()));
+    connect(address_lineedit_.lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
 
-    connect(&view_, SIGNAL(progressChangedSignal(const int, const int)),
-            this, SLOT(onProgressChanged(const int, const int)));
-    connect(&view_, SIGNAL(showHome()), this, SLOT(showHomePage()));
-    connect(&view_, SIGNAL(connectionChanged(WifiProfile&, WpaConnection::ConnectionState)),
-            this, SLOT(onConnectionChanged(WifiProfile&, WpaConnection::ConnectionState)));
-    connect(&view_, SIGNAL(viewportRangeChangedSignal(const int, const int, const int)),
-            this, SLOT(onRangeChanged(const int, const int, const int)));
-
+    connect(&view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
+    connect(&view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
     connect(&view_, SIGNAL(inputFormFocused(const QString&, const QString&,
                                             const QString&, const QString&,
                                             const QString&, const QString&)),
@@ -50,7 +52,6 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
                                           const QString&, const QString&,
                                           const QString&, const QString&)));
     connect(&view_, SIGNAL(inputFormLostFocus()), &keyboard_, SLOT(hide()));
-    connect(&view_, SIGNAL(focusOut()), this, SLOT(onWebViewFocusOut()));
 
     // Keyboard
     connect(&keyboard_, SIGNAL(textFinsihed(const QString&)), this, SLOT(onTextFinished(const QString&)));
@@ -159,22 +160,15 @@ bool BrowserMainWindow::event(QEvent *e)
 
 void BrowserMainWindow::setupToolBar()
 {
-    QToolBar* navigationBar = addToolBar(tr("Navigation"));
-    navigationBar->addAction(&homepage_action_);
-    navigationBar->addAction(&history_back_action_);
-    navigationBar->addAction(&history_forward_action_);
-    navigationBar->addWidget(&address_lineedit);
-    navigationBar->addAction(&menu_action);
+    addToolBar(&navigation_toolbar_);
+    navigation_toolbar_.setIconSize(QSize(40, 72));
+    address_lineedit_.setFixedHeight(41);
+    navigation_toolbar_.addAction(&homepage_action_);
+    navigation_toolbar_.addAction(&history_back_action_);
+    navigation_toolbar_.addAction(&history_forward_action_);
+    navigation_toolbar_.addWidget(&address_lineedit_);
+    navigation_toolbar_.addAction(&menu_action_);
 }
-
-//void BrowserMainWindow::createLayout()
-//{
-    //layout_.setContentsMargins(0, 0, 0, 0);
-    //layout_.setSpacing(1);
-    //layout_.addWidget(&view_);
-    //layout_.addWidget(&keyboard_);
-    //keyboard_.setVisible(false);
-//}
 
 void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
 {
@@ -278,4 +272,48 @@ void BrowserMainWindow::onInputText()
 {
 }
 
+void BrowserMainWindow::showHomePage()
+{
+    load(m_homePageUrl);
 }
+
+void BrowserMainWindow::showBackHistoryPage()
+{
+    view_.back();
+}
+
+void BrowserMainWindow::showForwardHistoryPage()
+{
+    view_.forward();
+}
+
+void BrowserMainWindow::showMenu()
+{
+}
+
+void BrowserMainWindow::onUrlChanged(const QUrl& url)
+{
+    qDebug("BrowserMainWindow::onUrlChanged %s", qPrintable(url.toString()));
+    int current = view_.GetCurrentHistoryPageIndex();
+    int total = view_.GetHistoryPageCounts();
+    if (current >= 0 && total > 0)
+    {
+        history_back_action_.setEnabled(current > 0);
+        history_forward_action_.setEnabled(current != total -1);
+    }
+
+    address_lineedit_.lineEdit()->setText(url.toString());
+}
+
+void BrowserMainWindow::onLinkClicked(const QUrl &new_url)
+{
+    load(new_url.toString());
+}
+
+void BrowserMainWindow::openUrlInAddress()
+{
+    qDebug("BrowserMainWindow::openUrlInAddress, %s", address_lineedit_.lineEdit()->text().toStdString().c_str());
+    load(address_lineedit_.lineEdit()->text());
+}
+}
+
