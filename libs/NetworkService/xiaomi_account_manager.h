@@ -18,6 +18,7 @@ public:
     void disconnectWebView();
 
     QString generateXiaomiAccountLoginUrl();
+    void login();
 
 Q_SIGNALS:
     void startLogin();
@@ -28,6 +29,9 @@ private Q_SLOTS:
     void onLoadStarted();
     void onLoadFinished(bool ok);
     void onUrlChanged(const QUrl& url);
+
+private:
+    void load(const QString& path);
 
 private:
     QString getServiceTokenFromCookies(const QList<QNetworkCookie>& cookies);
