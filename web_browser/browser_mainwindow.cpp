@@ -134,19 +134,22 @@ void BrowserMainWindow::load(const QString & url_str)
     }
     else
     {
-        QString host = url.host();
-        if (!host.isEmpty())
-        {
-            QString message = tr("%1");
-            message = message.arg(host);
-        }
-
         if (xiaomi_account_manager_.isXiaomiAccountPath(url_str))
         {
             xiaomi_account_manager_.connectWebView(&view_);
+            xiaomi_account_manager_.login();
         }
+        else
+        {
+            QString host = url.host();
+            if (!host.isEmpty())
+            {
+                QString message = tr("%1");
+                message = message.arg(host);
+            }
 
-        view_.myLoad(url);
+            view_.myLoad(url);
+        }
     }
 }
 

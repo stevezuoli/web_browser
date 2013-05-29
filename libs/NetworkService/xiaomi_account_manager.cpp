@@ -9,7 +9,7 @@ namespace network_service
 
 static const QString BOOK_HOST = "http://book.duokan.com";
 static const QString LOGIN_HOST = "http://api.duokan.com";
-static const QString TEST_HOST = "dkmars";
+static const QString TEST_HOST = "http://dkmars";
 
 static const QString XIAOMI_CHECKIN = "/dk_id/api/checkin";
 static const QString XIAOMI_EXCHANGE = "/dk_id/api/exchange";
@@ -19,6 +19,50 @@ static const QString XIAOMI_WEB_FOLLOWUP = "/dk_id/api/kindle_user_login";
 static const QString MI_ACCOUNT_SERVICE_LOGIN_URI = "https://account.xiaomi.com/pass/serviceLogin";
 static const QString MI_ACCOUNT_SERVICE_LOGIN_AUTH_URI = "https://account.xiaomi.com/pass/serviceLoginAuth";
 static const QString MI_ACCOUNT_REGISTERED_CALLBACK_URI = "http://login.dushu.xiaomi.com/dk_id/api/checkin";
+
+static char IntToHexChar(int i)
+{
+    if (0 <= i && i <= 9)
+    {
+        return i + '0';
+    }
+    else if (i < 16)
+    {
+        return i - 10 + 'a';
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+QString UrlEncode(const char* s)
+{
+    if (NULL == s)
+    {
+        return "";
+    }
+    const unsigned char* us = (const unsigned char*)s;
+    QString result;
+    while (unsigned int c = *us++)
+    {
+        if (isalnum(c))
+        {
+            result.push_back(c);
+        }
+        else if (' ' == c)
+        {
+            result.push_back('+');
+        }
+        else
+        {
+            result.push_back('%');
+            result.push_back(IntToHexChar(c / 16));
+            result.push_back(IntToHexChar(c % 16));
+        }
+    }
+    return result;
+}
 
 class DuokanServerConfiguration
 {
@@ -53,19 +97,22 @@ public:
     static QString xiaomiWebRegisterUrl()
     {
 #ifdef TEST_SERVER
-        return TEST_HOST + XIAOMI_WEB_REGISTER;
+        return (TEST_HOST + XIAOMI_WEB_REGISTER);
 #else
-        return LOGIN_HOST + XIAOMI_WEB_REGISTER;
+        return (LOGIN_HOST + XIAOMI_WEB_REGISTER);
 #endif
+
     }
 
     static QString xiaomiFollowupUrl()
     {
 #ifdef TEST_SERVER
-        return TEST_HOST + XIAOMI_WEB_FOLLOWUP;
+        QString str_url(TEST_HOST + XIAOMI_WEB_FOLLOWUP);
 #else
-        return LOGIN_HOST + XIAOMI_WEB_FOLLOWUP;
+        QString str_url(LOGIN_HOST + XIAOMI_WEB_FOLLOWUP);
 #endif
+        //QString transfered_url = UrlEncode(str_url.toStdString().c_str());
+        return str_url;
     }
 
     static QString xiaomiAccountCallback()
@@ -85,6 +132,11 @@ XiaomiAccountManager::XiaomiAccountManager()
 
 XiaomiAccountManager::~XiaomiAccountManager()
 {
+}
+
+QString XiaomiAccountManager::generateXiaomiAccountLoginUrl()
+{
+    return DuokanServerConfiguration::xiaomiWebRegisterUrl(); //+ "?followup=" + DuokanServerConfiguration::xiaomiFollowupUrl();
 }
 
 QString XiaomiAccountManager::getServiceTokenFromCookies(const QList<QNetworkCookie>& cookies)
@@ -130,29 +182,37 @@ void XiaomiAccountManager::onLoadStarted()
 void XiaomiAccountManager::onLoadFinished(bool ok)
 {
     QUrl current_url = view_->url();
-    const QString & myUrl = current_url.toString();
+    QString myUrl = current_url.toEncoded();
     if (myUrl.startsWith(MI_ACCOUNT_SERVICE_LOGIN_URI))
     {
         emit loginFinished(ok);
     }
-}
-
-void XiaomiAccountManager::onUrlChanged(const QUrl& url)
-{
-    QUrl current_url = view_->url();
-    QString myUrl = current_url.toString();
-    if (myUrl.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI) &&
+    else if (myUrl.contains(DuokanServerConfiguration::xiaomiAccountCallback()))
+    {
+        qDebug("test");
+    }
+    else if (myUrl.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI) &&
         !DuokanServerConfiguration::isOnline())
     {
         CookieJar* cookieJar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
         cookieJar->clear();
         QString targetUrl = myUrl.replace(MI_ACCOUNT_REGISTERED_CALLBACK_URI,
             DuokanServerConfiguration::xiaomiAccountCallback());
-        view_->load(QUrl(targetUrl));
+        load(targetUrl);
+    }
+}
+
+void XiaomiAccountManager::onUrlChanged(const QUrl& url)
+{
+    QString myUrl = url.toString();
+    if (myUrl.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI) &&
+        !DuokanServerConfiguration::isOnline())
+    {
+        //view_->stop();
     }
     else if (myUrl.startsWith(DuokanServerConfiguration::xiaomiFollowupUrl()))
     {
-        QList<QNetworkCookie> cookies = getAccessManagerInstance()->cookieJar()->cookiesForUrl(current_url);
+        QList<QNetworkCookie> cookies = getAccessManagerInstance()->cookieJar()->cookiesForUrl(url);
         QString serviceToken = getServiceTokenFromCookies(cookies);
         exchangeDuokanToken(serviceToken);
     }
@@ -192,6 +252,23 @@ bool XiaomiAccountManager::exchangeDuokanToken(const QString& serviceToken)
     return false;
 }
 
+void XiaomiAccountManager::load(const QString& path)
+{
+    QUrl my_url = guessUrlFromString(path);
+    if (view_ != 0 && my_url.isValid())
+    {
+        view_->load(my_url);
+    }
+}
 
+void XiaomiAccountManager::login()
+{
+    QString login_str = generateXiaomiAccountLoginUrl();
+    QUrl url = guessUrlFromString(login_str);
+    url.addEncodedQueryItem("followup", DuokanServerConfiguration::xiaomiFollowupUrl().toUtf8());
+
+    QByteArray str = url.toEncoded();
+    view_->load(url);
+}
 
 }
