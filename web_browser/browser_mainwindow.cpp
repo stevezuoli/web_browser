@@ -127,16 +127,18 @@ void BrowserMainWindow::load(const QString & url_str)
     }
     else
     {
+        if (xiaomi_account_manager_.isXiaomiAccountPath(url_str))
+        {
+            xiaomi_account_manager_.connectWebView(&view_);
+            QString login_str = xiaomi_account_manager_.generateXiaomiAccountLoginUrl();
+            url = guessUrlFromString(login_str);
+        }
+
         QString host = url.host();
         if (!host.isEmpty())
         {
             QString message = tr("%1");
             message = message.arg(host);
-        }
-
-        if (xiaomi_account_manager_.isXiaomiAccountPath(url_str))
-        {
-            xiaomi_account_manager_.connectWebView(&view_);
         }
 
         view_.myLoad(url);

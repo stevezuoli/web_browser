@@ -19,19 +19,21 @@ ELSE (UNIX OR BUILD_FOR_ARM)
 ENDIF (UNIX OR BUILD_FOR_ARM)
 
 #CMAKE_BUILD_TYPE could be Debug/Release/RelWithDebINfo/MinSizeRel
+IF(UNIX OR BUILD_FOR_ARM)
 SET(CMAKE_BUILD_TYPE "Debug")
 SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
 SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
+ENDIF (UNIX OR BUILD_FOR_ARM)
 
 # Check to use arm toolchain or not
-#IF(BUILD_FOR_ARM)
-#    INCLUDE(arm_toolchain)
-#    USE_ARM_TOOLCHAIN()
-#    include(FindTsLib)
-# #include(FindDBus)
-#ELSE(BUILD_FOR_ARM)
+IF(BUILD_FOR_ARM)
+    INCLUDE(arm_toolchain)
+    USE_ARM_TOOLCHAIN()
+    include(FindTsLib)
+ #include(FindDBus)
+ELSE(BUILD_FOR_ARM)
 link_directories("/usr/lib")
-#ENDIF(BUILD_FOR_ARM)
+ENDIF(BUILD_FOR_ARM)
 
 # Project include directories.
 INCLUDE_DIRECTORIES(BEFORE

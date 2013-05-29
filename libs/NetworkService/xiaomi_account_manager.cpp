@@ -87,6 +87,11 @@ XiaomiAccountManager::~XiaomiAccountManager()
 {
 }
 
+QString XiaomiAccountManager::generateXiaomiAccountLoginUrl()
+{
+    return DuokanServerConfiguration::xiaomiWebRegisterUrl() + "?followup=" + DuokanServerConfiguration::xiaomiFollowupUrl();
+}
+
 QString XiaomiAccountManager::getServiceTokenFromCookies(const QList<QNetworkCookie>& cookies)
 {
     for (int i = cookies.count() - 1; i >= 0; --i)
@@ -130,29 +135,35 @@ void XiaomiAccountManager::onLoadStarted()
 void XiaomiAccountManager::onLoadFinished(bool ok)
 {
     QUrl current_url = view_->url();
-    const QString & myUrl = current_url.toString();
+    QString myUrl = current_url.toString();
     if (myUrl.startsWith(MI_ACCOUNT_SERVICE_LOGIN_URI))
     {
         emit loginFinished(ok);
+    }
+
+    if (myUrl.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI) &&
+        !DuokanServerConfiguration::isOnline())
+    {
+        //view_->load(QUrl(guessUrlFromString("www.baidu.com")));
+        CookieJar* cookieJar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
+        cookieJar->clear();
+        QString targetUrl = myUrl.replace(MI_ACCOUNT_REGISTERED_CALLBACK_URI,
+            DuokanServerConfiguration::xiaomiAccountCallback());
+        view_->load(QUrl(guessUrlFromString(targetUrl)));
     }
 }
 
 void XiaomiAccountManager::onUrlChanged(const QUrl& url)
 {
-    QUrl current_url = view_->url();
-    QString & myUrl = current_url.toString();
+    QString myUrl = url.toString();
     if (myUrl.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI) &&
         !DuokanServerConfiguration::isOnline())
     {
-        CookieJar* cookieJar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
-        cookieJar->clear();
-        QString targetUrl = myUrl.replace(MI_ACCOUNT_REGISTERED_CALLBACK_URI,
-            DuokanServerConfiguration::xiaomiAccountCallback());
-        view_->load(QUrl(targetUrl));
+        //view_->stop();
     }
     else if (myUrl.startsWith(DuokanServerConfiguration::xiaomiFollowupUrl()))
     {
-        QList<QNetworkCookie> cookies = getAccessManagerInstance()->cookieJar()->cookiesForUrl(current_url);
+        QList<QNetworkCookie> cookies = getAccessManagerInstance()->cookieJar()->cookiesForUrl(url);
         QString serviceToken = getServiceTokenFromCookies(cookies);
         exchangeDuokanToken(serviceToken);
     }

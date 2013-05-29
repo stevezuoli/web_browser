@@ -17,6 +17,8 @@ public:
     void connectWebView(QWebView* view);
     void disconnectWebView();
 
+    QString generateXiaomiAccountLoginUrl();
+
 Q_SIGNALS:
     void startLogin();
     void startLoginAuth();
