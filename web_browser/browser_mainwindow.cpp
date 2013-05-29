@@ -4,6 +4,7 @@
 #include "const_strings.h"
 #include "Screen/screen_proxy.h"
 #include "Screen/screen_update_watcher.h"
+#include "ui/DKSoftKeyboardIME.h"
 
 namespace webbrowser
 {
@@ -42,19 +43,25 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     connect(&history_forward_action_, SIGNAL(triggered()), this, SLOT(showForwardHistoryPage()));
     connect(&menu_action_, SIGNAL(triggered()), this, SLOT(showMenu()));
     connect(address_lineedit_.lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
+    connect(address_lineedit_.lineEdit(), SIGNAL(focusIn()), this, SLOT(showSoftKeyboardIME()));
 
     connect(&view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
     connect(&view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
-    connect(&view_, SIGNAL(inputFormFocused(const QString&, const QString&,
-                                            const QString&, const QString&,
-                                            const QString&, const QString&)),
-            this, SLOT(onInputFormFocused(const QString&, const QString&,
-                                          const QString&, const QString&,
-                                          const QString&, const QString&)));
-    connect(&view_, SIGNAL(inputFormLostFocus()), &keyboard_, SLOT(hide()));
+    connect(&view_, SIGNAL(focusOut()), this, SLOT(showSoftKeyboardIME()));
+
+    connect(DKSoftKeyboardIME::GetInstance(), SIGNAL(textInput(const QString&)), this, SLOT(onTextInput(const QString&)));
+    connect(DKSoftKeyboardIME::GetInstance(), SIGNAL(enterPressed()), this, SLOT(openUrlInAddress()));
+    connect(DKSoftKeyboardIME::GetInstance(), SIGNAL(delPressed()), this, SLOT(onTextDel()));
+    //connect(&view_, SIGNAL(inputFormFocused(const QString&, const QString&,
+                                            //const QString&, const QString&,
+                                            //const QString&, const QString&)),
+            //this, SLOT(onInputFormFocused(const QString&, const QString&,
+                                          //const QString&, const QString&,
+                                          //const QString&, const QString&)));
+    //connect(&view_, SIGNAL(inputFormLostFocus()), &keyboard_, SLOT(hide()));
 
     // Keyboard
-    connect(&keyboard_, SIGNAL(textFinsihed(const QString&)), this, SLOT(onTextFinished(const QString&)));
+    //connect(&keyboard_, SIGNAL(textFinsihed(const QString&)), this, SLOT(onTextFinished(const QString&)));
 
 #ifdef Q_WS_QWS
     connect(qApp->desktop(), SIGNAL(resized(int)),
@@ -208,69 +215,50 @@ void BrowserMainWindow::onScreenSizeChanged(int)
     resize(qApp->desktop()->screenGeometry().size());
 }
 
-void BrowserMainWindow::onInputFormFocused(const QString& form_id,
-                                      const QString& form_name,
-                                      const QString& form_action,
-                                      const QString& input_type,
-                                      const QString& input_id,
-                                      const QString& input_name)
-{
-    // fill keyboard private data
-    keyboard_priv_.form_action = form_action;
-    keyboard_priv_.form_id     = form_id;
-    keyboard_priv_.form_name   = form_name;
-    keyboard_priv_.input_type  = input_type;
-    keyboard_priv_.input_id    = input_id;
-    keyboard_priv_.input_name  = input_name;
+//void BrowserMainWindow::onInputFormFocused(const QString& form_id,
+                                      //const QString& form_name,
+                                      //const QString& form_action,
+                                      //const QString& input_type,
+                                      //const QString& input_id,
+                                      //const QString& input_name)
+//{
+    //// fill keyboard private data
+    //keyboard_priv_.form_action = form_action;
+    //keyboard_priv_.form_id     = form_id;
+    //keyboard_priv_.form_name   = form_name;
+    //keyboard_priv_.input_type  = input_type;
+    //keyboard_priv_.input_id    = input_id;
+    //keyboard_priv_.input_name  = input_name;
 
-    // update keyboard status
-    keyboard_status_ = FORM_FOCUSED;
-    keyboard_.setVisible(true);
-}
+    //// update keyboard status
+    //keyboard_status_ = FORM_FOCUSED;
+    //keyboard_.setVisible(true);
+//}
 
-void BrowserMainWindow::onTextFinished(const QString& text)
-{
-    // reset keyboard status
-    if (keyboard_status_ == FORM_FOCUSED)
-    {
-        view_.formFocusedAddValue(keyboard_priv_.form_id,
-                                  keyboard_priv_.form_name,
-                                  keyboard_priv_.form_action,
-                                  keyboard_priv_.input_type,
-                                  keyboard_priv_.input_id,
-                                  keyboard_priv_.input_name,
-                                  text);
-    }
+//void BrowserMainWindow::onTextFinished(const QString& text)
+//{
+    //// reset keyboard status
+    //if (keyboard_status_ == FORM_FOCUSED)
+    //{
+        //view_.formFocusedAddValue(keyboard_priv_.form_id,
+                                  //keyboard_priv_.form_name,
+                                  //keyboard_priv_.form_action,
+                                  //keyboard_priv_.input_type,
+                                  //keyboard_priv_.input_id,
+                                  //keyboard_priv_.input_name,
+                                  //text);
+    //}
 
-    // refresh screen
-    keyboard_.hide();
-    keyboard_.clearText();
+    //// refresh screen
+    //keyboard_.hide();
+    //keyboard_.clearText();
 
-    if (keyboard_status_ == URL_INPUTTING)
-    {
-        load(text);
-    }
-    keyboard_status_ = KEYBOARD_FREE;
-}
-
-void BrowserMainWindow::onInputUrl()
-{
-    if (keyboard_status_ != URL_INPUTTING || keyboard_.isHidden())
-    {
-        // update keyboard status
-        keyboard_status_ = URL_INPUTTING;
-        keyboard_.setVisible(true);
-    }
-    else if (keyboard_.isVisible())
-    {
-        keyboard_.setVisible(false);
-        keyboard_status_ = KEYBOARD_FREE;
-    }
-}
-
-void BrowserMainWindow::onInputText()
-{
-}
+    //if (keyboard_status_ == URL_INPUTTING)
+    //{
+        //load(text);
+    //}
+    //keyboard_status_ = KEYBOARD_FREE;
+//}
 
 void BrowserMainWindow::showHomePage()
 {
@@ -314,6 +302,31 @@ void BrowserMainWindow::openUrlInAddress()
 {
     qDebug("BrowserMainWindow::openUrlInAddress, %s", address_lineedit_.lineEdit()->text().toStdString().c_str());
     load(address_lineedit_.lineEdit()->text());
+}
+
+void BrowserMainWindow::showSoftKeyboardIME()
+{
+    DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
+    if (ime)
+    {
+        ime->setParent(this);
+        DKSoftKeyboardIME::GetInstance()->show();
+    }
+}
+
+void BrowserMainWindow::onTextInput(const QString& text)
+{
+    address_lineedit_.lineEdit()->insert(text);
+}
+
+void BrowserMainWindow::onTextDel()
+{
+    QLineEdit* lineEdit = address_lineedit_.lineEdit();
+    if (lineEdit)
+    {
+        QString originText = lineEdit->text();
+        lineEdit->setText(originText.left(originText.count() -1));
+    }
 }
 }
 

@@ -45,4 +45,16 @@ void DKLineEdit::setDKStyleSheet()
 {
     setStyleSheet(LINE_EDIT_STYLE);
 }
+
+void DKLineEdit::focusInEvent(QFocusEvent* e)
+{
+    emit focusIn();
+    QLineEdit::focusInEvent(e);
+}
+
+void DKLineEdit::focusOutEvent(QFocusEvent* e)
+{
+    emit focusOut();
+    QLineEdit::focusOutEvent(e);
+}
 }

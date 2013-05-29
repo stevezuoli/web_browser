@@ -16,6 +16,34 @@
     <file>res/browser@kp.png</file>
     <file>res/homepage@kt.png</file>
     <file>res/homepage@kp.png</file>
+    <file>res/ime_key_50@kt.png</file>
+    <file>res/ime_key_50_pressed@kt.png</file>
+    <file>res/ime_key_64@kp.png</file>
+    <file>res/ime_key_64_pressed@kp.png</file>
+    <file>res/ime_key_79@kt.png</file>
+    <file>res/ime_key_79_pressed@kt.png</file>
+    <file>res/ime_key_96@kp.png</file>
+    <file>res/ime_key_96_pressed@kp.png</file>
+    <file>res/ime_key_lang_cn@kp.png</file>
+    <file>res/ime_key_lang_cn@kt.png</file>
+    <file>res/ime_key_lang_cn_pressed@kp.png</file>
+    <file>res/ime_key_lang_cn_pressed@kt.png</file>
+    <file>res/ime_key_lang_en@kp.png</file>
+    <file>res/ime_key_lang_en@kt.png</file>
+    <file>res/ime_key_lang_en_pressed@kp.png</file>
+    <file>res/ime_key_lang_en_pressed@kt.png</file>
+    <file>res/ime_key_space@kp.png</file>
+    <file>res/ime_key_space@kt.png</file>
+    <file>res/ime_key_space_pressed@kp.png</file>
+    <file>res/ime_key_space_pressed@kt.png</file>
+    <file>res/ime_key_enter@kt.png</file>
+    <file>res/ime_key_enter_pressed@kt.png</file>
+    <file>res/ime_key_enter@kp.png</file>
+    <file>res/ime_key_enter_pressed@kp.png</file>
+    <file>res/ime_key_del@kt.png</file>
+    <file>res/ime_key_del_pressed@kt.png</file>
+    <file>res/ime_key_del@kp.png</file>
+    <file>res/ime_key_del_pressed@kp.png</file>
     <file>res/jquery.min.js</file>
     <file>res/load_fail.html</file>
     <file>res/ota_status.html</file>

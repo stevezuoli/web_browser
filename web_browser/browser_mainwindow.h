@@ -6,8 +6,8 @@
 #include "NetworkService/xiaomi_account_manager.h"
 
 #include "view.h"
-#include "keyboard_dialog.h"
-#include "bookmark_model.h"
+//#include "keyboard_dialog.h"
+//#include "bookmark_model.h"
 #include "url_lineedit.h"
 #include "ui/DKToolBar.h"
 
@@ -54,16 +54,15 @@ protected:
     void closeEvent(QCloseEvent *e);
 
 private Q_SLOTS:
-    void onInputFormFocused(const QString & form_id,
-                            const QString & form_name,
-                            const QString & form_action,
-                            const QString & input_type,
-                            const QString & input_id,
-                            const QString & input_name);
-    void onTextFinished(const QString & text);
+    //void onInputFormFocused(const QString & form_id,
+                            //const QString & form_name,
+                            //const QString & form_action,
+                            //const QString & input_type,
+                            //const QString & input_id,
+                            //const QString & input_name);
+    //void onTextFinished(const QString & text);
 
-    void onInputUrl();
-    void onInputText();
+    //void onInputText();
     void onUrlChanged(const QUrl& url);
     void onLinkClicked(const QUrl& url);
     void openUrlInAddress();
@@ -72,6 +71,9 @@ private Q_SLOTS:
     void showBackHistoryPage();
     void showForwardHistoryPage();
     void showMenu();
+    void showSoftKeyboardIME();
+    void onTextInput(const QString& text);
+    void onTextDel();
 
     void setHomePageUrl(const QString& url)
     {
@@ -90,7 +92,7 @@ private:
     UrlLineEdit            address_lineedit_;
     DKToolBar              navigation_toolbar_;
     BrowserView            view_;
-    KeyboardDialog         keyboard_;
+    //KeyboardDialog         keyboard_;
     QStandardItemModel     model_;
     BrowserKeyboardPrivate keyboard_priv_;
     BrowserKeyboardStatus  keyboard_status_;
