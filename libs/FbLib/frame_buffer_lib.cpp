@@ -90,7 +90,7 @@ err0:
         int flags = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
         stat(EMULATOR_FB_MAP, &statbuf);
         chmod(EMULATOR_FB_MAP, statbuf.st_mode | flags);
-        addr_ = (INT8*)mmap(NULL, width_ * height_, PROT_READ | PROT_WRITE, MAP_SHARED, fb_, 0);
+        addr_ = (qint8*)mmap(NULL, width_ * height_, PROT_READ | PROT_WRITE, MAP_SHARED, fb_, 0);
     }
 #endif
 

@@ -140,7 +140,7 @@ void XiaomiAccountManager::onLoadFinished(bool ok)
 void XiaomiAccountManager::onUrlChanged(const QUrl& url)
 {
     QUrl current_url = view_->url();
-    QString & myUrl = current_url.toString();
+    QString myUrl = current_url.toString();
     if (myUrl.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI) &&
         !DuokanServerConfiguration::isOnline())
     {
