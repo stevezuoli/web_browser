@@ -4,6 +4,7 @@
 
 #include "FbLib/DeviceInfo.h"
 #include "AES/aes.h"
+#include "AES/base64.h"
 
 namespace network_service
 {
@@ -266,52 +267,41 @@ void XiaomiAccountManager::disconnectWebView()
     }
 }
 
-QByteArray XiaomiAccountManager::getEncryptedPasswordFromToken(const QString& token)
+
+// Reference
+/*SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
+Cipher cipher = Cipher.getInstance("AES/ECB/nopadding");// "算法/模式/补码方式"
+cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
+byte[] encrypted = cipher.doFinal(sSrc.getBytes());
+return Base64.encodeToString(encrypted, Base64.NO_WRAP);*/
+bool XiaomiAccountManager::getEncryptedPasswordFromToken(const QString& token, QByteArray& output)
 {
     QString service_token = token;
     QStringList sources = service_token.split(',');
     QString source = sources[0];
-    char* key = "s87PfD3FczE5z01XaB6YacbG9lQc20A3";
+    char* password = "s87PfD3FczE5z01XaB6YacbG9lQc20A3";
 
     // Do AES encrypy
     AES_KEY aes_key;
-    memset(&aes_key, 0, sizeof(aes_key));
-
-    int count = 16 - source.size() % 16;
-    for (int i = 0; i < count; i++)
-    {
-        source += " ";
-    }
  
-    QByteArray password;
-    int group_count = source.size() / 16;
-    for (int i = 0; i < group_count; i++)
-    {
-        int result = AES_set_encrypt_key((unsigned char*)(key), 256, &aes_key);
-        if (result < 0)
-        {
-            return QByteArray();
-        }
+	char in[1024]={0};
+	char cipher[1024]={0};
+	char text[1024]={0};
 
-        QString group = source.left(16);
-        source = source.right(source.size() - 16);
+    int len = source.size();
+	int rem = 16 - len % 16;
+	int bits = strlen(password) * 8;
+	
+	memcpy(in, source.toAscii().constData(), len);
+	memset(in + len, ' ', rem);
+	len += rem;
 
-        unsigned char out[64];
-        memset(out, 0 ,64);
-        unsigned char *in = NULL;
-        in = (unsigned char*)qstrdup(group.toAscii().constData());
+	AES_set_encrypt_key((const unsigned char*)password, bits, &aes_key);
+	AES_ecb_encrypt((const unsigned char*)in, (unsigned char*)cipher, len, &aes_key, 1);   // enc = 1, encrypt
 
-        AES_encrypt(in, out, &aes_key);
-
-        password.push_back((const char*)(out));
-    }
-
-    //SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
-    //Cipher cipher = Cipher.getInstance("AES/ECB/nopadding");// "算法/模式/补码方式"
-    //cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
-    //byte[] encrypted = cipher.doFinal(sSrc.getBytes());
-    //return Base64.encodeToString(encrypted, Base64.NO_WRAP);
-    return password.toBase64();
+    QByteArray cipherByteArray = QByteArray::fromRawData(cipher, len);
+    output = cipherByteArray.toBase64();
+    return true;
 }
 
 bool XiaomiAccountManager::exchangeDuokanToken(const QUrl& url)
@@ -322,7 +312,8 @@ bool XiaomiAccountManager::exchangeDuokanToken(const QUrl& url)
     {
         user_id_ = service_info[0];
         service_token_ = service_info[1];
-        QByteArray password = getEncryptedPasswordFromToken(service_token_);
+        QByteArray password;
+        getEncryptedPasswordFromToken(service_token_, password);
         QString exchange_url = DuokanServerConfiguration::xiaomiExchangeUrl();
         QUrl url(guessUrlFromString(exchange_url));
 
@@ -334,7 +325,7 @@ bool XiaomiAccountManager::exchangeDuokanToken(const QUrl& url)
 
         post_data.append("auth")
             .append("=")
-            .append(password.constData())
+            .append(UrlEncode(password.data()))
             .append("&");
 
         post_data.append("deviceid")
@@ -344,9 +335,17 @@ bool XiaomiAccountManager::exchangeDuokanToken(const QUrl& url)
 
         post_data.append("appid")
             .append("=")
-            .append(UrlEncode("KindleUser"));
+            .append(UrlEncode("KindleUser"))
+            .append("&");
+
+        post_data.append("format")
+            .append("=")
+            .append(UrlEncode("json"));
 
         QNetworkRequest request(url);
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+        request.setHeader(QNetworkRequest::ContentLengthHeader, post_data.size());
+
         reply_ = network_service::getAccessManagerInstance()->post(request, post_data);
         connectNetworkReply(reply_);
         return true;
@@ -374,6 +373,7 @@ void XiaomiAccountManager::onNetworkReplyFinished()
 {
     QByteArray result = reply_->readAll();
     qDebug("Network Reply Finished:%s", qPrintable(result));
+    parseAndSave(result);
 }
 
 void XiaomiAccountManager::load(const QString& path)
@@ -393,6 +393,46 @@ void XiaomiAccountManager::login()
 
     QByteArray str = url.toEncoded();
     view_->load(url);
+}
+
+bool XiaomiAccountManager::parseAndSave(const QByteArray& data)
+{
+    QString json_data(data);
+ 
+    QScriptEngine se;
+    QScriptValue sv = se.evaluate ("JSON.parse").call(QScriptValue(), QScriptValueList() << json_data);
+
+    QVariant status_variant = sv.property("status").toVariant();
+    QVariant token = sv.property("token").toVariant();
+    int result = -1;
+    if (status_variant.type() == QVariant::Map)
+    {
+        QMap<QString, QVariant> status_map = status_variant.toMap();
+        if (status_map.find("msg") != status_map.end())
+        {
+            QString message = status_map["msg"].toString();
+        }
+        if (status_map.find("code") != status_map.end())
+        {
+            result = status_map["code"].toInt();
+        }
+    }
+
+    if (result == 0)
+    {
+        if (token.type() == QVariant::String)
+        {
+            QString token_str = token.toString();
+            saveToken(token_str);
+        }
+    }
+    return result == 0;
+}
+
+bool XiaomiAccountManager::saveToken(const QString& token)
+{
+    // TODO. Save Token
+    return false;
 }
 
 }

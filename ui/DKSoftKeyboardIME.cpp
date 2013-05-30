@@ -34,14 +34,14 @@ static const char* s_keyTables[DKSoftKeyboardIME::SKT_Count][DKSoftKeyboardIME::
     {
         "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", 
         "$", "&", "(", ")", "\"", "'", "-", "+", "/", 
-        "#=~", "!", "?", ":", ";", ",", "_", "‚Ä¶", "",
+        "#=~", "!", "?", ":", ";", ",", "_", "°≠-", "",
         "ABC", "@", " ", ".com", "/", ".", "", "" 
     }, 
     // english symbol
     {
-        "`",  "*",  "#",  "Ôø•",  "%",  "|",  "\\",  "√ó",  "‚Äò",  "‚Äô", 
+        "`",  "*",  "#",  "£§®∫?®®",  "%",  "|",  "\\",  "°¡°ß?",  "°Æ?",  "°Ø??", 
         "=",  "~",  "[",  "]",  "{",  "}",  "<",  ">", "^", 
-        "123!?", "‚Ñ¢",  "¬ß",  "¬Æ",  "¬¢",  "¬£",  "‚Ç¨",  "¬©", ""
+        "123!?", "?",  "°Ï°ß?",  "?",  "?°ß?",  "?°ß?",  "Ä",  "?", ""
         "ABC", "@", " ", ".com", "/", ".", "", "" 
     },
 
@@ -50,28 +50,28 @@ static const char* s_keyTables[DKSoftKeyboardIME::SKT_Count][DKSoftKeyboardIME::
         "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", 
         "a", "s", "d", "f", "g", "h", "j", "k", "l", 
         "", "z", "x", "c", "v", "b", "n", "m", "",
-        "123!?", "„ÄÇ", " ", ".com", "/", "Ôºå", "", "" 
+        "123!?", "°£?®∫", " ", ".com", "/", "£¨®∫?", "", "" 
     }, 
     // chinese upper
     {
         "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", 
         "A", "S", "D", "F", "G", "H", "J", "K", "L", 
         "", "Z", "X", "C", "V", "B", "N", "M", "",
-        "123!?", "„ÄÇ", " ", ".com", "/", "Ôºå", "", "" 
+        "123!?", "°£?®∫", " ", ".com", "/", "£¨®∫?", "", "" 
     },
     // chinese number
     {
         "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", 
-        "$", "&", "Ôºà", "Ôºâ", "‚Äú", "‚Äò", "-", "+", "/", 
-        "#=~", "ÔºÅ", "Ôºü", "Ôºö", "Ôºõ", "@",  "_",  "‚Ä¶‚Ä¶", "",
-        "ABC", "„ÄÇ", " ", ".com", "/", "Ôºå", "", "" 
+        "$", "&", "£®®∫?°Ï", "£©®∫?", "°∞??", "°Æ?", "-", "+", "/", 
+        "#=~", "£°®∫?", "£ø®∫?", "£∫®∫o", "£ª®∫?", "@",  "_",  "°≠-°≠-", "",
+        "ABC", "°£?®∫", " ", ".com", "/", "£¨®∫?", "", "" 
     }, 
     // chinese symbol
     {
-        "`",  "„ÄÅ",  "#",  "Ôø•",  "%",  "|",  "\\",  "√ó",  "‚Äú",  "‚Äù", 
-        "‚Äî",  "‚Äò",  "‚Äô",  "=",  "~",  "¬∑",  "{",  "}", "^", 
-        "123!?", "„Äê",  "„Äë",  "„Ää",  "„Äã",  "<",  ">",  "*", "",
-        "ABC", "„ÄÇ", " ", ".com", "/", "Ôºå", "", "" 
+        "`",  "°¢?®¶",  "#",  "£§®∫?®®",  "%",  "|",  "\\",  "°¡°ß?",  "°∞??",  "°±??", 
+        "°™a",  "°Æ?",  "°Ø??",  "=",  "~",  "°§?®®",  "{",  "}", "^", 
+        "123!?", "°æ?",  "°ø?",  "°∂?",  "°∑?°Ë",  "<",  ">",  "*", "",
+        "ABC", "°£?®∫", " ", ".com", "/", "£¨®∫?", "", "" 
     }
 };
 
@@ -138,7 +138,7 @@ void DKSoftKeyboardIME::setupKeyboardWithType(SoftKeyboardType newType)
     for (int i = 0; i < s_btnsCountPerPage; ++i)
     {
         QAbstractButton* btn = m_keyboardBtns.button(i);
-        qDebug("%s, %x, %d", __PRETTY_FUNCTION__, btn, i);
+        //qDebug("%s, %x, %d", __PRETTY_FUNCTION__, btn, i);
 
         m_keyboardBtns.button(i)->setText(s_keyTables[newType][i]); 
     }
@@ -150,7 +150,7 @@ void DKSoftKeyboardIME::setupKeyboardWithType(SoftKeyboardType oldType, SoftKeyb
 
 void DKSoftKeyboardIME::onButtonClicked(int index)
 {
-    qDebug("%s, %d", __PRETTY_FUNCTION__, index);
+    //qDebug("%s, %d", __PRETTY_FUNCTION__, index);
 
     if (index == s_enterBtnIndex)
     {
@@ -216,4 +216,5 @@ void DKSoftKeyboardIME::InitSpecialBtns()
 
 }
 }
+
 

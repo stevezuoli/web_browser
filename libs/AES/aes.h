@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif	/* __cplusplus */
+#endif
 
 #define AES_MAXNR 14
 #define AES_BLOCK_SIZE 16
@@ -23,12 +23,16 @@ void AES_encrypt(const unsigned char *in, unsigned char *out,
 	const AES_KEY *key);
 void AES_decrypt(const unsigned char *in, unsigned char *out,
 	const AES_KEY *key);
+
 void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
 		     const unsigned long length, const AES_KEY *key,
 		     unsigned char *ivec, const int enc);
 
+void AES_ecb_encrypt(const unsigned char *in, unsigned char *out,
+		     const unsigned long length, const AES_KEY *key, const int enc);
+
 #ifdef __cplusplus
-}		/* extern "C" */
-#endif	/* __cplusplus */
+}
+#endif
 
 #endif

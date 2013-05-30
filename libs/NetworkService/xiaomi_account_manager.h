@@ -33,7 +33,7 @@ private Q_SLOTS:
     void onNetworkReplyError(QNetworkReply::NetworkError error);
     void onNetworkReplyFinished();
 
-    QByteArray getEncryptedPasswordFromToken(const QString& token);
+    bool getEncryptedPasswordFromToken(const QString& token, QByteArray& output);
 
 private:
     void load(const QString& path);
@@ -43,7 +43,9 @@ private:
     QStringList getServiceTokenFromCookies(const QList<QNetworkCookie>& cookies);
     QString getUserIdFromCookies(const QList<QNetworkCookie>& cookies);
     bool exchangeDuokanToken(const QUrl& url);
-
+    
+    bool parseAndSave(const QByteArray& data);
+    bool saveToken(const QString& token);
 private:
     QWebView* view_;
 
