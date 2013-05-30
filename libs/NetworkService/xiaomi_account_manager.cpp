@@ -4,7 +4,6 @@
 
 #include "FbLib/DeviceInfo.h"
 #include "AES/aes.h"
-#include "AES/base64.h"
 #include "Device/fat.h"
 
 namespace network_service
