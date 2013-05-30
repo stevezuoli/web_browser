@@ -54,15 +54,14 @@ protected:
     void closeEvent(QCloseEvent *e);
 
 private Q_SLOTS:
-    //void onInputFormFocused(const QString & form_id,
-                            //const QString & form_name,
-                            //const QString & form_action,
-                            //const QString & input_type,
-                            //const QString & input_id,
-                            //const QString & input_name);
-    //void onTextFinished(const QString & text);
+    void onInputFormFocused(const QString & form_id,
+                            const QString & form_name,
+                            const QString & form_action,
+                            const QString & input_type,
+                            const QString & input_id,
+                            const QString & input_name);
+    void onInputFormLostFocus();
 
-    //void onInputText();
     void onUrlChanged(const QUrl& url);
     void onLinkClicked(const QUrl& url);
     void openUrlInAddress();
@@ -71,7 +70,7 @@ private Q_SLOTS:
     void showBackHistoryPage();
     void showForwardHistoryPage();
     void showMenu();
-    void showSoftKeyboardIME();
+    void showSoftKeyboardIME(bool show);
     void onTextInput(const QString& text);
     void onTextDel();
 

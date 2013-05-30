@@ -35,14 +35,18 @@ public:
     };
 
     DKSoftKeyboardIME();
+    void attachReceiver(QObject* receiver)
+    {
+        m_keyReceiver = receiver;
+    }
 
 protected:
     virtual void paintEvent(QPaintEvent* e);
 
-signals:
-    void textInput(const QString& text);
-    void enterPressed();
-    void delPressed();
+//signals:
+    //void textInput(const QString& text);
+    //void enterPressed();
+    //void delPressed();
 
 private slots:
     void onButtonClicked(int);
@@ -57,12 +61,14 @@ private:
     void setupKeyboardWithType(SoftKeyboardType newType);
     //fast transform
     void setupKeyboardWithType(SoftKeyboardType oldType, SoftKeyboardType newType);
+    void postKeyEvent(unsigned int code, const QString& text);
 
 private:
     SoftKeyboardType m_currentType;
     QButtonGroup m_keyboardBtns;
     QHBoxLayout m_rowLayouts[s_keyboardRows];
     QVBoxLayout m_mainLayout;
+    QObject* m_keyReceiver;
 };
 }//ui
 #endif//__UI_DKSOFTKEYBOARDIME_H__

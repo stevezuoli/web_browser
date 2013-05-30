@@ -48,13 +48,15 @@ void DKLineEdit::setDKStyleSheet()
 
 void DKLineEdit::focusInEvent(QFocusEvent* e)
 {
-    emit focusIn();
+    qDebug("%s", __PRETTY_FUNCTION__);
+    emit focusSignal(true);
     QLineEdit::focusInEvent(e);
 }
 
 void DKLineEdit::focusOutEvent(QFocusEvent* e)
 {
-    emit focusOut();
+    qDebug("%s", __PRETTY_FUNCTION__);
+    emit focusSignal(false);
     QLineEdit::focusOutEvent(e);
 }
 }

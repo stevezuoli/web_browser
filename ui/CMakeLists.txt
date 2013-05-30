@@ -13,5 +13,6 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 ADD_LIBRARY(ui ${SRCS})
 
 TARGET_LINK_LIBRARIES(ui
+    device
     ${QT_LIBRARIES}
     ${ADD_LIB})
