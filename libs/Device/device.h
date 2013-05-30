@@ -1,7 +1,9 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
+#ifdef BUILD_FOR_ARM
 #include <unistd.h>
+#endif
 
 #include <QProcess>
 #include <QDebug>

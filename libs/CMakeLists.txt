@@ -1,4 +1,5 @@
 # All sub directories.
+add_subdirectory(AES)
 add_subdirectory(Base)
 add_subdirectory(FbLib)
 add_subdirectory(Screen)

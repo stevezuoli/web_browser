@@ -23,22 +23,37 @@ public:
 Q_SIGNALS:
     void startLogin();
     void startLoginAuth();
-    void loginFinished(bool);
+    void loginPageLoadFinished(bool);
 
 private Q_SLOTS:
     void onLoadStarted();
     void onLoadFinished(bool ok);
     void onUrlChanged(const QUrl& url);
 
+    void onNetworkReplyError(QNetworkReply::NetworkError error);
+    void onNetworkReplyFinished();
+
+    bool getEncryptedPasswordFromToken(const QString& token, QByteArray& output);
+
 private:
     void load(const QString& path);
 
 private:
-    QString getServiceTokenFromCookies(const QList<QNetworkCookie>& cookies);
-    bool exchangeDuokanToken(const QString& serviceToken);
-
+    void connectNetworkReply(QNetworkReply* reply);
+    QStringList getServiceTokenFromCookies(const QList<QNetworkCookie>& cookies);
+    QString getUserIdFromCookies(const QList<QNetworkCookie>& cookies);
+    bool exchangeDuokanToken(const QUrl& url);
+    
+    bool parseAndSave(const QByteArray& data);
+    bool saveToken(const QString& token);
 private:
     QWebView* view_;
+
+    QNetworkReply *reply_;
+    QString service_token_;
+    QString user_id_;
+
+    bool stoped_;
 };
 
 };
