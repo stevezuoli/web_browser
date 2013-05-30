@@ -210,7 +210,7 @@ string DeviceInfo::GetSerialNo()
         }
         return deviceId;
 #else
-        return "";
+        return "B024150123940HRG";
 #endif 
     }
 }
@@ -236,7 +236,7 @@ string DeviceInfo::GetDeviceID()
 #ifdef KINDLE_FOR_TOUCH	   		
     _dID += "008" ; //for Kindle;
 #else
-    _dID += "001" ; //for Kindle;
+    _dID += "008" ; //for Kindle;
 #endif
 
     _dID += GetSerialNo();

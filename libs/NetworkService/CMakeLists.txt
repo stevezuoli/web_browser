@@ -13,3 +13,10 @@ SET(RESOURCE_SRCS network_service_res.qrc)
 QT4_ADD_RESOURCES(NETWORK_SERVICE_RES ${RESOURCE_SRCS})
 
 ADD_LIBRARY(network_service ${SRCS} ${NETWORK_SERVICE_RES})
+
+TARGET_LINK_LIBRARIES(network_service
+  aes
+  duokan_base
+  fblib
+  ${QT_LIBRARIES}
+  ${ADD_LIB})
