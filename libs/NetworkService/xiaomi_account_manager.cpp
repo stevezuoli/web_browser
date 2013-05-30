@@ -5,11 +5,15 @@
 #include "FbLib/DeviceInfo.h"
 #include "AES/aes.h"
 #include "AES/base64.h"
+#include "Device/fat.h"
 
 namespace network_service
 {
 
 #define TEST_SERVER
+
+static const QString TOKEN_PATH = "/mnt/us/DK_System/xKindle/";
+static const QString WEB_BROWSER_DIR = "web_browser";
 
 static const QString BOOK_HOST = "http://book.duokan.com";
 static const QString LOGIN_HOST = "http://api.duokan.com";
@@ -125,6 +129,15 @@ public:
         return TEST_HOST + XIAOMI_CHECKIN;
 #else
         return LOGIN_HOST + XIAOMI_CHECKIN;
+#endif
+    }
+
+    static QString getTokenHome()
+    {
+#ifdef BUILD_FOR_ARM
+        return TOKEN_PATH;
+#else
+        return QDir::home().path();
 #endif
     }
 };
@@ -431,7 +444,44 @@ bool XiaomiAccountManager::parseAndSave(const QByteArray& data)
 
 bool XiaomiAccountManager::saveToken(const QString& token)
 {
-    // TODO. Save Token
+    QDomDocument doc("XiaomiToken");
+    QDomElement root = doc.createElement("XiaomiToken");
+    doc.appendChild(root);
+
+    QDomElement token_element = doc.createElement("token");
+    root.appendChild(token_element);
+
+    QDomText value = doc.createTextNode(token);
+    token_element.appendChild(value);
+
+    QString xml = doc.toString();
+    qDebug("XiaomiToken:%s", qPrintable(xml));
+
+    QString path = DuokanServerConfiguration::getTokenHome();
+    QDir dir(path);
+    if (!dir.exists(WEB_BROWSER_DIR))
+    {
+        if (!dir.mkdir(WEB_BROWSER_DIR))
+        {
+            return false;
+        }
+    }
+
+    if (dir.cd(WEB_BROWSER_DIR))
+    {
+        // Change folder attribute.
+        changeToHidden(dir.absolutePath().toLocal8Bit().constData());
+
+        path = dir.filePath("token.xml");
+        QFile file(path);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) 
+        {
+            QTextStream TextStream(&file);
+            TextStream << xml;
+            file.close();
+            return true;
+        }
+    }
     return false;
 }
 

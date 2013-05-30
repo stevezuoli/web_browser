@@ -93,7 +93,7 @@ Device &Device::instance()
 
 void Device::suspendFramework(bool fast)
 {
-#ifndef i386
+#ifdef BUILD_FOR_ARM
     qDebug("- framework");
     if (!isTouch()) {
         // this pause lets CVM handle painting before stopping, or screensaver may not draw
@@ -109,7 +109,7 @@ void Device::suspendFramework(bool fast)
 
 void Device::resumeFramework(bool fast)
 {
-#ifndef i386
+#ifdef BUILD_FOR_ARM
     qDebug("+ framework");
     QWSServer::instance()->enablePainting(false);
     if (!isTouch()) {
@@ -122,16 +122,18 @@ void Device::resumeFramework(bool fast)
 
 void Device::enableInput(bool enable)
 {
+#ifdef BUILD_FOR_ARM
     if (enable) {
         isTouch() ? QWSServer::instance()->openMouse() : QWSServer::instance()->openKeyboard();
     } else {
         isTouch() ? QWSServer::instance()->closeMouse() : QWSServer::instance()->closeKeyboard();
     }
+#endif
 }
 
 void Device::setFullScreenUpdateEvery(int n)
 {
-#ifndef i386
+#ifdef BUILD_FOR_ARM
     QKindleFb *pscreen = static_cast<QKindleFb*>(QScreen::instance());
     if (pscreen) pscreen->setFullUpdateEvery(n);
 #endif
@@ -139,7 +141,7 @@ void Device::setFullScreenUpdateEvery(int n)
 
 void Device::forceFullScreenUpdate(bool fullScreen)
 {
-#ifndef i386
+#ifdef BUILD_FOR_ARM
     QKindleFb *pscreen = static_cast<QKindleFb*>(QScreen::instance());
     if (pscreen) pscreen->forceFullUpdate(fullScreen);
 #endif
