@@ -7,9 +7,20 @@ namespace ui
 {
 class DKLineEdit : public QLineEdit
 {
+    Q_OBJECT
+
 public:
     DKLineEdit(QWidget* parent = 0);
     DKLineEdit(const QString& contents, QWidget* parent = 0);
+
+protected:
+    virtual void focusInEvent(QFocusEvent* e);
+    virtual void focusOutEvent(QFocusEvent* e);
+
+signals:
+    void focusIn();
+    void focusOut();
+
 private:
     void setDKStyleSheet();
     void InitDKProperty();
