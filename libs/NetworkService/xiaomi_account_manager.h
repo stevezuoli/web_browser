@@ -18,7 +18,9 @@ public:
     void disconnectWebView();
 
     QString generateXiaomiAccountLoginUrl();
-    void login();
+
+    // true = login; false = register
+    void login(bool login_or_register = true);
 
 Q_SIGNALS:
     void startLogin();

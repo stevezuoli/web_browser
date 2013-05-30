@@ -397,11 +397,12 @@ void XiaomiAccountManager::load(const QString& path)
     }
 }
 
-void XiaomiAccountManager::login()
+void XiaomiAccountManager::login(bool login_or_register)
 {
     QString login_str = generateXiaomiAccountLoginUrl();
     QUrl url = guessUrlFromString(login_str);
     url.addEncodedQueryItem("followup", DuokanServerConfiguration::xiaomiFollowupUrl().toUtf8());
+    url.addEncodedQueryItem("login", login_or_register ? "1" : "0"); // 0 = register; 1 = login
 
     QByteArray str = url.toEncoded();
     view_->load(url);
