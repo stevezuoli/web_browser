@@ -316,25 +316,6 @@ void BrowserView::mousePressEvent(QMouseEvent*me)
 
 void BrowserView::mouseMoveEvent(QMouseEvent *me)
 {
-    /*
-    if (isTextSelectionEnabled())
-    {
-        QWebView::mouseMoveEvent(me);
-        repaint(selected_rect_);
-        onyx::screen::instance().fastUpdateWidgetRegion(this, selected_rect_, false);
-        selected_rect_.setCoords(0, 0, 0, 0);
-    }
-    else if(me->buttons() != Qt::NoButton)
-    {
-        QPoint delta = position_ - me->pos();
-        page()->mainFrame()->scroll(delta.x(), delta.y());
-        onyx::screen::instance().flush();
-        onyx::screen::instance().enableUpdate(true);
-        onyx::screen::instance().fastUpdateWidget(this, true);
-        position_  = me->pos();
-    }
-    */
-
     if (!hand_tool_enabled_)
     {
         QWebView::mouseMoveEvent(me);
@@ -385,8 +366,11 @@ void BrowserView::keyPressEvent(QKeyEvent *e)
 {
 #ifndef WIN32
     // We only handle key release event, so ignore some keys.
+<<<<<<< HEAD
     qDebug("%s, %d, %s", __PRETTY_FUNCTION__, e->key(), qPrintable(e->text()));
 #endif
+=======
+>>>>>>> 6a564a6513cd59e099e52c5d9b521c6e790a537b
     switch (e->key())
     {
     case Qt::Key_Down:
