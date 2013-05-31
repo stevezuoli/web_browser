@@ -18,9 +18,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     , history_back_action_(QIcon(QLatin1String(":/res/back@kt.png")), "", this)
     , history_forward_action_(QIcon(QLatin1String(":/res/forward@kt.png")), "", this)
     , menu_action_(QIcon(QLatin1String(":/res/menu@kt.png")), "", this)
-    , address_lineedit_(this)
     , navigation_toolbar_(tr("Navigation"), this)
-    , view_(NULL)
     //, keyboard_status_(KEYBOARD_FREE)
     , m_homePageUrl(ConstStrings::HOME_PAGE)
 {
@@ -37,18 +35,14 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 
     address_lineedit_.setWebView(&view_);
     
-    QWidget* widget = new QWidget;
-    setCentralWidget(widget);
-    QVBoxLayout* mainLayout = new QVBoxLayout;
-    mainLayout->addWidget(&view_);
-    mainLayout->addWidget(DKSoftKeyboardIME::GetInstance()); 
-    centralWidget()->setLayout(mainLayout);
+    setCentralWidget(&view_);
 
     connect(&homepage_action_, SIGNAL(triggered()), this, SLOT(showHomePage()));
     connect(&history_back_action_, SIGNAL(triggered()), this, SLOT(showBackHistoryPage()));
     connect(&history_forward_action_, SIGNAL(triggered()), this, SLOT(showForwardHistoryPage()));
     connect(&menu_action_, SIGNAL(triggered()), this, SLOT(showMenu()));
     connect(address_lineedit_.lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
+    connect(address_lineedit_.lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(showSoftKeyboardIME(bool)));
 
     connect(&view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
     connect(&view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
@@ -288,7 +282,7 @@ void BrowserMainWindow::showSoftKeyboardIME(bool show)
     DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
     if (ime)
     {
-        ime->setParent(&view_);
+        ime->setParent(this);
         DKSoftKeyboardIME::GetInstance()->setVisible(show);
     }
 }

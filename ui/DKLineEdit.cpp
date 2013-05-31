@@ -49,25 +49,27 @@ void DKLineEdit::setDKStyleSheet()
 
 void DKLineEdit::focusInEvent(QFocusEvent* e)
 {
-    qDebug("%s", __PRETTY_FUNCTION__);
-    DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
-    if (ime)
-    {
-        ime->attachReceiver(this);
-        ime->show();
-    }
+    emit focusSignal(true);
+    //qDebug("%s", __PRETTY_FUNCTION__);
+    //DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
+    //if (ime)
+    //{
+        //ime->attachReceiver(this);
+        //ime->show();
+    //}
     QLineEdit::focusInEvent(e);
 }
 
 void DKLineEdit::focusOutEvent(QFocusEvent* e)
 {
-    qDebug("%s", __PRETTY_FUNCTION__);
-    DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
-    if (ime)
-    {
-        ime->attachReceiver(NULL);
-        ime->hide();
-    }
+    emit focusSignal(false);
+    //qDebug("%s", __PRETTY_FUNCTION__);
+    //DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
+    //if (ime)
+    //{
+        //ime->attachReceiver(NULL);
+        //ime->hide();
+    //}
     QLineEdit::focusOutEvent(e);
 }
 }

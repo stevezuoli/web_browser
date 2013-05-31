@@ -110,7 +110,9 @@ void DKSoftKeyboardIME::InitUI()
     setupKeyboardWithType(m_currentType);
     connect(&m_keyboardBtns, SIGNAL(buttonClicked(int)), this, SLOT(onButtonClicked(int)));
 
-    setFixedSize(GetWindowMetrics(UIScreenWidthIndex), GetWindowMetrics(UISoftKeyboardHeightIndex));
+    int width = GetWindowMetrics(UIScreenWidthIndex);
+    int height = GetWindowMetrics(UISoftKeyboardHeightIndex);
+    setGeometry(0, GetWindowMetrics(UIScreenHeightIndex) - height, width, height);
 }
 
 void DKSoftKeyboardIME::InitLayout()
