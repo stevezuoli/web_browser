@@ -308,7 +308,7 @@ QWebView *BrowserView::createWindow(QWebPage::WebWindowType type)
 
 void BrowserView::mousePressEvent(QMouseEvent*me)
 {
-    emit inputFormLostFocus();
+    formLostFocus();
     position_ = me->pos();
 
     return QWebView::mousePressEvent(me);
@@ -541,16 +541,6 @@ void BrowserView::clearSelection()
 
 void BrowserView::accurateScroll(int dx, int dy)
 {
-    // Jim: emulate a page turning key event to turn page for drop-down menu.
-    int key_code = Qt::Key_PageDown;
-    if (dy < 0)
-    {
-        key_code = Qt::Key_PageUp;
-    }
-    QKeyEvent * key_event = new QKeyEvent(QEvent::KeyPress, key_code,
-            Qt::NoModifier, "page_turning");
-    QApplication::postEvent(this, key_event);
-
     page()->currentFrame()->scroll(dx, dy);
     updateViewportRange();
 }
@@ -668,11 +658,13 @@ void BrowserView::formFocused (const QString& form_id,
             qPrintable(form_id), qPrintable(form_name), qPrintable(form_action),
             qPrintable(input_type), qPrintable(input_id), qPrintable(input_name));
 #endif
+    hand_tool_enabled_ = false;
     emit inputFormFocused(form_id, form_name, form_action, input_type, input_id, input_name);
 }
 
 void BrowserView::formLostFocus (void)
 {
+    hand_tool_enabled_ = true;
     emit inputFormLostFocus();
 }
 
