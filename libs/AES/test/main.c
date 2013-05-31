@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "AES/aes.h"
-#include "AES/base64.h"
+//#include "AES/base64.h"
 
 int main()
 {
@@ -31,12 +31,12 @@ int main()
 	AES_set_encrypt_key(password, bits, &key);
 	AES_ecb_encrypt(in, cipher, len, &key, 1);   // enc = 1, encrypt
 
-	initb64();
-	htob64(cipher, cipher64, len);
+	//initb64();
+	//htob64(cipher, cipher64, len);
 	
 
-    char* output_cipher = "G74B8eIxtd1UQ8sEDZEReQuVmO/UrkE9rtTjAnimUZR+ZWJEbh3RjGVbUqlQGdO4X7UFV9s0hxSpnXEdU+eOoQnCJfbS/iQ+ZyRn0p82RWRVtDJuJq+/+3EgJ23YMJCRxKGDTePOXNob/ETr6z1VdIUo2PWFhKdqMeW57V+3tSbTbsK0rsVp2nkqWQBUWHbmY9WIltvVrUFvfvLsJUEr2K3CoK6rXmbaXGIQPBh1Yd0";
-	b64toh(output_cipher, cipher);
+    //char* output_cipher = "G74B8eIxtd1UQ8sEDZEReQuVmO/UrkE9rtTjAnimUZR+ZWJEbh3RjGVbUqlQGdO4X7UFV9s0hxSpnXEdU+eOoQnCJfbS/iQ+ZyRn0p82RWRVtDJuJq+/+3EgJ23YMJCRxKGDTePOXNob/ETr6z1VdIUo2PWFhKdqMeW57V+3tSbTbsK0rsVp2nkqWQBUWHbmY9WIltvVrUFvfvLsJUEr2K3CoK6rXmbaXGIQPBh1Yd0";
+	//b64toh(output_cipher, cipher);
     
     
     AES_set_decrypt_key(password, bits, &key);
@@ -44,8 +44,8 @@ int main()
 	
 	printf(" in=\n%s,len=%d\n cipher=\n%s\n text=\n%s,len=%d\n", in, len, cipher, text, strlen(text));
 
-	printf(" cipher64=\n%s\n,b64len=%d\n", cipher64, strlen(cipher64));
-
+	//printf(" cipher64=\n%s\n,b64len=%d\n", cipher64, strlen(cipher64));
+    return 0;
 }
 
 
