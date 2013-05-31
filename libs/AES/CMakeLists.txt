@@ -9,5 +9,5 @@ SET(SRCS ${HDRS} ${SRCS})
 
 ADD_LIBRARY(aes ${SRCS})
 
-ADD_EXECUTABLE(test_aes test/main.c)
-TARGET_LINK_LIBRARIES(test_aes aes)
+#ADD_EXECUTABLE(test_aes test/main.c)
+#TARGET_LINK_LIBRARIES(test_aes aes)

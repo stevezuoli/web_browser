@@ -54,15 +54,14 @@ protected:
     void closeEvent(QCloseEvent *e);
 
 private Q_SLOTS:
-    //void onInputFormFocused(const QString & form_id,
-                            //const QString & form_name,
-                            //const QString & form_action,
-                            //const QString & input_type,
-                            //const QString & input_id,
-                            //const QString & input_name);
-    //void onTextFinished(const QString & text);
-
-    //void onInputText();
+    void onInputFormFocused(const QString & form_id,
+                            const QString & form_name,
+                            const QString & form_action,
+                            const QString & input_type,
+                            const QString & input_id,
+                            const QString & input_name);
+    void onInputFormLostFocus();
+    void onAddressInputFocus();
     void onUrlChanged(const QUrl& url);
     void onLinkClicked(const QUrl& url);
     void openUrlInAddress();
@@ -71,9 +70,7 @@ private Q_SLOTS:
     void showBackHistoryPage();
     void showForwardHistoryPage();
     void showMenu();
-    void showSoftKeyboardIME();
-    void onTextInput(const QString& text);
-    void onTextDel();
+    void showSoftKeyboardIME(bool show);
 
     void setHomePageUrl(const QString& url)
     {
@@ -94,8 +91,8 @@ private:
     BrowserView            view_;
     //KeyboardDialog         keyboard_;
     QStandardItemModel     model_;
-    BrowserKeyboardPrivate keyboard_priv_;
-    BrowserKeyboardStatus  keyboard_status_;
+    //BrowserKeyboardPrivate keyboard_priv_;
+    //BrowserKeyboardStatus  keyboard_status_;
 
     XiaomiAccountManager   xiaomi_account_manager_;
     QString                m_homePageUrl;

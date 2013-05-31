@@ -57,6 +57,17 @@ protected:
 Q_SIGNALS:
     void requestOTA(const QUrl & url);
     void focusOut();
+    void progressChangedSignal(const int, const int);
+    //void viewportRangeChangedSignal(const int, const int, const int);
+    //void showHome();
+
+    void inputFormFocused(const QString& form_id,
+                          const QString& form_name,
+                          const QString& form_action,
+                          const QString& input_type,
+                          const QString& input_id,
+                          const QString& input_name);
+    void inputFormLostFocus(void);
 
 public Q_SLOTS:
     void formLostFocus (void);
@@ -131,19 +142,6 @@ private Q_SLOTS:
     void hideScrollbar();
 
     void clearHistory();
-
-Q_SIGNALS:
-    void progressChangedSignal(const int, const int);
-    //void viewportRangeChangedSignal(const int, const int, const int);
-    //void showHome();
-
-    void inputFormFocused(const QString& form_id,
-                          const QString& form_name,
-                          const QString& form_action,
-                          const QString& input_type,
-                          const QString& input_id,
-                          const QString& input_name);
-    void inputFormLostFocus(void);
 
 private:
     void addFormsFocusEvent(void);

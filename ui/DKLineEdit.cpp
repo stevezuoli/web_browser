@@ -1,4 +1,5 @@
 #include "ui/DKLineEdit.h"    
+#include "ui/DKSoftKeyboardIME.h"
 
 namespace ui
 {
@@ -48,13 +49,25 @@ void DKLineEdit::setDKStyleSheet()
 
 void DKLineEdit::focusInEvent(QFocusEvent* e)
 {
-    emit focusIn();
+    qDebug("%s", __PRETTY_FUNCTION__);
+    DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
+    if (ime)
+    {
+        ime->attachReceiver(this);
+        ime->show();
+    }
     QLineEdit::focusInEvent(e);
 }
 
 void DKLineEdit::focusOutEvent(QFocusEvent* e)
 {
-    emit focusOut();
+    qDebug("%s", __PRETTY_FUNCTION__);
+    DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
+    if (ime)
+    {
+        ime->attachReceiver(NULL);
+        ime->hide();
+    }
     QLineEdit::focusOutEvent(e);
 }
 }

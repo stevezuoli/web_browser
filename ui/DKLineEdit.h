@@ -17,10 +17,6 @@ protected:
     virtual void focusInEvent(QFocusEvent* e);
     virtual void focusOutEvent(QFocusEvent* e);
 
-signals:
-    void focusIn();
-    void focusOut();
-
 private:
     void setDKStyleSheet();
     void InitDKProperty();
