@@ -14,6 +14,7 @@ namespace webbrowser
 
 static const int PAGE_REPEAT = 20;
 static const int DELTA = 10;
+static const qreal DEFAULT_FONT = 1.0;
 
 BrowserView::BrowserView(QWidget *parent)
     : QWebView(parent)
@@ -64,6 +65,7 @@ BrowserView::BrowserView(QWidget *parent)
         file.close();
     }
 #endif
+    setTextSizeMultiplier(DEFAULT_FONT);
 }
 
 BrowserView::~BrowserView()
@@ -292,7 +294,7 @@ void BrowserView::changeFontSize(qreal font_size)
     QPointF pt = currentOffset();
 
     // Change size now.
-    //setTextSizeMultiplier(text_size_actions_.selectedMultiplier());
+    setTextSizeMultiplier(font_size);
 
     // Scroll to there again.
     QSize new_size = page()->mainFrame()->contentsSize();
@@ -565,11 +567,11 @@ QPointF BrowserView::currentOffset()
 void BrowserView::updateViewportRange()
 {
     // Get current location.
-    //QSizeF s = page()->currentFrame()->contentsSize();
-    //QPointF pt = currentOffset();
-    //emit viewportRangeChangedSignal(static_cast<int>(pt.y()),
-                                    //static_cast<int>(rect().height()),
-                                    //static_cast<int>(s.height()));
+    QSizeF s = page()->currentFrame()->contentsSize();
+    QPointF pt = currentOffset();
+    emit viewportUpdated(static_cast<int>(pt.y()),
+                         static_cast<int>(rect().height()),
+                         static_cast<int>(s.height()));
 }
 
 void BrowserView::formFocusedAddValue (const QString& form_id,

@@ -27,7 +27,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 {
     // setAttribute(Qt::WA_DeleteOnClose, true);
 #ifndef Q_WS_QWS
-    resize(600, 800);
+    resize(758, 1024);
 #else
     resize(qApp->desktop()->screenGeometry().size());
 #endif
@@ -118,7 +118,7 @@ static QUrl guessUrlFromString(const QString &string)
     return url;
 }
 
-void BrowserMainWindow::load(const QString & url_str)
+void BrowserMainWindow::load(const QString & url_str, const QString & option)
 {
     // Depends on the url is local file or not, if the url is empty
     // we need to display the thumbnail view.
@@ -126,13 +126,18 @@ void BrowserMainWindow::load(const QString & url_str)
     QUrl url = guessUrlFromString(url_str);
     if (!url.isValid())
     {
+        qDebug("Invalid input url");
+        return;
     }
     else
     {
         if (xiaomi_account_manager_.isXiaomiAccountPath(url_str))
         {
             xiaomi_account_manager_.connectWebView(&view_);
-            xiaomi_account_manager_.login(); // test register
+            if (option.compare("login", Qt::CaseInsensitive) == 0)
+                xiaomi_account_manager_.login(true); // test register
+            else if (option.compare("register", Qt::CaseInsensitive) == 0)
+                xiaomi_account_manager_.login(false);
         }
         else
         {

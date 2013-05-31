@@ -58,7 +58,7 @@ Q_SIGNALS:
     void requestOTA(const QUrl & url);
     void focusOut();
     void progressChangedSignal(const int, const int);
-    //void viewportRangeChangedSignal(const int, const int, const int);
+    void viewportUpdated(const int, const int, const int);
     //void showHome();
 
     void inputFormFocused(const QString& form_id,

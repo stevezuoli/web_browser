@@ -28,12 +28,24 @@ WebApplication::WebApplication(int &argc, char **argv)
     QWebSettings::setMaximumPagesInCache(4);
     QWebSettings::setObjectCacheCapacities(CACHE_MIN_DEAD_CAPACITY, CACHE_MAX_DEAD, TOTAL_CAPACITY);
 
+    // parse arguments
+    if (argc >= 2)
+    {
+        init_url_path_ = QString::fromLocal8Bit(argv[1]);
+    }
+
+    if (argc > 3)
+    {
+        additional_option_ = QString::fromLocal8Bit(argv[2]);
+    }
+
     QString dirName = QString(ConstStrings::WEBBROWSER_RES_PATH) + QLatin1String("/.") + QString(ConstStrings::FAVICONS);
     QDir dir(dirName);
     if (!dir.exists())
     {
         dir.mkpath(dirName);
     }
+
     QWebSettings::setIconDatabasePath(dirName);
     //main_window_->attachBookmarkModel(bookmark_model_.get());
     initTheme();
@@ -45,14 +57,14 @@ WebApplication::~WebApplication(void)
 {
 }
 
-bool WebApplication::open(const QString & path_name)
+bool WebApplication::open()
 {
     if (main_window_ == 0)
     {
         return false;
     }
 
-    main_window_->load(path_name);
+    main_window_->load(init_url_path_, additional_option_);
     main_window_->show();
     return true;
 }

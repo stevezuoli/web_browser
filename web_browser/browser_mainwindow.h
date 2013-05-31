@@ -44,7 +44,7 @@ public:
     ~BrowserMainWindow();
 
 public Q_SLOTS:
-    void load(const QString & url_str);
+    void load(const QString & url_str, const QString & option = QString());
     void onScreenSizeChanged(int);
 
 protected:
@@ -91,10 +91,7 @@ private:
     DKToolBar              navigation_toolbar_;
     BrowserView            view_;
     QVBoxLayout            main_layout_;
-    //KeyboardDialog         keyboard_;
     QStandardItemModel     model_;
-    //BrowserKeyboardPrivate keyboard_priv_;
-    //BrowserKeyboardStatus  keyboard_status_;
 
     XiaomiAccountManager   xiaomi_account_manager_;
     QString                m_homePageUrl;

@@ -21,7 +21,7 @@ int main(int argc, char * argv[])
 
     Q_INIT_RESOURCE(res);
     //adaptor.open(path);
-    app.open(path);
+    app.open();
     int ret = app.exec();
     return ret;
 }

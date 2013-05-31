@@ -9,13 +9,11 @@
 namespace network_service
 {
 
-#define TEST_SERVER
-
 static const QString TOKEN_PATH = "/mnt/us/DK_System/xKindle/";
 static const QString WEB_BROWSER_DIR = "web_browser";
 
 static const QString BOOK_HOST = "http://book.duokan.com";
-static const QString LOGIN_HOST = "http://api.duokan.com";
+static const QString LOGIN_HOST = "http://login.dushu.xiaomi.com";
 static const QString TEST_HOST = "http://dkmars";
 
 static const QString XIAOMI_CHECKIN = "/dk_id/api/checkin";
@@ -436,10 +434,10 @@ bool XiaomiAccountManager::parseAndSave(const QByteArray& data)
         if (token.type() == QVariant::String)
         {
             QString token_str = token.toString();
-            saveToken(token_str);
+            return saveToken(token_str);
         }
     }
-    return result == 0;
+    return false;
 }
 
 bool XiaomiAccountManager::saveToken(const QString& token)
