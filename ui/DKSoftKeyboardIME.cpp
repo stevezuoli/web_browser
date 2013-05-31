@@ -94,6 +94,7 @@ DKSoftKeyboardIME::DKSoftKeyboardIME()
 
 void DKSoftKeyboardIME::InitUI()
 {
+    setWindowFlags(Qt::Popup);
     setFocusPolicy(Qt::NoFocus);
     for (int i = 0; i < s_btnsCountPerPage; ++i)
     {
