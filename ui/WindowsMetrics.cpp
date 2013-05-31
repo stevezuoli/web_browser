@@ -12,7 +12,7 @@ const int g_WindowsMetricsKT[] = {
 };
 
 const int g_WindowsMetricsKP[] = {
-#define MAKE_WINDOWSMETICS_KP(x,y,z) y,
+#define MAKE_WINDOWSMETICS_KP(x,y,z) z,
     METRICS_LIST(MAKE_WINDOWSMETICS_KP)
 #undef MAKE_WINDOWSMETICS_KP
 };
