@@ -35,7 +35,7 @@ enum BrowserKeyboardStatus
     URL_INPUTTING
 };
 
-class BrowserMainWindow : public QMainWindow
+class BrowserMainWindow : public QWidget 
 {
     Q_OBJECT
 
@@ -61,7 +61,7 @@ private Q_SLOTS:
                             const QString & input_id,
                             const QString & input_name);
     void onInputFormLostFocus();
-    void onAddressInputFocus();
+    void onAddressInputFocus(bool);
     void onUrlChanged(const QUrl& url);
     void onLinkClicked(const QUrl& url);
     void openUrlInAddress();
@@ -80,6 +80,7 @@ private:
     void loadThumbnails();
     void thumbnailModel(QStandardItemModel & model);
     void setupToolBar();
+    void InitLayout();
 
 private:
     QAction                homepage_action_;
@@ -89,6 +90,7 @@ private:
     UrlLineEdit            address_lineedit_;
     DKToolBar              navigation_toolbar_;
     BrowserView            view_;
+    QVBoxLayout            main_layout_;
     //KeyboardDialog         keyboard_;
     QStandardItemModel     model_;
     //BrowserKeyboardPrivate keyboard_priv_;
