@@ -34,7 +34,7 @@ WebApplication::WebApplication(int &argc, char **argv)
         init_url_path_ = QString::fromLocal8Bit(argv[1]);
     }
 
-    if (argc > 3)
+    if (argc >= 3)
     {
         additional_option_ = QString::fromLocal8Bit(argv[2]);
     }

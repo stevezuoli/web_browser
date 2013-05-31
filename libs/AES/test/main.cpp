@@ -28,8 +28,8 @@ int main()
 	len += rem;
 
 
-	AES_set_encrypt_key(password, bits, &key);
-	AES_ecb_encrypt(in, cipher, len, &key, 1);   // enc = 1, encrypt
+	AES_set_encrypt_key((const unsigned char*)password, bits, &key);
+	AES_ecb_encrypt((const unsigned char*)in, (unsigned char*)cipher, len, &key, 1);   // enc = 1, encrypt
 
 	//initb64();
 	//htob64(cipher, cipher64, len);
@@ -39,8 +39,8 @@ int main()
 	//b64toh(output_cipher, cipher);
     
     
-    AES_set_decrypt_key(password, bits, &key);
-	AES_ecb_encrypt(cipher, text, len, &key, 0); // enc = 0, decrypt
+    AES_set_decrypt_key((const unsigned char*)password, bits, &key);
+	AES_ecb_encrypt((const unsigned char*)cipher, (unsigned char*)text, len, &key, 0); // enc = 0, decrypt
 	
 	printf(" in=\n%s,len=%d\n cipher=\n%s\n text=\n%s,len=%d\n", in, len, cipher, text, strlen(text));
 

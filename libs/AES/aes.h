@@ -1,9 +1,9 @@
 #ifndef QEMU_AES_H
 #define QEMU_AES_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 #define AES_MAXNR 14
 #define AES_BLOCK_SIZE 16
@@ -31,8 +31,8 @@ void AES_cbc_encrypt(const unsigned char *in, unsigned char *out,
 void AES_ecb_encrypt(const unsigned char *in, unsigned char *out,
 		     const unsigned long length, const AES_KEY *key, const int enc);
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 
 #endif

@@ -28,6 +28,9 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "aes.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #ifndef NDEBUG
 #define NDEBUG
