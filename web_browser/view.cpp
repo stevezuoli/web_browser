@@ -308,7 +308,7 @@ QWebView *BrowserView::createWindow(QWebPage::WebWindowType type)
 
 void BrowserView::mousePressEvent(QMouseEvent*me)
 {
-    formLostFocus();
+    emit inputFormLostFocus();
     position_ = me->pos();
 
     return QWebView::mousePressEvent(me);
@@ -662,7 +662,7 @@ void BrowserView::formFocused (const QString& form_id,
     emit inputFormFocused(form_id, form_name, form_action, input_type, input_id, input_name);
 }
 
-void BrowserView::formLostFocus (void)
+void BrowserView::formLostFocus(void)
 {
     hand_tool_enabled_ = true;
     emit inputFormLostFocus();
