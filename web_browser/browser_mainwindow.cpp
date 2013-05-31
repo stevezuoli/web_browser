@@ -137,7 +137,7 @@ void BrowserMainWindow::load(const QString & url_str)
         if (xiaomi_account_manager_.isXiaomiAccountPath(url_str))
         {
             xiaomi_account_manager_.connectWebView(&view_);
-            xiaomi_account_manager_.login(false); // test register
+            xiaomi_account_manager_.login(); // test register
         }
         else
         {
