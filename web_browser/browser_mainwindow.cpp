@@ -27,7 +27,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 {
     // setAttribute(Qt::WA_DeleteOnClose, true);
 #ifndef Q_WS_QWS
-    resize(600, 800);
+    resize(758, 1024);
 #else
     resize(qApp->desktop()->screenGeometry().size());
 #endif
