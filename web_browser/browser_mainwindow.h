@@ -61,7 +61,7 @@ private Q_SLOTS:
                             const QString & input_id,
                             const QString & input_name);
     void onInputFormLostFocus();
-
+    void onAddressInputFocus();
     void onUrlChanged(const QUrl& url);
     void onLinkClicked(const QUrl& url);
     void openUrlInAddress();
@@ -71,8 +71,6 @@ private Q_SLOTS:
     void showForwardHistoryPage();
     void showMenu();
     void showSoftKeyboardIME(bool show);
-    void onTextInput(const QString& text);
-    void onTextDel();
 
     void setHomePageUrl(const QString& url)
     {

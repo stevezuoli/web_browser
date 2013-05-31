@@ -43,11 +43,6 @@ public:
 protected:
     virtual void paintEvent(QPaintEvent* e);
 
-//signals:
-    //void textInput(const QString& text);
-    //void enterPressed();
-    //void delPressed();
-
 private slots:
     void onButtonClicked(int);
 

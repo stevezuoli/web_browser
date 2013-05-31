@@ -3,15 +3,17 @@
 
 namespace ui
 {
-const char* g_ImagePathKT[] = {
+static const char* g_ImagePathKT[] = {
 #define IMAGEPATHKT(CommandId, ImagePathKT, ImagePathKP) \
-    ":/res/"IMAGEPATHKT,
+    ":/res/"ImagePathKT,
+    IMAGE_LIST(IMAGEPATHKT)
 #undef IMAGEPATHKT
 };
 
-const char* g_ImagePathKP[] = {
+static const char* g_ImagePathKP[] = {
 #define IMAGEPATHKP(CommandId, ImagePathKT, ImagePathKP) \
-    ":/res/"IMAGEPATHKP,
+    ":/res/"ImagePathKP,
+    IMAGE_LIST(IMAGEPATHKP)
 #undef IMAGEPATHKP
 };
 

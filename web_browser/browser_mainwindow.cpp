@@ -35,23 +35,19 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     setAutoFillBackground(true);
     setBackgroundRole(QPalette::Base);
 
-    setCentralWidget(&view_);
     address_lineedit_.setWebView(&view_);
     
+    setCentralWidget(&view_);
+
     connect(&homepage_action_, SIGNAL(triggered()), this, SLOT(showHomePage()));
     connect(&history_back_action_, SIGNAL(triggered()), this, SLOT(showBackHistoryPage()));
     connect(&history_forward_action_, SIGNAL(triggered()), this, SLOT(showForwardHistoryPage()));
     connect(&menu_action_, SIGNAL(triggered()), this, SLOT(showMenu()));
     connect(address_lineedit_.lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
-    connect(address_lineedit_.lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(showSoftKeyboardIME(bool)));
 
     connect(&view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
     connect(&view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
-    //connect(&view_, SIGNAL(focusIn()), this, SLOT(showSoftKeyboardIME()));
 
-    //connect(DKSoftKeyboardIME::GetInstance(), SIGNAL(textInput(const QString&)), this, SLOT(onTextInput(const QString&)));
-    //connect(DKSoftKeyboardIME::GetInstance(), SIGNAL(enterPressed()), this, SLOT(openUrlInAddress()));
-    //connect(DKSoftKeyboardIME::GetInstance(), SIGNAL(delPressed()), this, SLOT(onTextDel()));
     connect(&view_, SIGNAL(inputFormFocused(const QString&, const QString&,
                                             const QString&, const QString&,
                                             const QString&, const QString&)),
@@ -292,43 +288,15 @@ void BrowserMainWindow::showSoftKeyboardIME(bool show)
     }
 }
 
-void BrowserMainWindow::onTextInput(const QString& text)
-{
-    qDebug("%s, %d, %s", __PRETTY_FUNCTION__, keyboard_status_, qPrintable(text));
-    if (keyboard_status_ == FORM_FOCUSED)
-    {
-        view_.formFocusedAddValue(keyboard_priv_.form_id,
-                                  keyboard_priv_.form_name,
-                                  keyboard_priv_.form_action,
-                                  keyboard_priv_.input_type,
-                                  keyboard_priv_.input_id,
-                                  keyboard_priv_.input_name,
-                                  text);
-    }
-    else
-    {
-        QLineEdit* lineEdit = address_lineedit_.lineEdit();
-        if (lineEdit && lineEdit->hasFocus())
-        {
-            address_lineedit_.lineEdit()->insert(text);
-        }
-    }
-}
-
-void BrowserMainWindow::onTextDel()
-{
-    QLineEdit* lineEdit = address_lineedit_.lineEdit();
-    if (lineEdit && lineEdit->hasFocus())
-    {
-        QString originText = lineEdit->text();
-        lineEdit->setText(originText.left(originText.count() -1));
-    }
-}
-
 void BrowserMainWindow::onInputFormLostFocus()
 {
     showSoftKeyboardIME(false);
     keyboard_status_ = KEYBOARD_FREE;
+}
+
+void BrowserMainWindow::onAddressInputFocus()
+{
+    DKSoftKeyboardIME::GetInstance()->attachReceiver(address_lineedit_.lineEdit());
 }
 }
 
