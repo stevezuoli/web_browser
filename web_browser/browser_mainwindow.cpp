@@ -218,7 +218,9 @@ void BrowserMainWindow::onInputFormFocused(const QString& form_id,
                                       const QString& input_id,
                                       const QString& input_name)
 {
+#ifndef WIN32
     qDebug("%s, %d, %d, %d", __PRETTY_FUNCTION__, view_.hasFocus(), address_lineedit_.hasFocus(), address_lineedit_.lineEdit()->hasFocus());
+#endif
     // fill keyboard private data
     //keyboard_priv_.form_action = form_action;
     //keyboard_priv_.form_id     = form_id;

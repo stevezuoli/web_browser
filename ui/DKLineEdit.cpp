@@ -49,7 +49,9 @@ void DKLineEdit::setDKStyleSheet()
 
 void DKLineEdit::focusInEvent(QFocusEvent* e)
 {
+#ifndef WIN32
     qDebug("%s", __PRETTY_FUNCTION__);
+#endif
     DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
     if (ime)
     {
@@ -61,7 +63,9 @@ void DKLineEdit::focusInEvent(QFocusEvent* e)
 
 void DKLineEdit::focusOutEvent(QFocusEvent* e)
 {
+#ifndef WIN32
     qDebug("%s", __PRETTY_FUNCTION__);
+#endif
     DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
     if (ime)
     {

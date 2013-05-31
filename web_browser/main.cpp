@@ -18,8 +18,6 @@ int main(int argc, char * argv[])
     }
 
     Q_INIT_RESOURCE(res);
-    //set font for QWebView
-    app.setFont(QFont("Arial", 20, QFont::Bold));
     //adaptor.open(path);
     app.open(path);
     int ret = app.exec();

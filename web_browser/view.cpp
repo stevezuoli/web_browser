@@ -383,8 +383,10 @@ void BrowserView::mouseReleaseEvent(QMouseEvent*me)
 
 void BrowserView::keyPressEvent(QKeyEvent *e)
 {
+#ifndef WIN32
     // We only handle key release event, so ignore some keys.
     qDebug("%s, %d, %s", __PRETTY_FUNCTION__, e->key(), qPrintable(e->text()));
+#endif
     switch (e->key())
     {
     case Qt::Key_Down:
@@ -399,7 +401,9 @@ void BrowserView::keyPressEvent(QKeyEvent *e)
 
 void BrowserView::keyReleaseEvent(QKeyEvent *ke)
 {
+#ifndef WIN32
     qDebug("%s, %d, %s", __PRETTY_FUNCTION__, ke->key(), qPrintable(ke->text()));
+#endif
     switch (ke->key())
     {
     case Qt::Key_Left:
@@ -678,9 +682,11 @@ void BrowserView::formFocused (const QString& form_id,
                                const QString& input_id,
                                const QString& input_name)
 {
+#ifndef WIN32
     qDebug("%s\n: id: %s\nname: %s\naction: %s\ntype: %s\nid: %s\nname: %s", __PRETTY_FUNCTION__, 
             qPrintable(form_id), qPrintable(form_name), qPrintable(form_action),
             qPrintable(input_type), qPrintable(input_id), qPrintable(input_name));
+#endif
     emit inputFormFocused(form_id, form_name, form_action, input_type, input_id, input_name);
 }
 

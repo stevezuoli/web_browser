@@ -1,4 +1,4 @@
-#include "ui/DKSoftKeyboardIME.h"
+﻿#include "ui/DKSoftKeyboardIME.h"
 #include "ui/DKPushButton.h"
 #include "ui/WindowsMetrics.h"
 #include "ui/ImageManager.h"
