@@ -29,6 +29,10 @@ namespace ui
     MACRO_NAME(IME_KEY_LANG_EN_PRESSED, "ime_key_lang_en_pressed@kt.png", "ime_key_lang_en_pressed@kp.png")   \
     MACRO_NAME(IME_KEY_SPACE, "ime_key_space@kt.png", "ime_key_space@kp.png")   \
     MACRO_NAME(IME_KEY_SPACE_PRESSED, "ime_key_space_pressed@kt.png", "ime_key_space_pressed@kp.png")   \
+    MACRO_NAME(IME_KEY_LOWER, "ime_key_A_lower@kt.png", "ime_key_A_lower@kp.png")   \
+    MACRO_NAME(IME_KEY_LOWER_PRESSED, "ime_key_A_lower_pressed@kt.png", "ime_key_A_lower_pressed@kp.png")   \
+    MACRO_NAME(IME_KEY_UPPER, "ime_key_A_upper@kt.png", "ime_key_A_upper@kp.png")   \
+    MACRO_NAME(IME_KEY_UPPER_PRESSED, "ime_key_A_upper_pressed@kt.png", "ime_key_A_upper_pressed@kp.png")   \
 
 enum ImageIndex
 {
@@ -39,7 +43,7 @@ enum ImageIndex
     ImageCount
 };//ImageIndex
 
-class ImageManger
+class ImageManager
 {
 public:
     static const char* GetImagePath(ImageIndex index);

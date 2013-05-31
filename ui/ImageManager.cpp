@@ -17,7 +17,7 @@ static const char* g_ImagePathKP[] = {
 #undef IMAGEPATHKP
 };
 
-const char* ImageManger::GetImagePath(ImageIndex index)
+const char* ImageManager::GetImagePath(ImageIndex index)
 {
     if (index < 0 || index >= ImageCount)
     {
