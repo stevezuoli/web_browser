@@ -366,11 +366,8 @@ void BrowserView::keyPressEvent(QKeyEvent *e)
 {
 #ifndef WIN32
     // We only handle key release event, so ignore some keys.
-<<<<<<< HEAD
     qDebug("%s, %d, %s", __PRETTY_FUNCTION__, e->key(), qPrintable(e->text()));
 #endif
-=======
->>>>>>> 6a564a6513cd59e099e52c5d9b521c6e790a537b
     switch (e->key())
     {
     case Qt::Key_Down:
