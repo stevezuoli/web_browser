@@ -37,7 +37,12 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 
     address_lineedit_.setWebView(&view_);
     
-    setCentralWidget(&view_);
+    QWidget* widget = new QWidget;
+    setCentralWidget(widget);
+    QVBoxLayout* mainLayout = new QVBoxLayout;
+    mainLayout->addWidget(&view_);
+    mainLayout->addWidget(DKSoftKeyboardIME::GetInstance()); 
+    centralWidget()->setLayout(mainLayout);
 
     connect(&homepage_action_, SIGNAL(triggered()), this, SLOT(showHomePage()));
     connect(&history_back_action_, SIGNAL(triggered()), this, SLOT(showBackHistoryPage()));
@@ -283,7 +288,7 @@ void BrowserMainWindow::showSoftKeyboardIME(bool show)
     DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
     if (ime)
     {
-        ime->setParent(this);
+        ime->setParent(&view_);
         DKSoftKeyboardIME::GetInstance()->setVisible(show);
     }
 }
