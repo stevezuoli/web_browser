@@ -5,14 +5,17 @@
 #include "Screen/screen_proxy.h"
 #include "Screen/screen_update_watcher.h"
 #include "ui/DKSoftKeyboardIME.h"
+#include "ui/WindowsMetrics.h"
+
+using namespace ui::windowsmetrics;
 
 namespace webbrowser
 {
 BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 #ifdef Q_WS_QWS
-    : QMainWindow(parent, Qt::FramelessWindowHint)
+    : QWidget(parent, Qt::FramelessWindowHint)
 #else
-    : QMainWindow(parent)
+    : QWidget(parent)
 #endif
     , homepage_action_(QIcon(QLatin1String(":/res/homepage@kt.png")), "", this)
     , history_back_action_(QIcon(QLatin1String(":/res/back@kt.png")), "", this)
@@ -35,14 +38,14 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 
     address_lineedit_.setWebView(&view_);
     
-    setCentralWidget(&view_);
+    InitLayout();
 
     connect(&homepage_action_, SIGNAL(triggered()), this, SLOT(showHomePage()));
     connect(&history_back_action_, SIGNAL(triggered()), this, SLOT(showBackHistoryPage()));
     connect(&history_forward_action_, SIGNAL(triggered()), this, SLOT(showForwardHistoryPage()));
     connect(&menu_action_, SIGNAL(triggered()), this, SLOT(showMenu()));
     connect(address_lineedit_.lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
-    connect(address_lineedit_.lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(showSoftKeyboardIME(bool)));
+    connect(address_lineedit_.lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(onAddressInputFocus(bool)));
 
     connect(&view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
     connect(&view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
@@ -115,7 +118,7 @@ static QUrl guessUrlFromString(const QString &string)
     return url;
 }
 
-void BrowserMainWindow::load(const QString & url_str)
+void BrowserMainWindow::load(const QString & url_str, const QString & option)
 {
     // Depends on the url is local file or not, if the url is empty
     // we need to display the thumbnail view.
@@ -123,13 +126,18 @@ void BrowserMainWindow::load(const QString & url_str)
     QUrl url = guessUrlFromString(url_str);
     if (!url.isValid())
     {
+        qDebug("Invalid input url");
+        return;
     }
     else
     {
         if (xiaomi_account_manager_.isXiaomiAccountPath(url_str))
         {
             xiaomi_account_manager_.connectWebView(&view_);
-            xiaomi_account_manager_.login(); // test register
+            if (option.compare("login", Qt::CaseInsensitive) == 0)
+                xiaomi_account_manager_.login(true); // test register
+            else if (option.compare("register", Qt::CaseInsensitive) == 0)
+                xiaomi_account_manager_.login(false);
         }
         else
         {
@@ -162,9 +170,8 @@ bool BrowserMainWindow::event(QEvent *e)
 
 void BrowserMainWindow::setupToolBar()
 {
-    addToolBar(&navigation_toolbar_);
-    navigation_toolbar_.setIconSize(QSize(40, 72));
-    address_lineedit_.setFixedHeight(41);
+    navigation_toolbar_.setIconSize(QSize(GetWindowMetrics(WebBrowserNavigationBarIconWidthIndex), GetWindowMetrics(WebBrowserNavigationBarIconHeightIndex)));
+    address_lineedit_.setFixedHeight(GetWindowMetrics(WebBrowserAddressEditHeightIndex));
     navigation_toolbar_.addAction(&homepage_action_);
     navigation_toolbar_.addAction(&history_back_action_);
     navigation_toolbar_.addAction(&history_forward_action_);
@@ -296,9 +303,18 @@ void BrowserMainWindow::onInputFormLostFocus()
     //keyboard_status_ = KEYBOARD_FREE;
 }
 
-void BrowserMainWindow::onAddressInputFocus()
+void BrowserMainWindow::onAddressInputFocus(bool focusIn)
 {
-    DKSoftKeyboardIME::GetInstance()->attachReceiver(address_lineedit_.lineEdit());
+    DKSoftKeyboardIME::GetInstance()->attachReceiver(focusIn ? address_lineedit_.lineEdit() : NULL);
+    showSoftKeyboardIME(focusIn);
+}
+
+void BrowserMainWindow::InitLayout()
+{
+    main_layout_.addWidget(&navigation_toolbar_);
+    main_layout_.addWidget(&view_);
+    main_layout_.addWidget(DKSoftKeyboardIME::GetInstance());
+    setLayout(&main_layout_);
 }
 }
 

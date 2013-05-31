@@ -27,8 +27,12 @@ public:
     static NetworkAccessManager * accessManager();
 
     QIcon icon(const QUrl& url) const;
+
+    QString initUrl() const { return init_url_path_; }
+    QString additionalOption() const { return additional_option_; }
+
 public Q_SLOTS:
-    bool open(const QString & path_name);
+    bool open();
     bool close(const QString & path_name);
     void suspend();
 
@@ -45,6 +49,9 @@ private:
 private:
     BrowserMainWindow* main_window_;
     BookmarkModel* bookmark_model_;
+
+    QString init_url_path_;
+    QString additional_option_;
 
     mutable QIcon default_icon_;
 };
