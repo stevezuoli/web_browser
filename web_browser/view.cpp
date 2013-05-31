@@ -565,11 +565,11 @@ QPointF BrowserView::currentOffset()
 void BrowserView::updateViewportRange()
 {
     // Get current location.
-    //QSizeF s = page()->currentFrame()->contentsSize();
-    //QPointF pt = currentOffset();
-    //emit viewportRangeChangedSignal(static_cast<int>(pt.y()),
-                                    //static_cast<int>(rect().height()),
-                                    //static_cast<int>(s.height()));
+    QSizeF s = page()->currentFrame()->contentsSize();
+    QPointF pt = currentOffset();
+    emit viewportUpdated(static_cast<int>(pt.y()),
+                         static_cast<int>(rect().height()),
+                         static_cast<int>(s.height()));
 }
 
 void BrowserView::formFocusedAddValue (const QString& form_id,

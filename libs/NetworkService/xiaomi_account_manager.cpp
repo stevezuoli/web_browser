@@ -436,10 +436,10 @@ bool XiaomiAccountManager::parseAndSave(const QByteArray& data)
         if (token.type() == QVariant::String)
         {
             QString token_str = token.toString();
-            saveToken(token_str);
+            return saveToken(token_str);
         }
     }
-    return result == 0;
+    return false;
 }
 
 bool XiaomiAccountManager::saveToken(const QString& token)
