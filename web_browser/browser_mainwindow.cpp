@@ -21,7 +21,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     , address_lineedit_(this)
     , navigation_toolbar_(tr("Navigation"), this)
     , view_(NULL)
-    , keyboard_status_(KEYBOARD_FREE)
+    //, keyboard_status_(KEYBOARD_FREE)
     , m_homePageUrl(ConstStrings::HOME_PAGE)
 {
     // setAttribute(Qt::WA_DeleteOnClose, true);
@@ -220,15 +220,15 @@ void BrowserMainWindow::onInputFormFocused(const QString& form_id,
 {
     qDebug("%s, %d, %d, %d", __PRETTY_FUNCTION__, view_.hasFocus(), address_lineedit_.hasFocus(), address_lineedit_.lineEdit()->hasFocus());
     // fill keyboard private data
-    keyboard_priv_.form_action = form_action;
-    keyboard_priv_.form_id     = form_id;
-    keyboard_priv_.form_name   = form_name;
-    keyboard_priv_.input_type  = input_type;
-    keyboard_priv_.input_id    = input_id;
-    keyboard_priv_.input_name  = input_name;
+    //keyboard_priv_.form_action = form_action;
+    //keyboard_priv_.form_id     = form_id;
+    //keyboard_priv_.form_name   = form_name;
+    //keyboard_priv_.input_type  = input_type;
+    //keyboard_priv_.input_id    = input_id;
+    //keyboard_priv_.input_name  = input_name;
 
     // update keyboard status
-    keyboard_status_ = FORM_FOCUSED;
+    //keyboard_status_ = FORM_FOCUSED;
 
     DKSoftKeyboardIME::GetInstance()->attachReceiver(&view_);
     showSoftKeyboardIME(true);
@@ -290,8 +290,9 @@ void BrowserMainWindow::showSoftKeyboardIME(bool show)
 
 void BrowserMainWindow::onInputFormLostFocus()
 {
+    DKSoftKeyboardIME::GetInstance()->attachReceiver(NULL);
     showSoftKeyboardIME(false);
-    keyboard_status_ = KEYBOARD_FREE;
+    //keyboard_status_ = KEYBOARD_FREE;
 }
 
 void BrowserMainWindow::onAddressInputFocus()

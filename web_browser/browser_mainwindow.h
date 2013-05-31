@@ -91,8 +91,8 @@ private:
     BrowserView            view_;
     //KeyboardDialog         keyboard_;
     QStandardItemModel     model_;
-    BrowserKeyboardPrivate keyboard_priv_;
-    BrowserKeyboardStatus  keyboard_status_;
+    //BrowserKeyboardPrivate keyboard_priv_;
+    //BrowserKeyboardStatus  keyboard_status_;
 
     XiaomiAccountManager   xiaomi_account_manager_;
     QString                m_homePageUrl;
