@@ -1,7 +1,7 @@
 ﻿#include "ui/DKSoftKeyboardIME.h"
 #include "ui/DKPushButton.h"
-#include "ui/WindowsMetrics.h"
-#include "ui/ImageManager.h"
+#include "common/WindowsMetrics.h"
+#include "common/ImageManager.h"
 #include <algorithm>
 
 namespace ui

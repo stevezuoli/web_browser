@@ -20,6 +20,7 @@ TARGET_LINK_LIBRARIES(web_browser
    system
    screen
    ui
+   common
    ${QT_LIBRARIES}
    ${ADD_LIB}
 )

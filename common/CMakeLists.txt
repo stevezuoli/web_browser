@@ -10,10 +10,9 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 
 #Resouce.
 
-ADD_LIBRARY(ui ${SRCS})
+ADD_LIBRARY(common ${SRCS})
 
-TARGET_LINK_LIBRARIES(ui
-    common
+TARGET_LINK_LIBRARIES(common
     device
     ${QT_LIBRARIES}
     ${ADD_LIB})
