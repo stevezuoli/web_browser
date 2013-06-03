@@ -9,7 +9,6 @@ using namespace webbrowser;
 int main(int argc, char * argv[])
 {
     Device::instance();
-    SystemManager system;
     WebApplication app(argc, argv);
     //WebApplicationAdaptor adaptor(&app);
     
