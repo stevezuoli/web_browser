@@ -5,7 +5,7 @@
 #include "Screen/screen_proxy.h"
 #include "Screen/screen_update_watcher.h"
 #include "ui/DKSoftKeyboardIME.h"
-#include "ui/WindowsMetrics.h"
+#include "common/WindowsMetrics.h"
 
 using namespace ui::windowsmetrics;
 
@@ -27,7 +27,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 {
     // setAttribute(Qt::WA_DeleteOnClose, true);
 #ifndef Q_WS_QWS
-    resize(758, 1024);
+    resize(GetWindowMetrics(UIScreenWidthIndex), GetWindowMetrics(UIScreenHeightIndex));
 #else
     resize(qApp->desktop()->screenGeometry().size());
 #endif
@@ -123,6 +123,7 @@ void BrowserMainWindow::load(const QString & url_str, const QString & option)
     // Depends on the url is local file or not, if the url is empty
     // we need to display the thumbnail view.
     // Check if it's a local file or not at first.
+    qDebug("BrowserMainWindow::load %s, %s", qPrintable(url_str), qPrintable(option));
     QUrl url = guessUrlFromString(url_str);
     if (!url.isValid())
     {

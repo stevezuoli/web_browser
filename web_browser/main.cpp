@@ -9,6 +9,42 @@ using namespace webbrowser;
 int main(int argc, char * argv[])
 {
     Device::instance();
+#ifndef Q_WS_QWS
+    int ch;
+    while ((ch = getopt(argc, argv, "-ud:")) != -1)
+    {
+        switch (ch)
+        {
+            case 'u':
+            case '?':
+                qDebug("Usage:\n -d: SetDeviceType, eg. -d k3/k4/kt/kp");
+                return 0;
+            case 'd':
+                qDebug("Device set to %s", optarg);
+                if (strcmp(optarg, "k3") == 0)
+                {
+                    Device::setModel(Device::K3);
+                }
+                else if (strcmp(optarg, "k4") == 0)
+                {
+                    Device::setModel(Device::K4NT);
+                }
+                else if (strcmp(optarg, "k4b") == 0)
+                {
+                    Device::setModel(Device::K4NTB);
+                }
+                else if (strcmp(optarg, "kt") == 0)
+                {
+                    Device::setModel(Device::KT);
+                }
+                else if (strcmp(optarg, "kp") == 0)
+                {
+                    Device::setModel(Device::KPW);
+                }
+        }
+    }
+#endif
+
     WebApplication app(argc, argv);
     //WebApplicationAdaptor adaptor(&app);
     

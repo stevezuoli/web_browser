@@ -65,4 +65,5 @@ add_subdirectory(drivers/kermit)
 add_subdirectory(drivers/QKindleFb)
 add_subdirectory(drivers/KindleTS)
 add_subdirectory(ui)
+add_subdirectory(common)
 
