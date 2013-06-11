@@ -1,1 +1,1 @@
-CC=/opt/freescale/usr/local/gcc-4.4.4-glibc-2.11.1-multilib-1.0/arm-fsl-linux-gnueabi/bin/arm-linux-gcc CXX=/opt/freescale/usr/local/gcc-4.4.4-glibc-2.11.1-multilib-1.0/arm-fsl-linux-gnueabi/bin/arm-linux-g++ cmake -DBUILD_FOR_ARM:BOOL=ON  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON ../web_browser
+CC=/opt/freescale/usr/local/gcc-4.4.4-glibc-2.11.1-multilib-1.0/arm-fsl-linux-gnueabi/bin/arm-linux-gcc CXX=/opt/freescale/usr/local/gcc-4.4.4-glibc-2.11.1-multilib-1.0/arm-fsl-linux-gnueabi/bin/arm-linux-g++ cmake -DBUILD_FOR_ARM:BOOL=ON  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON .

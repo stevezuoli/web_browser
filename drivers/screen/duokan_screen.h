@@ -1,6 +1,3 @@
-/// Author John
-/// Qt based Eink screen plugin for Duokan project.
-
 #ifndef DUOKAN_SCREEN_H_
 #define DUOKAN_SCREEN_H_
 

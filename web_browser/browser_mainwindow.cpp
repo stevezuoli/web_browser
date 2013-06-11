@@ -4,8 +4,11 @@
 #include "const_strings.h"
 #include "Screen/screen_proxy.h"
 #include "Screen/screen_update_watcher.h"
-#include "ui/DKSoftKeyboardIME.h"
 #include "common/WindowsMetrics.h"
+#include "common/ImageManager.h"
+#include "common/debug.h"
+#include "url_lineedit.h"
+#include "System/inc/system_manager.h"
 
 using namespace ui::windowsmetrics;
 
@@ -17,12 +20,15 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 #else
     : QWidget(parent)
 #endif
-    , homepage_action_(QIcon(QLatin1String(":/res/homepage@kt.png")), "", this)
-    , history_back_action_(QIcon(QLatin1String(":/res/back@kt.png")), "", this)
-    , history_forward_action_(QIcon(QLatin1String(":/res/forward@kt.png")), "", this)
-    , menu_action_(QIcon(QLatin1String(":/res/menu@kt.png")), "", this)
-    , navigation_toolbar_(tr("Navigation"), this)
-    //, keyboard_status_(KEYBOARD_FREE)
+    , exit_tool_button_(this)
+    , history_back_tool_button_(this)
+    , history_forward_tool_button_(this)
+    , menu_tool_button_(this)
+    , address_lineedit_(new UrlLineEdit)
+    , navigation_toolbar_(new DKToolBar(tr("Navigation"), this))
+    , view_(new BrowserView)
+    , keyboard_(new DKSoftKeyboardIME)
+    , xiaomi_account_manager_()
     , m_homePageUrl(ConstStrings::HOME_PAGE)
 {
     // setAttribute(Qt::WA_DeleteOnClose, true);
@@ -36,28 +42,31 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     setAutoFillBackground(true);
     setBackgroundRole(QPalette::Base);
 
-    address_lineedit_.setWebView(&view_);
+    address_lineedit_->setWebView(view_);
     
     InitLayout();
+    view_->setFocus();
+    connect(&exit_tool_button_, SIGNAL(clicked()), view_, SLOT(returnToLibrary()));
+    connect(&history_back_tool_button_, SIGNAL(clicked()), this, SLOT(showBackHistoryPage()));
+    connect(&history_forward_tool_button_, SIGNAL(clicked()), this, SLOT(showForwardHistoryPage()));
+    connect(&menu_tool_button_, SIGNAL(clicked()), this, SLOT(showMenu()));
+    connect(address_lineedit_->lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
+    connect(address_lineedit_->lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(onAddressInputFocus(bool)));
 
-    connect(&homepage_action_, SIGNAL(triggered()), this, SLOT(showHomePage()));
-    connect(&history_back_action_, SIGNAL(triggered()), this, SLOT(showBackHistoryPage()));
-    connect(&history_forward_action_, SIGNAL(triggered()), this, SLOT(showForwardHistoryPage()));
-    connect(&menu_action_, SIGNAL(triggered()), this, SLOT(showMenu()));
-    connect(address_lineedit_.lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
-    connect(address_lineedit_.lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(onAddressInputFocus(bool)));
+    connect(view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
+    connect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
+    connect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
+    connect(view_, SIGNAL(keyboardKeyPressed(void)), this, SLOT(switchKeyboardVisible(void)));
 
-    connect(&view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
-    connect(&view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
-
-    connect(&view_, SIGNAL(inputFormFocused(const QString&, const QString&,
+    connect(view_, SIGNAL(inputFormFocused(const QString&, const QString&,
                                             const QString&, const QString&,
                                             const QString&, const QString&)),
             this, SLOT(onInputFormFocused(const QString&, const QString&,
                                           const QString&, const QString&,
                                           const QString&, const QString&)));
-    connect(&view_, SIGNAL(inputFormLostFocus()), this, SLOT(onInputFormLostFocus()));
+    connect(view_, SIGNAL(inputFormLostFocus()), this, SLOT(onInputFormLostFocus()));
 
+    
 #ifdef Q_WS_QWS
     connect(qApp->desktop(), SIGNAL(resized(int)),
             this, SLOT(onScreenSizeChanged(int)), Qt::QueuedConnection);
@@ -66,6 +75,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 
 BrowserMainWindow::~BrowserMainWindow()
 {
+    DebugWB("");
 }
 
 static QUrl guessUrlFromString(const QString &string)
@@ -132,13 +142,15 @@ void BrowserMainWindow::load(const QString & url_str, const QString & option)
     }
     else
     {
-        if (xiaomi_account_manager_.isXiaomiAccountPath(url_str))
+        if (XiaomiAccountManager::isXiaomiAccountPath(url_str))
         {
-            xiaomi_account_manager_.connectWebView(&view_);
+            xiaomi_account_manager_.reset(new XiaomiAccountManager);
+            address_lineedit_->setModifyLineEditTextAutomatically(false);
+            setupXiaomiAccountConnect();
             if (option.compare("login", Qt::CaseInsensitive) == 0)
-                xiaomi_account_manager_.login(true); // test register
+                xiaomi_account_manager_->login(url_str, true); // test register
             else if (option.compare("register", Qt::CaseInsensitive) == 0)
-                xiaomi_account_manager_.login(false);
+                xiaomi_account_manager_->login(url_str, false);
         }
         else
         {
@@ -149,7 +161,7 @@ void BrowserMainWindow::load(const QString & url_str, const QString & option)
                 message = message.arg(host);
             }
 
-            view_.myLoad(url);
+            view_->myLoad(url);
         }
     }
 }
@@ -171,13 +183,38 @@ bool BrowserMainWindow::event(QEvent *e)
 
 void BrowserMainWindow::setupToolBar()
 {
-    navigation_toolbar_.setIconSize(QSize(GetWindowMetrics(WebBrowserNavigationBarIconWidthIndex), GetWindowMetrics(WebBrowserNavigationBarIconHeightIndex)));
-    address_lineedit_.setFixedHeight(GetWindowMetrics(WebBrowserAddressEditHeightIndex));
-    navigation_toolbar_.addAction(&homepage_action_);
-    navigation_toolbar_.addAction(&history_back_action_);
-    navigation_toolbar_.addAction(&history_forward_action_);
-    navigation_toolbar_.addWidget(&address_lineedit_);
-    navigation_toolbar_.addAction(&menu_action_);
+    navigation_toolbar_->setStyleSheet("background: transparent;border: none");
+    navigation_toolbar_->setIconSize(QSize(GetWindowMetrics(WebBrowserNavigationBarIconWidthIndex), GetWindowMetrics(WebBrowserNavigationBarIconHeightIndex)));
+    navigation_toolbar_->setFloatable(false);
+    navigation_toolbar_->setMovable(false);
+    address_lineedit_->setFixedHeight(GetWindowMetrics(WebBrowserAddressEditHeightIndex));
+    navigation_toolbar_->addWidget(&exit_tool_button_);
+    navigation_toolbar_->addWidget(&history_back_tool_button_);
+    navigation_toolbar_->addWidget(&history_forward_tool_button_);
+    navigation_toolbar_->addWidget(address_lineedit_);
+    navigation_toolbar_->addWidget(&menu_tool_button_);
+
+    QString styleSheet("QToolButton::enabled{image: url(%1)}" "QToolButton::pressed{image: url(%2)}" "QToolButton::disabled{image: url(%3)}");
+    //QString styleSheetDisabled("disabled{image: url(%1)}");
+    exit_tool_button_.setStyleSheet(styleSheet.arg(
+                ImageManager::GetImagePath(IMAGE_HOMEPAGE),
+                ImageManager::GetImagePath(IMAGE_BROWSER),
+                ImageManager::GetImagePath(IMAGE_HOMEPAGE)));
+    history_back_tool_button_.setStyleSheet(styleSheet.arg(
+                ImageManager::GetImagePath(IMAGE_BACK), 
+                ImageManager::GetImagePath(IMAGE_BROWSER),
+                ImageManager::GetImagePath(IMAGE_BACK_GREY)));
+    history_forward_tool_button_.setStyleSheet(styleSheet.arg(
+                ImageManager::GetImagePath(IMAGE_FORWARD),
+                ImageManager::GetImagePath(IMAGE_BROWSER),
+                ImageManager::GetImagePath(IMAGE_FORWARD_GREY)));
+    menu_tool_button_.setStyleSheet(styleSheet.arg(
+                ImageManager::GetImagePath(IMAGE_MENU),
+                ImageManager::GetImagePath(IMAGE_BROWSER),
+                ImageManager::GetImagePath(IMAGE_MENU)));
+    //history_back_tool_button_.setIcon(QIcon(ImageManager::GetImagePath(IMAGE_BACK)));
+    //history_forward_tool_button_.setIcon(QIcon(ImageManager::GetImagePath(IMAGE_FORWARD)));
+    //menu_tool_button_.setIcon(QIcon(ImageManager::GetImagePath(IMAGE_MENU)));
 }
 
 void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
@@ -186,7 +223,7 @@ void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
     switch (ke->key())
     {
     case Qt::Key_Escape:
-        view_.returnToLibrary();
+        view_->returnToLibrary();
         break;
     default:
         QWidget::keyReleaseEvent(ke);
@@ -197,10 +234,23 @@ void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
 /// The keyPressEvent could be sent from virtual keyboard.
 void BrowserMainWindow::keyPressEvent(QKeyEvent * ke)
 {
+    DebugWB("");
     ke->accept();
 
+    switch (ke->key())
+    {
+    case Qt::Key_Down:
+        if (address_lineedit_->hasFocus())
+        {
+            view_->setFocus();
+            return;
+        }
+    default:
+        break;
+    }
+
     QKeyEvent * key_event = new QKeyEvent(ke->type(), ke->key(), ke->modifiers(), ke->text());
-    QApplication::postEvent(&view_, key_event);
+    QApplication::postEvent(view_, key_event);
 
     while (QApplication::hasPendingEvents())
     {
@@ -225,9 +275,7 @@ void BrowserMainWindow::onInputFormFocused(const QString& form_id,
                                       const QString& input_id,
                                       const QString& input_name)
 {
-#ifndef WIN32
-    qDebug("%s, %d, %d, %d", __PRETTY_FUNCTION__, view_.hasFocus(), address_lineedit_.hasFocus(), address_lineedit_.lineEdit()->hasFocus());
-#endif
+    //DebugWB("");
     // fill keyboard private data
     //keyboard_priv_.form_action = form_action;
     //keyboard_priv_.form_id     = form_id;
@@ -239,7 +287,7 @@ void BrowserMainWindow::onInputFormFocused(const QString& form_id,
     // update keyboard status
     //keyboard_status_ = FORM_FOCUSED;
 
-    DKSoftKeyboardIME::GetInstance()->attachReceiver(&view_);
+    keyboard_->attachReceiver(view_);
     showSoftKeyboardIME(true);
 }
 
@@ -250,12 +298,12 @@ void BrowserMainWindow::showHomePage()
 
 void BrowserMainWindow::showBackHistoryPage()
 {
-    view_.back();
+    view_->back();
 }
 
 void BrowserMainWindow::showForwardHistoryPage()
 {
-    view_.forward();
+    view_->forward();
 }
 
 void BrowserMainWindow::showMenu()
@@ -265,57 +313,113 @@ void BrowserMainWindow::showMenu()
 void BrowserMainWindow::onUrlChanged(const QUrl& url)
 {
     qDebug("BrowserMainWindow::onUrlChanged %s", qPrintable(url.toString()));
-    int current = view_.GetCurrentHistoryPageIndex();
-    int total = view_.GetHistoryPageCounts();
-    if (current >= 0 && total > 0)
+    if (!xiaomi_account_manager_)
     {
-        history_back_action_.setEnabled(current > 0);
-        history_forward_action_.setEnabled(current != total -1);
+        int current = view_->GetCurrentHistoryPageIndex();
+        int total = view_->GetHistoryPageCounts();
+        if (current >= 0 && total > 0)
+        {
+            history_back_tool_button_.setEnabled(current > 0);
+            history_forward_tool_button_.setEnabled(current != total -1);
+        }
     }
-
-    address_lineedit_.lineEdit()->setText(url.toString());
 }
 
 void BrowserMainWindow::onLinkClicked(const QUrl &new_url)
 {
-    load(new_url.toString());
+    view_->myLoad(new_url);
 }
 
 void BrowserMainWindow::openUrlInAddress()
 {
-    qDebug("BrowserMainWindow::openUrlInAddress, %s", address_lineedit_.lineEdit()->text().toStdString().c_str());
-    load(address_lineedit_.lineEdit()->text());
+    showSoftKeyboardIME(false);
+    view_->setFocus();
+    load(address_lineedit_->lineEdit()->text());
 }
 
 void BrowserMainWindow::showSoftKeyboardIME(bool show)
 {
-    DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
-    if (ime)
+    //DebugWB("");
+    if (keyboard_ != 0)
     {
-        ime->setParent(this);
-        DKSoftKeyboardIME::GetInstance()->setVisible(show);
+        keyboard_->setParent(this);
+        keyboard_->setVisible(show);
+    }
+
+    if (show)
+        SystemManager::instance()->enterKeypadMode();
+    else
+        SystemManager::instance()->enterMouseMode();
+}
+
+void BrowserMainWindow::switchKeyboardVisible()
+{
+    if (keyboard_ != 0)
+    {
+        keyboard_->setParent(this);
+        keyboard_->setVisible(!keyboard_->isVisible());
     }
 }
 
 void BrowserMainWindow::onInputFormLostFocus()
 {
-    DKSoftKeyboardIME::GetInstance()->attachReceiver(NULL);
+    //DebugWB("");
+    keyboard_->attachReceiver(NULL);
     showSoftKeyboardIME(false);
     //keyboard_status_ = KEYBOARD_FREE;
 }
 
 void BrowserMainWindow::onAddressInputFocus(bool focusIn)
 {
-    DKSoftKeyboardIME::GetInstance()->attachReceiver(focusIn ? address_lineedit_.lineEdit() : NULL);
+    DebugWB("");
+    keyboard_->attachReceiver(focusIn ? address_lineedit_->lineEdit() : NULL);
     showSoftKeyboardIME(focusIn);
 }
 
 void BrowserMainWindow::InitLayout()
 {
-    main_layout_.addWidget(&navigation_toolbar_);
-    main_layout_.addWidget(&view_);
-    main_layout_.addWidget(DKSoftKeyboardIME::GetInstance());
+    main_layout_.addWidget(navigation_toolbar_);
+    main_layout_.addWidget(view_);
+    main_layout_.addWidget(keyboard_);
     setLayout(&main_layout_);
 }
+
+void BrowserMainWindow::onLoadFinished(bool ok)
+{
+    DebugWB("");
+    view_->setFocus();
+    showSoftKeyboardIME(false);
+}
+
+void BrowserMainWindow::setupXiaomiAccountConnect()
+{
+    connect(xiaomi_account_manager_.get(), SIGNAL(pageChanged(const QString&)), this, SLOT(onXiaomiAccountPageChanged(const QString&)));
+    connect(xiaomi_account_manager_.get(), SIGNAL(loginFinished(bool)), this, SLOT(onXiaomiAccountLoadFinished(bool)));
+    xiaomi_account_manager_->connectWebView(view_);
+}
+
+void BrowserMainWindow::onXiaomiAccountPageChanged(const QString& message)
+{
+    address_lineedit_->lineEdit()->setText(message);
+}
+
+void BrowserMainWindow::paintEvent(QPaintEvent *e)
+{
+    QPainter painter(this);
+    int lineTop = navigation_toolbar_->rect().bottom();
+    painter.setBrush(Qt::black);
+    painter.drawRect(0, lineTop, GetWindowMetrics(UIScreenWidthIndex), GetWindowMetrics(NavigationBarLinePixelIndex));
+    QWidget::paintEvent(e);
+}
+
+void BrowserMainWindow::onXiaomiAccountLoadFinished(bool ok)
+{
+    if (ok)
+    {
+        xiaomi_account_manager_->disconnectWebView();
+        view_->returnToLibrary();
+    }
+}
+
 }
 

@@ -168,7 +168,6 @@ void NetworkAccessManager::onSSLErrors(QNetworkReply *reply, const QList<QSslErr
             ssl_trusted_hosts_.append(reply_host);
             reply->ignoreSslErrors();
         }
-        onyx::screen::instance().flush(0, onyx::screen::ScreenProxy::GU);
     }
 #else
     reply->ignoreSslErrors();

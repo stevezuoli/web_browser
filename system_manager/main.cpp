@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
     // Otherwise, tslib can not initialize the touch screen.
     QApplication app(argc, argv);
     //SystemManagerAdaptor adaptor(app);
+    SystemManager::instance();
 
     return app.exec();
 }

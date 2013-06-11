@@ -42,7 +42,7 @@
 #include "qmousetslib_qws.h"
 
 #if !defined(QT_NO_QWS_MOUSE_TSLIB) || defined(QT_PLUGIN)
-
+#include "qwindowsystem_qws.h"
 #include <QtCore/qregexp.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qprocess.h>
@@ -71,8 +71,8 @@ QT_BEGIN_NAMESPACE
 #define BTN_TOUCH		0x14a
 #define BTN_TOOL_DOUBLETAP	0x14d
 
-#define POS_TH 10
 #define KT_HOME 102
+#define POS_TH 10
 
 class Device
 {
@@ -344,14 +344,14 @@ QWSTslibMouseHandlerPrivate::QWSTslibMouseHandlerPrivate(QWSTslibMouseHandler *h
     }
 
     if (_fd == -1)
-        qDebug("TOUCH open FAILED");
+        qDebug("Open touch failed!");
     else
-        qDebug("TOUCH open SUCCESS");
+        qDebug("Open touch succeeded!");
 
     if (kt_fd == -1)
-        qDebug("KBD open FAILED");
+        qDebug("Open Keyboard failed!");
     else
-        qDebug("KBD open SUCCESS");
+        qDebug("Open Keyboard succeeded!");
 
     _sn = new QSocketNotifier(_fd, QSocketNotifier::Read);
 
@@ -404,12 +404,15 @@ void QWSTslibMouseHandlerPrivate::kt_activity(int)
 
     if (in.type == 1)
     {
-        QString debugText = QString("Keyboard: type %1, code %2, value %3").arg(in.type).arg(in.code).arg(in.value) ;
-        qDebug("%s", (const char*)debugText.toAscii());
+        if (_debug)
+        {
+            QString debugText = QString("Keyboard: type %1, code %2, value %3").arg(in.type).arg(in.code).arg(in.value) ;
+            qDebug("%s", (const char*)debugText.toAscii());
+        }
 
-        /*if (in.code == KT_HOME) {
-            processKeyEvent(0, Qt::Key_Home, Qt::NoModifier, in.value != 0, in.value != 2);
-        }*/
+        if (in.code == KT_HOME) {
+            QWSServer::sendKeyEvent(0, Qt::Key_Home, Qt::NoModifier, in.value != 0, in.value != 2);
+        }
     }
 
     kt_sn->setEnabled(true);
@@ -418,14 +421,10 @@ void QWSTslibMouseHandlerPrivate::kt_activity(int)
 void QWSTslibMouseHandlerPrivate::activity(int)
 {
     _sn->setEnabled(false);
-
     int pos;
-
     input_event_t in; ssize_t size ;
-
     size = read(_fd, &in, sizeof(input_event_t));
-
-    qDebug("TS data: type %X, code %X, value %d", in.type, in.code, in.value);
+    if (_debug) qDebug("TS data: type %X, code %X, value %d", in.type, in.code, in.value);
 
     switch(in.type)
     {
@@ -468,9 +467,12 @@ void QWSTslibMouseHandlerPrivate::activity(int)
         break ;
     }
 
-    qDebug("x=%d, y=%d, touch=%d %d, doubletap=%d %d", p.x(), p.y(), touch, newtouch, doubletap, newdoubletap);
-    if (in.type == EV_SYN)
-        qDebug("________________") ;
+    if (_debug)
+    {
+        qDebug("x=%d, y=%d, touch=%d %d, doubletap=%d %d", p.x(), p.y(), touch, newtouch, doubletap, newdoubletap);
+        if (in.type == EV_SYN)
+            qDebug("________________");
+    }
 
     _sn->setEnabled(true);
 }
@@ -481,7 +483,7 @@ void QWSTslibMouseHandlerPrivate::capture_input(void)
 
     if (!input_captured )
     {
-        qDebug("attempting to capture input...");
+        if (_debug) qDebug("attempting to capture input...");
 
         if (_fd != -1)
         {
@@ -507,7 +509,7 @@ void QWSTslibMouseHandlerPrivate::release_input(void)
 
     if (input_captured )
     {
-        qDebug("attempting to release input...");
+        if (_debug) qDebug("attempting to release input...");
         if (_fd != -1)
         {
             if (ioctl(_fd, EVIOCGRAB, off)) {

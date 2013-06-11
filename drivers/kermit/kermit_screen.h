@@ -1,6 +1,3 @@
-/// Author John
-/// Qt based Eink screen plugin for marvell kermit chipset.
-
 #ifndef KERMIT_SCREEN_H_
 #define KERMIT_SCREEN_H_
 

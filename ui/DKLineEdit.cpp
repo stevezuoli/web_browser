@@ -1,5 +1,6 @@
 #include "ui/DKLineEdit.h"    
 #include "ui/DKSoftKeyboardIME.h"
+#include "common/debug.h"
 
 namespace ui
 {
@@ -7,7 +8,6 @@ const QString LINE_EDIT_STYLE = "       \
 QLineEdit                               \
 {                                       \
     border: 0px solid dark;             \
-    background: white;                  \
     selection-background-color: black;  \
     selection-color: white;             \
     font: 24px bold;                    \
@@ -17,11 +17,10 @@ QLineEdit                               \
 QLineEdit:disabled                      \
 {                                       \
     border: 0px solid dark;             \
-    background: white;                  \
     selection-background-color: black;  \
     selection-color: white;             \
     font: 24px bold;                    \
-    color: dark;                       \
+    color: dark;                        \
     padding: 2px;                       \
 }";
 
@@ -49,30 +48,13 @@ void DKLineEdit::setDKStyleSheet()
 
 void DKLineEdit::focusInEvent(QFocusEvent* e)
 {
-#ifndef WIN32
-    qDebug("%s", __PRETTY_FUNCTION__);
-#endif
     emit focusSignal(true);
-    //qDebug("%s", __PRETTY_FUNCTION__);
-    //DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
-    //if (ime)
-    //{
-        //ime->attachReceiver(this);
-        //ime->show();
-    //}
     QLineEdit::focusInEvent(e);
 }
 
 void DKLineEdit::focusOutEvent(QFocusEvent* e)
 {
     emit focusSignal(false);
-    //qDebug("%s", __PRETTY_FUNCTION__);
-    //DKSoftKeyboardIME* ime = DKSoftKeyboardIME::GetInstance();
-    //if (ime)
-    //{
-        //ime->attachReceiver(NULL);
-        //ime->hide();
-    //}
     QLineEdit::focusOutEvent(e);
 }
 }

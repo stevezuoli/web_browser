@@ -47,11 +47,15 @@ QT_END_NAMESPACE
 namespace network_service
 {
 
-CookieJar::CookieJar(QObject *parent)
+CookieJar::CookieJar(QObject *parent,
+    const QLatin1String &storage_name,
+    const QLatin1String &setting_name)
     : QNetworkCookieJar(parent)
     , loaded_(false)
     , save_timer_(new AutoSaver(this))
     , accept_cookies_(AcceptOnlyFromSitesNavigatedTo)
+    , storage_name_(storage_name)
+    , setting_name_(setting_name)
 {
 }
 
@@ -77,7 +81,7 @@ void CookieJar::load()
         return;
     // load cookies and exceptions
     qRegisterMetaTypeStreamOperators<QList<QNetworkCookie> >("QList<QNetworkCookie>");
-    QSettings cookieSettings(QDesktopServices::storageLocation(QDesktopServices::DataLocation) + QLatin1String("/cookies.ini"), QSettings::IniFormat);
+    QSettings cookieSettings(QDesktopServices::storageLocation(QDesktopServices::DataLocation) + storage_name_, QSettings::IniFormat);
     setAllCookies(qvariant_cast<QList<QNetworkCookie> >(cookieSettings.value(QLatin1String("cookies"))));
     cookieSettings.beginGroup(QLatin1String("Exceptions"));
     exceptions_block_ = cookieSettings.value(QLatin1String("block")).toStringList();
@@ -93,7 +97,7 @@ void CookieJar::load()
 void CookieJar::loadSettings()
 {
     QSettings settings;
-    settings.beginGroup(QLatin1String("cookies"));
+    settings.beginGroup(setting_name_);
     QByteArray value = settings.value(QLatin1String("acceptCookies"),
                         QLatin1String("AcceptOnlyFromSitesNavigatedTo")).toByteArray();
     QMetaEnum acceptPolicyEnum = staticMetaObject.enumerator(staticMetaObject.indexOfEnumerator("AcceptPolicy"));
@@ -135,7 +139,7 @@ void CookieJar::save()
         QDir dir;
         dir.mkpath(directory);
     }
-    QSettings cookieSettings(directory + QLatin1String("/cookies.ini"), QSettings::IniFormat);
+    QSettings cookieSettings(directory + storage_name_, QSettings::IniFormat);
     QList<QNetworkCookie> cookies = allCookies();
     //for (int i = cookies.count() - 1; i >= 0; --i)
     //{
@@ -150,15 +154,30 @@ void CookieJar::save()
     cookieSettings.setValue(QLatin1String("block"), exceptions_block_);
     cookieSettings.setValue(QLatin1String("allow"), exceptions_allow_);
     cookieSettings.setValue(QLatin1String("allowForSession"), exceptions_allow_for_session_);
+    cookieSettings.endGroup();
 
     // save cookie settings
     QSettings settings;
-    settings.beginGroup(QLatin1String("cookies"));
+    settings.beginGroup(setting_name_);
     QMetaEnum acceptPolicyEnum = staticMetaObject.enumerator(staticMetaObject.indexOfEnumerator("AcceptPolicy"));
     settings.setValue(QLatin1String("acceptCookies"), QLatin1String(acceptPolicyEnum.valueToKey(accept_cookies_)));
 
     QMetaEnum keepPolicyEnum = staticMetaObject.enumerator(staticMetaObject.indexOfEnumerator("KeepPolicy"));
     settings.setValue(QLatin1String("keepCookiesUntil"), QLatin1String(keepPolicyEnum.valueToKey(keep_cookies_)));
+    settings.endGroup();
+}
+
+void CookieJar::reset()
+{
+    storage_name_ = QLatin1String("/cookies.ini");
+    setting_name_ = QLatin1String("cookies");
+    loaded_ = false;
+    load();
+
+    if (keep_cookies_ != KeepUntilExpire)
+    {
+        setKeepPolicy(KeepUntilExpire);
+    }
 }
 
 void CookieJar::purgeOldCookies()

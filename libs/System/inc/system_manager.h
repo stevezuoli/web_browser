@@ -5,21 +5,39 @@
 #include <QtDBus/QtDBus>
 #include "screen_manager.h"
 
-
+class KindleTS;
+class KindleKeyboard;
+class KindleFiveWay;
 class SystemManager : public QObject
 {
     Q_OBJECT
-public:
     SystemManager();
+public:
     virtual ~SystemManager();
+    static SystemManager* instance();
+
+    void setupKindleTSMouseHandler();
+    void setupKindleKeyboardHandler();
+    void setupKindleFiveWayHandler();
+    void suspendTouch();
+    void resumeTouch();
+    void enterMouseMode();
+    void enterKeypadMode();
 
 public Q_SLOTS:
-    void snapshot(const QString &path);
-    bool setGrayScale(int colors);
-    int grayScale();
+    //void snapshot(const QString &path);
+    //bool setGrayScale(int colors);
+    //int grayScale();
 
-public:
-    ScreenManager screen_manager_;
+private:
+    void loadDrivers();
+    void releaseDrivers();
+
+private:
+    //ScreenManager screen_manager_; // Disable screen manager because we are using driver drawing now
+    KindleTS* kindle_ts_;
+    KindleKeyboard* kindle_keyboard_;
+    KindleFiveWay* kindle_fiveway_;
 };
 
 /// Device manager which reports device states.

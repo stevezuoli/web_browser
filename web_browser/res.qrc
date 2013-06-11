@@ -56,5 +56,6 @@
     <file>res/load_fail.html</file>
     <file>res/ota_status.html</file>
     <file>res/connecting.html</file>
+    <file>res/WebBrowser_Chn.qm</file>
   </qresource>
 </RCC>

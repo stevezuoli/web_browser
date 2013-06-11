@@ -2,7 +2,6 @@
 #define __DEVICEINFO_H__
 #include <map>
 #include "string"
-#include <QtGui/QtGui>
 using std::map;
 using std::string;
 

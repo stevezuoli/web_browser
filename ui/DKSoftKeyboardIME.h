@@ -21,7 +21,7 @@ public:
     static const int s_keyboardRows = 4;
     static const int s_btnsEndIndex[s_keyboardRows];
 
-    static DKSoftKeyboardIME* GetInstance();
+    //static DKSoftKeyboardIME* GetInstance();
     enum SoftKeyboardType
     {
         SKT_English = 0x1,
@@ -46,11 +46,13 @@ public:
     DKSoftKeyboardIME();
     void attachReceiver(QObject* receiver)
     {
-        m_keyReceiver = receiver;
+        key_receiver_ = receiver;
     }
+    virtual void setVisible(bool visible);
 
 protected:
     virtual void paintEvent(QPaintEvent* e);
+    virtual void keyPressEvent(QKeyEvent* event);
 
 private slots:
     void onButtonClicked(int);
@@ -76,13 +78,20 @@ private:
     void onShiftBtnClicked();
     void onLangBtnClicked();
     void onDigitBtnClicked();
+ 
+    QString getTextByBtnIndex(int, int);
+    void onOkKeyPressed();
+    void onArrowKeyPressed(int key);
+    void handlePrevNextFocus(bool next);
+    void handleAdjacentLineFocus(bool next);
 
 private:
-    SoftKeyboardType m_currentType;
-    QButtonGroup m_keyboardBtns;
-    QHBoxLayout m_rowLayouts[s_keyboardRows];
-    QVBoxLayout m_mainLayout;
-    QObject* m_keyReceiver;
+    SoftKeyboardType current_type_;
+    QButtonGroup keyboard_btns_;
+    QHBoxLayout* row_layouts_;
+    QVBoxLayout* main_layout_;
+    QObject* key_receiver_;
+    int current_btn_index_;
 };
 }//ui
 #endif//__UI_DKSOFTKEYBOARDIME_H__

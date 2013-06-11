@@ -15,6 +15,10 @@ ADD_LIBRARY(system ${SRCS})
 TARGET_LINK_LIBRARIES(system
  fblib
  screen
+ gesture
+ KindleTS
+ KindleKeyboard
+ KindleFiveWay
  ${QT_LIBRARIES}
  ${ADD_LIB} )
 

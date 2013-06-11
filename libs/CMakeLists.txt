@@ -6,5 +6,6 @@ add_subdirectory(Screen)
 add_subdirectory(System)
 add_subdirectory(Device)
 add_subdirectory(NetworkService)
+add_subdirectory(Gesture)
 
 

@@ -11,6 +11,8 @@ public:
     DKToolBar(const QString& title, QWidget* parent = 0);
     DKToolBar(QWidget* parent);
 
+protected:
+    //virtual void paintEvent(QPaintEvent* e);
 private:
     void setDKStyleSheet();
     void InitDKProperty();

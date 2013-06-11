@@ -585,6 +585,7 @@ bool QKindleFb::initDevice()
 #ifndef QT_NO_QWS_CURSOR
     if (hasCursor)
     {
+        qDebug("\n QKindleFb::initDevice() : QKindleCursor \n");
 #ifdef USE_KINDLE_CURSOR
         qt_screencursor = new QKindleCursor(d_ptr->fd, data, dw, dh) ;
 #else

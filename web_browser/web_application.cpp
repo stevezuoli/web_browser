@@ -2,8 +2,12 @@
 #include "browser_mainwindow.h"
 #include "bookmark_model.h"
 #include "const_strings.h"
+#include "common/ImageManager.h"
+#include "common/WindowsMetrics.h"
 
 using namespace network_service;
+using namespace ui;
+using namespace ui::windowsmetrics;
 
 namespace webbrowser
 {
@@ -148,12 +152,12 @@ QIcon WebApplication::icon(const QUrl& url) const
     QIcon icon = QWebSettings::iconForUrl(url);
     if (!icon.isNull())
     {
-        return icon.pixmap(16,16);
+        return icon.pixmap(GetWindowMetrics(UrlFaviconSizeIndex),GetWindowMetrics(UrlFaviconSizeIndex));
     }
     if (default_icon_.isNull())
-        default_icon_ = QIcon(QLatin1String(":/res/browser@kt.png"));
+        default_icon_ = QIcon(ImageManager::GetImagePath(IMAGE_BROWSER));
 
-    return default_icon_.pixmap(16,16);
+    return default_icon_.pixmap(GetWindowMetrics(UrlFaviconSizeIndex),GetWindowMetrics(UrlFaviconSizeIndex));
 }
 } // namespace webbrowser
 

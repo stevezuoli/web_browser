@@ -38,7 +38,6 @@ private:
     int curw ;
     int curh ;
     bool visible ;
-    int screen_fbd ;
     unsigned char *pfb ;
     int dw ;
     int dh ;

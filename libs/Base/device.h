@@ -1,5 +1,3 @@
-// Author: John
-
 #ifndef BASE_DEVICE_H__
 #define BASE_DEVICE_H__
 

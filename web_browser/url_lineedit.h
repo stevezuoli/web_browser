@@ -3,6 +3,7 @@
 
 #include <QtCore/QUrl>
 #include <QtGui/QWidget>
+#include <QtGui/QAbstractButton>
 #include <QtGui/QStyleOptionFrame>
 #include "ui/DKLineEdit.h"
 
@@ -10,7 +11,18 @@ using namespace ui;
 
 namespace webbrowser
 {
-//class ClearButton;
+class ClearButton : public QAbstractButton
+{
+    Q_OBJECT
+public:
+    ClearButton(QWidget* parent = 0);
+protected:
+    virtual void paintEvent(QPaintEvent* e);
+
+public slots:
+    void textChanged(const QString& text);
+};//ClearButton
+
 class ExLineEdit : public QWidget
 {
     Q_OBJECT
@@ -18,12 +30,16 @@ class ExLineEdit : public QWidget
 public:
     ExLineEdit(QWidget *parent = 0);
 
-    inline QLineEdit *lineEdit() const { return m_lineEdit; }
+    inline QLineEdit *lineEdit() const { return line_edit_; }
 
     void setLeftWidget(QWidget *widget);
     QWidget *leftWidget() const;
 
     QSize sizeHint() const;
+    void setModifyLineEditTextAutomatically(bool automatically)
+    {
+        modify_line_edit_text_automatically_ = automatically;
+    }
 
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
 protected:
@@ -39,9 +55,10 @@ protected:
     void updateGeometries();
     void initStyleOption(QStyleOptionFrameV2 *option) const;
 
-    QWidget *m_leftWidget;
-    QLineEdit *m_lineEdit;
-    //ClearButton *m_clearButton;
+    QWidget *left_widget_;
+    QLineEdit *line_edit_;
+    ClearButton *clear_button_;
+    bool modify_line_edit_text_automatically_;
 };
 
 class UrlIconLabel;
@@ -64,9 +81,9 @@ private slots:
 
 private:
     QLinearGradient generateGradient(const QColor &color) const;
-    BrowserView *m_webView;
-    UrlIconLabel *m_iconLabel;
-    QColor m_defaultBaseColor;
+    BrowserView *web_view_;
+    UrlIconLabel *icon_label_;
+    QColor default_base_color_;
 
 };
 

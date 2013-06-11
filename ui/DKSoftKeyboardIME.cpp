@@ -2,6 +2,8 @@
 #include "ui/DKPushButton.h"
 #include "common/WindowsMetrics.h"
 #include "common/ImageManager.h"
+#include "common/debug.h"
+#include "Device/device.h"
 #include <algorithm>
 
 namespace ui
@@ -83,15 +85,12 @@ static const char* s_keyTables[][DKSoftKeyboardIME::s_btnsCountPerPage] =
     }
 };
 
-DKSoftKeyboardIME* DKSoftKeyboardIME::GetInstance()
-{
-    static DKSoftKeyboardIME ime;
-    return &ime;
-}
-
 DKSoftKeyboardIME::DKSoftKeyboardIME()
-    : m_currentType(SKT_EnglishLower)
-    , m_keyReceiver(NULL)
+    : current_type_(SKT_EnglishLower)
+      , row_layouts_(NULL)
+      , main_layout_(NULL)
+      , key_receiver_(NULL)
+      , current_btn_index_(14)
 {
     InitUI();
     InitLayout();
@@ -101,20 +100,30 @@ void DKSoftKeyboardIME::InitUI()
 {
     setWindowFlags(Qt::Popup);
     setFocusPolicy(Qt::NoFocus);
+    setVisible(false);
 
     for (int i = 0; i < s_btnsCountPerPage; ++i)
     {
         DKPushButton* btn = new DKPushButton(this);
         btn->setFocusPolicy(Qt::NoFocus);
-        btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_NORMAL_IME_KEY), ImageManager::GetImagePath(IMAGE_NORMAL_IME_KEY_PRESSED));
+        btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_NORMAL_IME_KEY_PRESSED), ImageManager::GetImagePath(IMAGE_NORMAL_IME_KEY));
         btn->setFixedSize(GetWindowMetrics(UISoftKeyboardNormalBtnWidthIndex), GetWindowMetrics(UISoftKeyboardNormalBtnHeightIndex));
-        m_keyboardBtns.addButton(btn, i);
+        keyboard_btns_.addButton(btn, i);
+    }
+
+    if (!Device::isTouch())
+    {
+        DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(current_btn_index_));
+        if (btn)
+        {
+            btn->setPressed(true);
+        }
     }
 
     InitSpecialBtns();
 
-    setupKeyboardWithType(m_currentType);
-    connect(&m_keyboardBtns, SIGNAL(buttonClicked(int)), this, SLOT(onButtonClicked(int)));
+    setupKeyboardWithType(current_type_);
+    connect(&keyboard_btns_, SIGNAL(buttonClicked(int)), this, SLOT(onButtonClicked(int)));
 
     int width = GetWindowMetrics(UIScreenWidthIndex);
     int height = GetWindowMetrics(UISoftKeyboardHeightIndex);
@@ -123,8 +132,10 @@ void DKSoftKeyboardIME::InitUI()
 
 void DKSoftKeyboardIME::InitLayout()
 {
-    Q_ASSERT(m_keyboardBtns.buttons().count() == s_btnsCountPerPage);
+    Q_ASSERT(keyboard_btns_.buttons().count() == s_btnsCountPerPage);
     int line = 0;
+    main_layout_ = new QVBoxLayout;
+    row_layouts_ = new QHBoxLayout[s_keyboardRows];
     for (int i = 0; i < s_btnsCountPerPage; ++i)
     {
         if (i > s_btnsEndIndex[line])
@@ -132,7 +143,7 @@ void DKSoftKeyboardIME::InitLayout()
             ++line;
         }
 
-        m_rowLayouts[line].addWidget(m_keyboardBtns.button(i));
+        row_layouts_[line].addWidget(keyboard_btns_.button(i));
     }
 
     const int horiBorder = GetWindowMetrics(UISoftKeyboardHoriBorderIndex);
@@ -140,24 +151,24 @@ void DKSoftKeyboardIME::InitLayout()
     const int mainSpace = GetWindowMetrics(UISoftKeyboardSpaceIndex);
     for (int i = 0; i < s_keyboardRows; ++i)
     {
-        m_rowLayouts[i].insertSpacing(0, i == 1 ? bigHoriBorder : horiBorder);
-        m_rowLayouts[i].addSpacing(i == 1 ? bigHoriBorder : horiBorder);
-        m_mainLayout.addLayout(m_rowLayouts + i);
+        row_layouts_[i].insertSpacing(0, i == 1 ? bigHoriBorder : horiBorder);
+        row_layouts_[i].addSpacing(i == 1 ? bigHoriBorder : horiBorder);
+        main_layout_->addLayout(row_layouts_ + i);
     }
 
-    m_mainLayout.setSpacing(mainSpace);
-    setLayout(&m_mainLayout);
+    main_layout_->setSpacing(mainSpace);
+    setLayout(main_layout_);
 }
 
 void DKSoftKeyboardIME::setupKeyboardWithType(SoftKeyboardType newType)
 {
-    Q_ASSERT(m_keyboardBtns.buttons().count() == s_btnsCountPerPage);
-    int index = getKeyBoardIndex(m_currentType);
+    Q_ASSERT(keyboard_btns_.buttons().count() == s_btnsCountPerPage);
+    int index = getKeyBoardIndex(current_type_);
     if ( index >= 0)
     {
         for (int i = 0; i < s_btnsCountPerPage; ++i)
         {
-            m_keyboardBtns.button(i)->setText(QString::fromUtf8(s_keyTables[index][i])); 
+            keyboard_btns_.button(i)->setText(QString::fromUtf8(s_keyTables[index][i])); 
         }
     }
 }
@@ -165,7 +176,7 @@ void DKSoftKeyboardIME::setupKeyboardWithType(SoftKeyboardType newType)
 int DKSoftKeyboardIME::getKeyBoardIndex(SoftKeyboardType type) const
 {
     static int keyTableKind[] = {SKT_EnglishLower, SKT_EnglishUpper, SKT_EnglishDigit, SKT_EnglishSymbol, 
-                               SKT_ChineseLower, SKT_ChineseUpper, SKT_ChineseDigit, SKT_ChineseSymbol};
+        SKT_ChineseLower, SKT_ChineseUpper, SKT_ChineseDigit, SKT_ChineseSymbol};
     static int len = sizeof(keyTableKind)/sizeof(keyTableKind[0]);
 
     int index = std::find(keyTableKind, keyTableKind + len, type) - keyTableKind;
@@ -196,15 +207,10 @@ void DKSoftKeyboardIME::onButtonClicked(int index)
             break;
         default:
             {
-                int keyboardIndex = getKeyBoardIndex(m_currentType);
+                int keyboardIndex = getKeyBoardIndex(current_type_);
                 if (keyboardIndex >= 0)
                 {
-                    QString text = QString::fromUtf8(s_keyTables[keyboardIndex][index]);
-                    if (index == s_ampersandBtnIndex && (m_currentType == SKT_EnglishDigit || m_currentType == SKT_ChineseDigit))
-                    {
-                        text = QString::fromUtf8("&");
-                    }
-                    postKeyEvent(index, text);
+                    postKeyEvent(index, getTextByBtnIndex(keyboardIndex, index));
                 }
             }
             return;
@@ -213,9 +219,24 @@ void DKSoftKeyboardIME::onButtonClicked(int index)
     updateSpecialBtn();
 }
 
+QString DKSoftKeyboardIME::getTextByBtnIndex(int keyboardIndex, int index)
+{
+    if (keyboardIndex < 0)
+    {
+        return QString();
+    }
+
+    QString text = QString::fromUtf8(s_keyTables[keyboardIndex][index]);
+    if (index == s_ampersandBtnIndex && (current_type_ == SKT_EnglishDigit || current_type_ == SKT_ChineseDigit))
+    {
+        text = QString::fromUtf8("&");
+    }
+    return text;
+}
+
 void DKSoftKeyboardIME::postKeyEvent(unsigned int code, const QString& text)
 {
-    if (m_keyReceiver)
+    if (key_receiver_)
     {
         int key = Qt::Key_Any;
         switch (code)
@@ -224,13 +245,17 @@ void DKSoftKeyboardIME::postKeyEvent(unsigned int code, const QString& text)
                 key = Qt::Key_Backspace;
                 break;
             case s_enterBtnIndex:
-                key = Qt::Key_Return;
-                break;
+                {
+                    key = Qt::Key_Return;
+                    QKeyEvent* keyEvent = new QKeyEvent(QEvent::KeyPress, key, Qt::NoModifier, QString(QChar(0x0D)));
+                    QApplication::postEvent(key_receiver_, keyEvent);
+                    return;
+                }
             default:
                 break;
         }
         QKeyEvent* keyEvent = new QKeyEvent(QEvent::KeyPress, key, Qt::NoModifier, text);
-        QApplication::postEvent(m_keyReceiver, keyEvent);
+        QApplication::postEvent(key_receiver_, keyEvent);
     }
 }
 
@@ -249,29 +274,49 @@ void DKSoftKeyboardIME::paintEvent(QPaintEvent* e)
     painter.drawPath(path);
 }
 
+void DKSoftKeyboardIME::keyPressEvent(QKeyEvent* event)
+{
+    switch (event->key())
+    {
+        case Qt::Key_Left:
+        case Qt::Key_Up:
+        case Qt::Key_Right:
+        case Qt::Key_Down:
+            onArrowKeyPressed(event->key());
+            return;
+        case Qt::Key_Select:
+            onOkKeyPressed();
+            return;
+        case Qt::Key_AltGr:
+            setVisible(false);
+            return;
+    }
+    event->ignore();
+}
+
 void DKSoftKeyboardIME::InitSpecialBtns()
 {
     static const int specialBtnCounts = 7;
     static int specialIndex[specialBtnCounts] = {s_shiftBtnIndex, s_delBtnIndex, s_numBtnIndex, s_spaceBtnIndex, s_comBtnIndex, s_langBtnIndex, s_enterBtnIndex};
-    static QString focusInBackGoundPaths[specialBtnCounts] = 
-                                        {ImageManager::GetImagePath(IMAGE_IME_KEY_LOWER),
-                                         ImageManager::GetImagePath(IMAGE_IME_KEY_DEL),
-                                         ImageManager::GetImagePath(IMAGE_MID_IME_KEY),
-                                         ImageManager::GetImagePath(IMAGE_IME_KEY_SPACE),
-                                         ImageManager::GetImagePath(IMAGE_MID_IME_KEY),
-                                         ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_EN),
-                                         ImageManager::GetImagePath(IMAGE_IME_KEY_ENTER)};
     static QString focusOutBackGoundPaths[specialBtnCounts] = 
-                                        {ImageManager::GetImagePath(IMAGE_IME_KEY_LOWER_PRESSED),
-                                         ImageManager::GetImagePath(IMAGE_IME_KEY_DEL_PRESSED),
-                                         ImageManager::GetImagePath(IMAGE_MID_IME_KEY_PRESSED),
-                                         ImageManager::GetImagePath(IMAGE_IME_KEY_SPACE_PRESSED),
-                                         ImageManager::GetImagePath(IMAGE_MID_IME_KEY_PRESSED),
-                                         ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_EN_PRESSED),
-                                         ImageManager::GetImagePath(IMAGE_IME_KEY_ENTER_PRESSED)};
+    {ImageManager::GetImagePath(IMAGE_IME_KEY_LOWER),
+        ImageManager::GetImagePath(IMAGE_IME_KEY_DEL),
+        ImageManager::GetImagePath(IMAGE_MID_IME_KEY),
+        ImageManager::GetImagePath(IMAGE_IME_KEY_SPACE),
+        ImageManager::GetImagePath(IMAGE_MID_IME_KEY),
+        ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_EN),
+        ImageManager::GetImagePath(IMAGE_IME_KEY_ENTER)};
+    static QString focusInBackGoundPaths[specialBtnCounts] = 
+    {ImageManager::GetImagePath(IMAGE_IME_KEY_LOWER_PRESSED),
+        ImageManager::GetImagePath(IMAGE_IME_KEY_DEL_PRESSED),
+        ImageManager::GetImagePath(IMAGE_MID_IME_KEY_PRESSED),
+        ImageManager::GetImagePath(IMAGE_IME_KEY_SPACE_PRESSED),
+        ImageManager::GetImagePath(IMAGE_MID_IME_KEY_PRESSED),
+        ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_EN_PRESSED),
+        ImageManager::GetImagePath(IMAGE_IME_KEY_ENTER_PRESSED)};
     for (int i = 0; i < specialBtnCounts; ++i)
     {
-        DKPushButton* btn = reinterpret_cast<DKPushButton*>(m_keyboardBtns.button(specialIndex[i]));
+        DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(specialIndex[i]));
         if (btn)
         {
             QPixmap pixmap(focusInBackGoundPaths[i]);
@@ -284,29 +329,29 @@ void DKSoftKeyboardIME::InitSpecialBtns()
 
 void DKSoftKeyboardIME::updateShiftBtn()
 {
-    DKPushButton* btn = reinterpret_cast<DKPushButton*>(m_keyboardBtns.button(s_shiftBtnIndex));
+    DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(s_shiftBtnIndex));
     if (btn)
     {
-        if (m_currentType & SKT_Alpha)
+        if (current_type_ & SKT_Alpha)
         {
             btn->setText("");
-            if (m_currentType & SKT_Lower)
+            if (current_type_ & SKT_Lower)
             {
-                btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_IME_KEY_UPPER), ImageManager::GetImagePath(IMAGE_IME_KEY_UPPER_PRESSED));
+                btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_IME_KEY_UPPER_PRESSED), ImageManager::GetImagePath(IMAGE_IME_KEY_UPPER));
             }
-            else if (m_currentType & SKT_Upper)
+            else if (current_type_ & SKT_Upper)
             {
-                btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_IME_KEY_LOWER), ImageManager::GetImagePath(IMAGE_IME_KEY_LOWER_PRESSED));
+                btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_IME_KEY_LOWER_PRESSED), ImageManager::GetImagePath(IMAGE_IME_KEY_LOWER));
             }
         }
-        else if (m_currentType & SKT_DigSym)
+        else if (current_type_ & SKT_DigSym)
         {
-            btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_MID_IME_KEY), ImageManager::GetImagePath(IMAGE_MID_IME_KEY_PRESSED));
-            if (m_currentType & SKT_Digit)
+            btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_MID_IME_KEY_PRESSED), ImageManager::GetImagePath(IMAGE_MID_IME_KEY));
+            if (current_type_ & SKT_Digit)
             {
                 btn->setText(s_symbol);
             }
-            else if (m_currentType & SKT_Symbol)
+            else if (current_type_ & SKT_Symbol)
             {
                 btn->setText(s_digit);
             }
@@ -316,30 +361,30 @@ void DKSoftKeyboardIME::updateShiftBtn()
 
 void DKSoftKeyboardIME::updateLangBtn()
 {
-    DKPushButton* btn = reinterpret_cast<DKPushButton*>(m_keyboardBtns.button(s_langBtnIndex));
+    DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(s_langBtnIndex));
     if (btn)
     {
-        if (m_currentType & SKT_English)
+        if (current_type_ & SKT_English)
         {
-            btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_EN), ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_EN_PRESSED));
+            btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_EN_PRESSED), ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_EN));
         }
-        else if (m_currentType & SKT_Chinese)
+        else if (current_type_ & SKT_Chinese)
         {
-            btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_CN), ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_CN_PRESSED));
+            btn->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_CN_PRESSED), ImageManager::GetImagePath(IMAGE_IME_KEY_LANG_CN));
         }
     }
 }
 
 void DKSoftKeyboardIME::updateDigitBtn()
 {
-    DKPushButton* btn = reinterpret_cast<DKPushButton*>(m_keyboardBtns.button(s_numBtnIndex));
+    DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(s_numBtnIndex));
     if (btn)
     {
-        if (m_currentType & SKT_Alpha)
+        if (current_type_ & SKT_Alpha)
         {
             btn->setText(s_digit);
         }
-        else if (m_currentType & SKT_DigSym)
+        else if (current_type_ & SKT_DigSym)
         {
             btn->setText(s_alpha);
         }
@@ -355,28 +400,96 @@ void DKSoftKeyboardIME::updateSpecialBtn()
 
 void DKSoftKeyboardIME::onShiftBtnClicked()
 {
-    qDebug("enter DKSoftKeyboardIME::onShiftBtnClicked %d", m_currentType);
     int all = SKT_Lower | SKT_Upper;
-    m_currentType = (SoftKeyboardType)((m_currentType & ~all) | (~(m_currentType & all) & all));
-    setupKeyboardWithType(m_currentType);
-    qDebug("leave DKSoftKeyboardIME::onShiftBtnClicked %d", m_currentType);
+    current_type_ = (SoftKeyboardType)((current_type_ & ~all) | (~(current_type_ & all) & all));
+    setupKeyboardWithType(current_type_);
 }
 
 void DKSoftKeyboardIME::onLangBtnClicked()
 {
-    qDebug("enter DKSoftKeyboardIME::onLangBtnClicked %d", m_currentType);
-    m_currentType = (SoftKeyboardType)((m_currentType & ~SKT_Lang) | (~(m_currentType & SKT_Lang) & SKT_Lang));
-    setupKeyboardWithType(m_currentType);
-    qDebug("leave DKSoftKeyboardIME::onLangBtnClicked %d", m_currentType);
+    current_type_ = (SoftKeyboardType)((current_type_ & ~SKT_Lang) | (~(current_type_ & SKT_Lang) & SKT_Lang));
+    setupKeyboardWithType(current_type_);
 }
 
 void DKSoftKeyboardIME::onDigitBtnClicked()
 {
-    qDebug("enter DKSoftKeyboardIME::onDigitBtnClicked %d", m_currentType);
     int all = SKT_Alpha | SKT_DigSym;
-    m_currentType = (SoftKeyboardType)((m_currentType & ~all) | (~(m_currentType & all) & all));
-    setupKeyboardWithType(m_currentType);
-    qDebug("leave DKSoftKeyboardIME::onDigitBtnClicked %d", m_currentType);
+    current_type_ = (SoftKeyboardType)((current_type_ & ~all) | (~(current_type_ & all) & all));
+    setupKeyboardWithType(current_type_);
+}
+
+void DKSoftKeyboardIME::setVisible(bool visible)
+{
+    QWidget::setVisible(visible);
+    if (visible)
+    {
+        grabKeyboard();
+    }
+    else
+    {
+        releaseKeyboard();
+    }
+}
+
+void DKSoftKeyboardIME::onArrowKeyPressed(int key)
+{
+    DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(current_btn_index_));
+    if (btn)
+    {
+        btn->setPressed(false);
+    }
+    switch (key)
+    {
+        case Qt::Key_Left:
+        case Qt::Key_Right:
+            handlePrevNextFocus(key == Qt::Key_Right);
+            break;
+        case Qt::Key_Up:
+        case Qt::Key_Down:
+            handleAdjacentLineFocus(key == Qt::Key_Down);
+            break;
+        default:
+            break;
+    }
+}
+void DKSoftKeyboardIME::handlePrevNextFocus(bool next)
+{
+    next ? current_btn_index_++ : current_btn_index_--;
+    current_btn_index_ = current_btn_index_ >= 0 ? current_btn_index_ : s_btnsCountPerPage - 1;
+    current_btn_index_ = current_btn_index_ < s_btnsCountPerPage ? current_btn_index_ : 0;
+    DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(current_btn_index_));
+    if (btn)
+    {
+        btn->setPressed(true);
+    }
+}
+
+void DKSoftKeyboardIME::handleAdjacentLineFocus(bool next)
+{
+    int line = 0;
+    for (; current_btn_index_ > s_btnsEndIndex[line] && line < s_keyboardRows; ++line)
+        ;
+    if (line >= s_keyboardRows)
+        return;
+
+    int relativeIndex = line == 0 ? current_btn_index_ : current_btn_index_ - s_btnsEndIndex[line - 1];
+
+    next ? line++ : line--;
+    line = line >= 0 ? line : s_keyboardRows - 1;
+    line = line < s_keyboardRows ? line : 0;
+
+    current_btn_index_ = line == 0 ? relativeIndex : relativeIndex + s_btnsEndIndex[line - 1];
+    current_btn_index_ = current_btn_index_ <= s_btnsEndIndex[line] ? current_btn_index_ : s_btnsEndIndex[line];
+    DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(current_btn_index_));
+    if (btn)
+    {
+        btn->setPressed(true);
+    }
+}
+
+void DKSoftKeyboardIME::onOkKeyPressed()
+{
+    onButtonClicked(current_btn_index_);
 }
 }
 

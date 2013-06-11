@@ -17,6 +17,18 @@ const int g_WindowsMetricsKP[] = {
 #undef MAKE_WINDOWSMETICS_KP
 };
 
+const int g_WindowsFontsKT[] = {
+#define MAKE_WINDOWSFONTS_KT(x,y,z) y,
+    FONTS_LIST(MAKE_WINDOWSFONTS_KT)
+#undef MAKE_WINDOWSFONTS_KT
+};
+
+const int g_WindowsFontsKP[] = {
+#define MAKE_WINDOWSFONTS_KP(x,y,z) z,
+    FONTS_LIST(MAKE_WINDOWSFONTS_KP)
+#undef MAKE_WINDOWSFONTS_KP
+};
+
 int GetWindowMetrics(int index)
 {
     if (index < 0 || index >= WindowMetricsCount)
@@ -29,6 +41,21 @@ int GetWindowMetrics(int index)
         return g_WindowsMetricsKP[index];
     }
     return g_WindowsMetricsKT[index];
+}
+
+
+int GetWindowFontSize(int index)
+{
+    if (index < 0 || index >= WindowFontsCount)
+    {
+        return -1;
+    }
+
+    if (Device::getModel() == Device::KPW)
+    {
+        return g_WindowsFontsKP[index];
+    }
+    return g_WindowsFontsKT[index];
 }
 }
 }

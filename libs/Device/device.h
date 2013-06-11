@@ -34,7 +34,11 @@ public:
         KT,       // Kindle Touch
         KPW       // Kindle PaperWhite
     } Model;
-
+#ifndef Q_WS_QWS
+    static void setModel(MODEL model) {
+        m_model = model;
+    }
+#endif
     static Model getModel() {
         return m_model;
     }

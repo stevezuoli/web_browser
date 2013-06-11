@@ -1,10 +1,11 @@
 #include "ui/DKPushButton.h"    
 #include <QPainter>
+#include "common/WindowsMetrics.h"
 
 namespace ui
 {
 static const QString PUSH_BUTTON_STYLE = "                          \
-QPushButton                             \
+QAbstractButton                             \
 {                                       \
     background: transparent;            \
     border: 0px                         \
@@ -14,7 +15,7 @@ QPushButton                             \
     color: black;                       \
     padding: 0px;                       \
 }                                       \
-QPushButton:pressed                     \
+QAbstractButton:pressed                     \
 {                                       \
     padding-left: 0px;                  \
     padding-top: 0px;                   \
@@ -22,7 +23,7 @@ QPushButton:pressed                     \
     border-color: white;                \
     background-color: black;            \
 }                                       \
-QPushButton:checked                     \
+QAbstractButton:checked                     \
 {                                       \
     padding-left: 0px;                  \
     padding-top: 0px;                   \
@@ -30,7 +31,7 @@ QPushButton:checked                     \
     border-color: white;                \
     background-color: black;            \
 }                                       \
-QPushButton:focus                       \
+QAbstractButton:focus                       \
 {                                       \
     padding-left: 0px;                  \
     padding-top: 0px;                   \
@@ -40,7 +41,7 @@ QPushButton:focus                       \
     border-color: white;                \
     background-color: white;            \
 }                                       \
-QPushButton:disabled                    \
+QAbstractButton:disabled                    \
 {                                       \
     padding-left: 0px;                  \
     padding-top: 0px;                   \
@@ -50,20 +51,25 @@ QPushButton:disabled                    \
 }";
 
 DKPushButton::DKPushButton(QWidget* parent)
-    : QPushButton(parent)
-{
-    InitDKProperty();
-}
-DKPushButton::DKPushButton(const QString& text, QWidget* parent)
-    : QPushButton(text, parent)
+    : QAbstractButton(parent)
+    , pressed_(false)
 {
     InitDKProperty();
 }
 
-DKPushButton::DKPushButton(const QIcon& icon, const QString& text, QWidget* parent)
-    : QPushButton(icon, text, parent)
+DKPushButton::DKPushButton(const QString& text, QWidget* parent)
+    : QAbstractButton(parent)
 {
+    setText(text);
     InitDKProperty();
+}
+
+DKPushButton::DKPushButton(const QString& path, const QString& text, QWidget* parent)
+    : QAbstractButton(parent)
+{
+    setText(text);
+    InitDKProperty();
+    setBackGroundImagePaths(path, "");
 }
 
 void DKPushButton::setDKStyleSheet()
@@ -73,28 +79,51 @@ void DKPushButton::setDKStyleSheet()
 
 void DKPushButton::InitDKProperty()
 {
-    setFlat(true);
+}
+
+void DKPushButton::setBackGroundImagePaths(const QString& focusInPath, const QString& focusOutPath)
+{
+    m_focusInBackgroundImage.load(focusInPath);
+    m_focusOutBackgroundImage.load(focusOutPath);
 }
 
 void DKPushButton::paintEvent(QPaintEvent* e)
 {
-    if (isDown())
+    QPainter painter(this);
+    QFont btnFont = font();
+    btnFont.setBold(true);
+    btnFont.setPixelSize(ui::windowsmetrics::GetWindowFontSize(ui::windowsmetrics::DKPushButtonIndex));
+    setFont(btnFont);
+    if (pressed_)
     {
-        if (!m_focusInBackgroudImagePath.isEmpty())
+        if (!m_focusInBackgroundImage.isNull())
         {
-            QPainter painter(this);
-            painter.drawPixmap(rect(), QPixmap(m_focusInBackgroudImagePath));
+            painter.drawPixmap(rect(), m_focusInBackgroundImage);
         }
+        painter.setPen(Qt::white);
+        painter.drawText(rect(), Qt::AlignCenter, text());
     }
     else
     {
-        if (!m_focusInBackgroudImagePath.isEmpty())
+        if (!m_focusOutBackgroundImage.isNull())
         {
-            QPainter painter(this);
-            painter.drawPixmap(rect(), QPixmap(m_focusInBackgroudImagePath));
+            painter.drawPixmap(rect(), m_focusOutBackgroundImage);
         }
+        painter.setPen(Qt::black);
+        painter.drawText(rect(), Qt::AlignCenter, text());
     }
 
-    return QPushButton::paintEvent(e);
+}
+
+void DKPushButton::mousePressEvent(QMouseEvent* e)
+{
+    pressed_ = true;
+    QAbstractButton::mousePressEvent(e);
+}
+
+void DKPushButton::mouseReleaseEvent(QMouseEvent* e)
+{
+    pressed_ = false;
+    QAbstractButton::mouseReleaseEvent(e);
 }
 }//ui

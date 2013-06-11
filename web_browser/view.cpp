@@ -1,11 +1,14 @@
 #include <QtGui/QtGui>
 #include "NetworkService/auto_complete.h"
 #include "NetworkService/password_model.h"
+#include "Gesture/scale_gesture_detector.h"
 
 #include "view.h"
 #include "web_application.h"
+#include "common/debug.h"
 
 using namespace network_service;
+using namespace gesture;
 
 namespace webbrowser
 {
@@ -14,7 +17,7 @@ namespace webbrowser
 
 static const int PAGE_REPEAT = 20;
 static const int DELTA = 10;
-static const qreal DEFAULT_FONT = 1.0;
+static const qreal DEFAULT_FONT = 1.5;
 
 BrowserView::BrowserView(QWidget *parent)
     : QWebView(parent)
@@ -30,6 +33,7 @@ BrowserView::BrowserView(QWidget *parent)
 
     // In order to receive link clicked event.
     page()->setLinkDelegationPolicy(QWebPage::DelegateAllLinks);
+    setWindowFlags(windowFlags() | Qt::FramelessWindowHint);
 
     // Setup connections.
     connect(this, SIGNAL(loadStarted(void)), this, SLOT(onLoadStarted(void)));
@@ -50,6 +54,11 @@ BrowserView::BrowserView(QWidget *parent)
 
     connect(WebApplication::accessManager(), SIGNAL(requestSavePassword(const QByteArray &)),
             this, SLOT(onSavePassword(const QByteArray &)));
+
+    // Connect scale gesture detector
+    connect(ScaleGestureDetector::instance(), SIGNAL(scaleBegin()), this, SLOT(onScaleBegin()));
+    connect(ScaleGestureDetector::instance(), SIGNAL(scaleEnd()), this, SLOT(onScaleEnd()));
+    connect(ScaleGestureDetector::instance(), SIGNAL(scaling()), this, SLOT(onScaling()));
 
     settings()->setAttribute(QWebSettings::JavascriptEnabled, true);
     settings()->setAttribute(QWebSettings::JavaEnabled, true);
@@ -123,9 +132,13 @@ void BrowserView::onLoadStarted(void)
     scrollbar_hidden_ = 0;
     progress_ = 0;
 
+    // Experimental, set handle tool to be true
+    hand_tool_enabled_ = true;
+
     // Store the screen update type.
     resetUpdateRect();
     reportCurrentProcess();
+    form_elements_ = QWebElementCollection();
 }
 
 void BrowserView::onSavePassword(const QByteArray & data)
@@ -185,6 +198,14 @@ void BrowserView::onLoadFinished(bool ok)
         reportCurrentProcess();
     }
     updateViewportRange();
+
+    //collect the form elements in current page
+    form_elements_ = page()->currentFrame()->documentElement().findAll("input[type=text],input[type=password], textarea");
+    qDebug() << form_elements_.count();
+    foreach (QWebElement formElement, form_elements_)
+    {
+        qDebug() << formElement.toOuterXml();
+    }
 }
 
 bool BrowserView::needConfigNetwork()
@@ -249,11 +270,9 @@ void BrowserView::popupMenu()
 void BrowserView::returnToLibrary()
 {
     sync();
-
+    stop();
     close();
     qApp->exit();
-
-    // We found a strange dead-lock after downloading a book. Use system exit to resolve it temporarily.   
     ::exit(0);
 }
 
@@ -310,6 +329,12 @@ QWebView *BrowserView::createWindow(QWebPage::WebWindowType type)
 
 void BrowserView::mousePressEvent(QMouseEvent*me)
 {
+    if (disableMouse()) {
+        qDebug("Disable mousePressEvent");
+        me->accept();
+        return;
+    }
+    qDebug("BrowserView::mousePressEvent");
     emit inputFormLostFocus();
     position_ = me->pos();
 
@@ -318,6 +343,12 @@ void BrowserView::mousePressEvent(QMouseEvent*me)
 
 void BrowserView::mouseMoveEvent(QMouseEvent *me)
 {
+    if (disableMouse()) {
+        qDebug("Disable mouseMoveEvent");
+        me->accept();
+        return;
+    }
+    qDebug("BrowserView::mouseMoveEvent");
     if (!hand_tool_enabled_)
     {
         QWebView::mouseMoveEvent(me);
@@ -330,6 +361,12 @@ void BrowserView::mouseMoveEvent(QMouseEvent *me)
 
 void BrowserView::mouseReleaseEvent(QMouseEvent*me)
 {
+    if (disableMouse()) {
+        qDebug("Disable mouseReleaseEvent");
+        me->accept();
+        return;
+    }
+    qDebug("BrowserView::mouseReleaseEvent");
     QPoint delta = position_ - me->pos();
     if (isTextSelectionEnabled())
     {
@@ -366,14 +403,17 @@ void BrowserView::mouseReleaseEvent(QMouseEvent*me)
 
 void BrowserView::keyPressEvent(QKeyEvent *e)
 {
-#ifndef WIN32
     // We only handle key release event, so ignore some keys.
-    qDebug("%s, %d, %s", __PRETTY_FUNCTION__, e->key(), qPrintable(e->text()));
-#endif
     switch (e->key())
     {
     case Qt::Key_Down:
     case Qt::Key_Up:
+        break;
+    case Qt::Key_AltGr:
+        if (isformFocused())
+        {
+            emit keyboardKeyPressed();
+        }
         break;
     default:
         QWebView::keyPressEvent(e);
@@ -384,28 +424,26 @@ void BrowserView::keyPressEvent(QKeyEvent *e)
 
 void BrowserView::keyReleaseEvent(QKeyEvent *ke)
 {
-#ifndef WIN32
-    qDebug("%s, %d, %s", __PRETTY_FUNCTION__, ke->key(), qPrintable(ke->text()));
-#endif
+    DebugWB("%d, %s, %d", ke->key(), qPrintable(ke->text()), int(ke->modifiers()));
     switch (ke->key())
     {
     case Qt::Key_Left:
-        myScroll(-PAGE_REPEAT, 0);
+        myScroll(0, -PAGE_REPEAT);
         break;
     case Qt::Key_Right:
-        myScroll(PAGE_REPEAT, 0);
+        myScroll(0, PAGE_REPEAT);
         break;
     case Qt::Key_PageDown:
         myScroll(0, rect().height() - PAGE_REPEAT);
         break;
     case Qt::Key_Down:
-        myScroll(0, PAGE_REPEAT);
+        focusNextPrevChild(true);
         break;
     case Qt::Key_PageUp:
         myScroll(0, -rect().height() + PAGE_REPEAT);
         break;
     case Qt::Key_Up:
-        myScroll(0, -PAGE_REPEAT);
+        focusNextPrevChild(false);
         break;
     case Qt::Key_C:
         clearCookies();
@@ -551,6 +589,42 @@ void BrowserView::myScroll(int dx, int dy)
 {
     page()->currentFrame()->scroll(dx, dy);
     updateViewportRange();
+
+    QWebElement element = searchElement(page()->currentFrame()->documentElement(), isInViewport);
+    if (!element.isNull())
+    {
+        element.setFocus();
+    }
+}
+
+QWebElement BrowserView::searchElement(QWebElement element, bool func(const BrowserView* view, const QWebElement& e))
+{
+    QWebElement child = element.firstChild();
+
+    if (child.isNull() && func(this, element))
+    {
+        return element;
+    }
+    while (!child.isNull())
+    {
+        QWebElement result = searchElement(child, func);
+        if (!result.isNull())
+        {
+            return result;
+        }
+        child = child.nextSibling();
+    }
+
+    return QWebElement();
+}
+
+bool BrowserView::isInViewport(const BrowserView* view, const QWebElement& element)
+{
+    QRect rc = element.geometry();
+    return !element.isNull()
+        && rc.isValid()
+        && (rc.topLeft().x() > view->currentOffset().x())
+        && (rc.topLeft().y() > view->currentOffset().y());
 }
 
 void BrowserView::myScrollTo(const QPoint &pt)
@@ -559,7 +633,7 @@ void BrowserView::myScrollTo(const QPoint &pt)
     updateViewportRange();
 }
 
-QPointF BrowserView::currentOffset()
+QPointF BrowserView::currentOffset() const
 {
     return page()->currentFrame()->scrollPosition();
 }
@@ -655,11 +729,6 @@ void BrowserView::formFocused (const QString& form_id,
                                const QString& input_id,
                                const QString& input_name)
 {
-#ifndef WIN32
-    qDebug("%s\n: id: %s\nname: %s\naction: %s\ntype: %s\nid: %s\nname: %s", __PRETTY_FUNCTION__, 
-            qPrintable(form_id), qPrintable(form_name), qPrintable(form_action),
-            qPrintable(input_type), qPrintable(input_id), qPrintable(input_name));
-#endif
     hand_tool_enabled_ = false;
     emit inputFormFocused(form_id, form_name, form_action, input_type, input_id, input_name);
 }
@@ -865,4 +934,61 @@ void BrowserView::onLoadProgress(int progress)
         reportCurrentProcess();
     }
 }
+
+//bool BrowserView::focusNextPrevChild(bool next)
+//{
+    //bool focused = QWebView::focusNextPrevChild(next);
+    //if (focused && isformFocused())
+    //{
+        //emit formFocused("", "", "", "", "", "");
+    //}
+
+    //return focused;
+//}
+
+bool BrowserView::isformFocused()
+{
+    foreach (QWebElement formElement, form_elements_)
+    {
+        if (!formElement.isNull() && formElement.hasFocus())
+        {
+            return true;
+            break;
+        }
+    }
+
+    return false;
+}
+
+QString BrowserView::getHtmlFromMainFrame()
+{
+    QWebPage* this_page = page();
+    if (this_page != 0 && this_page->mainFrame() != 0)
+    {
+        return this_page->mainFrame()->toHtml();
+    }
+    return QString();
+}
+
+void BrowserView::onScaleBegin()
+{
+    qDebug("Web View begin scaling");
+}
+
+void BrowserView::onScaleEnd()
+{
+    qDebug("Web View end scaling");
+}
+
+void BrowserView::onScaling()
+{
+    qDebug("Web View is scaling");
+}
+
+bool BrowserView::disableMouse()
+{
+    // TODO. more limitation to this function should be added
+    return ScaleGestureDetector::instance()->isScaling();
+}
+
 }

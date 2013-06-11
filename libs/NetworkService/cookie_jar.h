@@ -32,7 +32,9 @@ public:
     };
 
 public:
-    CookieJar(QObject *parent = 0);
+    CookieJar(QObject *parent = 0,
+        const QLatin1String &storage_name = QLatin1String("/cookies.ini"),
+        const QLatin1String &setting_name = QLatin1String("cookies"));
     ~CookieJar();
 
     QList<QNetworkCookie> cookiesForUrl(const QUrl &url) const;
@@ -52,6 +54,11 @@ public:
     void setAllowedCookies(const QStringList &list);
     void setAllowForSessionCookies(const QStringList &list);
 
+    void setStorageName(const QString &storage_name) { storage_name_ = storage_name; }
+    void setSettingName(const QString &setting_name) { setting_name_ = setting_name; }
+    void load();
+    void reset();
+
 Q_SIGNALS:
     void cookiesChanged();
 
@@ -64,7 +71,6 @@ private Q_SLOTS:
 
 private:
     void purgeOldCookies();
-    void load();
 
 private:
     bool         loaded_;
@@ -72,6 +78,8 @@ private:
     AcceptPolicy accept_cookies_;
     KeepPolicy   keep_cookies_;
 
+    QString storage_name_;
+    QString setting_name_;
     QStringList  exceptions_block_;
     QStringList  exceptions_allow_;
     QStringList  exceptions_allow_for_session_;

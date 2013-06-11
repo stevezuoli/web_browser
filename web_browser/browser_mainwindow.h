@@ -1,18 +1,19 @@
-
 #ifndef WEB_BROWSER_FRAME_H_
 #define WEB_BROWSER_FRAME_H_
 
 #include <QtGui/QtGui>
+#include "Base/base.h"
 #include "NetworkService/xiaomi_account_manager.h"
 
-#include "view.h"
 //#include "keyboard_dialog.h"
 //#include "bookmark_model.h"
-#include "url_lineedit.h"
 #include "ui/DKToolBar.h"
+#include "ui/DKSoftKeyboardIME.h"
+
+#include "view.h"
 
 using namespace ui;
-
+using namespace base;
 using namespace network_service;
 
 namespace webbrowser
@@ -35,10 +36,10 @@ enum BrowserKeyboardStatus
     URL_INPUTTING
 };
 
+class UrlLineEdit;
 class BrowserMainWindow : public QWidget 
 {
     Q_OBJECT
-
 public:
     BrowserMainWindow(QWidget *parent = 0);
     ~BrowserMainWindow();
@@ -48,10 +49,11 @@ public Q_SLOTS:
     void onScreenSizeChanged(int);
 
 protected:
-    void keyPressEvent(QKeyEvent * ke);
-    void keyReleaseEvent(QKeyEvent *ke);
-    bool event(QEvent *e);
-    void closeEvent(QCloseEvent *e);
+    virtual void keyPressEvent(QKeyEvent * ke);
+    virtual void keyReleaseEvent(QKeyEvent *ke);
+    virtual bool event(QEvent *e);
+    virtual void closeEvent(QCloseEvent *e);
+    virtual void paintEvent(QPaintEvent *e);
 
 private Q_SLOTS:
     void onInputFormFocused(const QString & form_id,
@@ -64,6 +66,7 @@ private Q_SLOTS:
     void onAddressInputFocus(bool);
     void onUrlChanged(const QUrl& url);
     void onLinkClicked(const QUrl& url);
+    void onLoadFinished(bool ok);
     void openUrlInAddress();
 
     void showHomePage();
@@ -71,32 +74,39 @@ private Q_SLOTS:
     void showForwardHistoryPage();
     void showMenu();
     void showSoftKeyboardIME(bool show);
-
+    void switchKeyboardVisible();
     void setHomePageUrl(const QString& url)
     {
         m_homePageUrl = url;
     }
+
+    void onXiaomiAccountPageChanged(const QString& message);
+    void onXiaomiAccountLoadFinished(bool ok);
+
 private:
     void loadThumbnails();
     void thumbnailModel(QStandardItemModel & model);
     void setupToolBar();
     void InitLayout();
 
+    void setupXiaomiAccountConnect();
+
 private:
-    QAction                homepage_action_;
-    QAction                history_back_action_;
-    QAction                history_forward_action_;
-    QAction                menu_action_;
-    UrlLineEdit            address_lineedit_;
-    DKToolBar              navigation_toolbar_;
-    BrowserView            view_;
+    QToolButton                exit_tool_button_;
+    QToolButton                history_back_tool_button_;
+    QToolButton                history_forward_tool_button_;
+    QToolButton                menu_tool_button_;
+    UrlLineEdit*           address_lineedit_;
+    DKToolBar*             navigation_toolbar_;
+    BrowserView*           view_;
+    DKSoftKeyboardIME*     keyboard_;
     QVBoxLayout            main_layout_;
     QStandardItemModel     model_;
 
-    XiaomiAccountManager   xiaomi_account_manager_;
+    shared_ptr<XiaomiAccountManager>  xiaomi_account_manager_;
     QString                m_homePageUrl;
 };
 
-}   // namespace webbrowser
+};   // namespace webbrowser
 
 #endif  // WEB_BROWSER_FRAME_H_

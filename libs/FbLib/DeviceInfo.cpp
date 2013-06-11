@@ -1,3 +1,4 @@
+#include <QtCore/QtCore>
 #include "DeviceInfo.h"
 #include "stdio.h"
 #include "stdlib.h"

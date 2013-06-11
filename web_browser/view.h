@@ -23,7 +23,6 @@ public:
 
 public:
     void attachBookmarkModel(BookmarkModel * model);
-    void returnToLibrary();
 
     const QRect & updateRect() { return update_rect_; }
     void resetUpdateRect() { update_rect_.setRect(0, 0, 0, 0); }
@@ -31,9 +30,7 @@ public:
 
     void onRangeClicked(const int, const int);
     void reportCurrentProcess();
-
     void myLoad(const QUrl & url);
-
     int getProgress() const
     {
         return progress_;
@@ -41,6 +38,9 @@ public:
 
     int GetHistoryPageCounts() const;
     int GetCurrentHistoryPageIndex() const;
+
+    QString getHtmlFromMainFrame();
+
 protected:
     virtual QWebView *createWindow(QWebPage::WebWindowType type);
     virtual void mousePressEvent (QMouseEvent * );
@@ -53,6 +53,7 @@ protected:
     virtual void closeEvent(QCloseEvent * event);
     virtual bool eventFilter(QObject *obj, QEvent *event);
     virtual void focusOutEvent(QFocusEvent * event);
+    //virtual bool focusNextPrevChild(bool next);
 
 Q_SIGNALS:
     void requestOTA(const QUrl & url);
@@ -68,6 +69,7 @@ Q_SIGNALS:
                           const QString& input_id,
                           const QString& input_name);
     void inputFormLostFocus(void);
+    void keyboardKeyPressed();
 
 public Q_SLOTS:
     void formLostFocus (void);
@@ -89,6 +91,11 @@ public Q_SLOTS:
     void selectFocus();
     void selectBlur();
     void selectChanged();
+    void returnToLibrary();
+
+    void onScaleBegin();
+    void onScaleEnd();
+    void onScaling();
 
 private Q_SLOTS:
     void updateActions();
@@ -131,7 +138,7 @@ private Q_SLOTS:
     void myScroll(int dx, int dy);
     void myScrollTo(const QPoint & p);
     void updateViewportRange();
-    QPointF currentOffset();
+    QPointF currentOffset() const;
     void accurateScroll(int dx, int dy);
 
     void populateJavaScriptWindowObject (void);
@@ -143,6 +150,7 @@ private Q_SLOTS:
 
     void clearHistory();
 
+    //void onMicroFocusChanged();
 private:
     void addFormsFocusEvent(void);
     void addSelectEvents(void);
@@ -164,7 +172,17 @@ private:
     // Clear Cookies
     void clearCookies();
 
+    // Thumbnail
     void saveThumbnailForExplorer();
+    
+    // Navigation
+    QWebElement searchElement(QWebElement element, bool func(const BrowserView* view, const QWebElement& e));
+    static bool isInViewport(const BrowserView* view, const QWebElement& element);
+    bool isformFocused();
+
+    // scale
+    bool disableMouse();
+
 private:
     QPoint position_;
     QPoint offset_;
@@ -189,6 +207,7 @@ private:
     WebPage *page_;
     BookmarkModel *bookmark_model_;
     QWidgets focus_widgets_;
+    QWebElementCollection form_elements_;
 
     bool hand_tool_enabled_;
 

@@ -18,6 +18,8 @@ ELSE (UNIX OR BUILD_FOR_ARM)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 ENDIF (UNIX OR BUILD_FOR_ARM)
 
+ADD_DEFINITIONS(-DUSE_BUILT_IN_DRIVER)
+
 #CMAKE_BUILD_TYPE could be Debug/Release/RelWithDebINfo/MinSizeRel
 IF(UNIX)
 SET(CMAKE_BUILD_TYPE "Debug")
@@ -64,6 +66,8 @@ add_subdirectory(drivers/screen)
 add_subdirectory(drivers/kermit)
 add_subdirectory(drivers/QKindleFb)
 add_subdirectory(drivers/KindleTS)
+add_subdirectory(drivers/KindleFiveWay)
+add_subdirectory(drivers/KindleKeyboard)
 add_subdirectory(ui)
 add_subdirectory(common)
 

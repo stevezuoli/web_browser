@@ -16,7 +16,9 @@ namespace windowsmetrics
     MACRO_NAME(UISoftKeyboardHeight, 230, 295) \
     MACRO_NAME(WebBrowserNavigationBarIconWidth, 40, 51) \
     MACRO_NAME(WebBrowserNavigationBarIconHeight, 72, 92) \
-    MACRO_NAME(WebBrowserAddressEditHeight, 41, 53)
+    MACRO_NAME(WebBrowserAddressEditHeight, 41, 53) \
+    MACRO_NAME(UrlFaviconSize, 16, 21) \
+    MACRO_NAME(NavigationBarLinePixel, 2, 3)
 
 enum WindowMetricsIndex
 {
@@ -26,7 +28,20 @@ enum WindowMetricsIndex
     WindowMetricsCount
 };
 
+
+#define FONTS_LIST(MACRO_NAME)    \
+    MACRO_NAME(DKPushButton, 20, 24)
+
+enum WindowFontsIndex
+{
+#define MAKE_WINDOWS_FONTS_INDEX(x,y,z) x##Index,
+    FONTS_LIST(MAKE_WINDOWS_FONTS_INDEX)
+#undef MAKE_WINDOWS_FONTS_INDEX
+    WindowFontsCount
+};
+
 int GetWindowMetrics(int index);
+int GetWindowFontSize(int index);
 }//windowsmetrics
 }//ui
 #endif//__COMMON_WINDOWSMETRICS_H__

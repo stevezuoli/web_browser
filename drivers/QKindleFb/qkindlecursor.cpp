@@ -20,61 +20,14 @@ typedef __u8 u8;
 
 #include "qkindlecursor.h"
 
-/***
-void QKindleCursor::set ( const QImage & image, int hotx, int hoty )
-{
-    QScreenCursor::set(image, hotx, hoty) ;
-    if (visible)
-    {
-        hide() ;
-        curw = image.width() ;
-        curx = image.height() ;
-        show() ;
-    }
-    else
-    {
-        curw = image.width() ;
-        curx = image.height() ;
-    }
-}
-***/
-/***
-void QKindleCursor::setBounds(int x0, int y0, int w, int h)
-{
-    if (visible)
-    {
-        hide() ;
-        curx = x0 ;
-        cury = y0 ;
-        curw = w ;
-        curx = h ;
-        show() ;
-    }
-    else
-    {
-        curx = x0 ;
-        cury = y0 ;
-        curw = w ;
-        curx = h ;
-    }
-}
 
-QRect boundingRect () const
-{
-    return this->QScreenCursor::boundingRect() ;
-}
-
-QImage 	image () const
-{
-    return this->QScreenCursor::image() ;
-}
-***/
 /////////////////////////////////////////////////////////////
 
 QKindleCursor::QKindleCursor(int fd, unsigned char *bufp, int w, int h)
 {
-    enable = false;
-    hwaccel = false;
+    qDebug("Create Kindle Cursor");
+    enable = true;
+    //hwaccel = false;
     supportsAlpha = false;
 
     screen_fd = fd ;
@@ -84,12 +37,13 @@ QKindleCursor::QKindleCursor(int fd, unsigned char *bufp, int w, int h)
 
     curx = cury = 0 ;
     curw = 16 ; curh = 16;   // try how narrow and bold 'underline' will be looking...
-    visible = 0 ;
+    visible = true;
 }
 
 
 void QKindleCursor::move(int x, int y)
 {
+    qDebug("Move Cursor:%d, %d", x, y);
     if (visible)
     {
         hide() ;
@@ -143,7 +97,7 @@ void QKindleCursor::hide()
 
         qDebug("hiding visible cursor @ %d %d %d %d", curx, cury, curw, curh) ;
 
-        ioctl(screen_fbd, FBIO_EINK_UPDATE_DISPLAY_AREA, &ua);
+        ioctl(screen_fd, FBIO_EINK_UPDATE_DISPLAY_AREA, &ua);
         visible = false;
         delete ptmp ;
     }
@@ -204,11 +158,9 @@ void QKindleCursor::show()
 
 void QKindleCursor::set(const QImage &image, int hotx, int hoty)
 {
-    QKindleFb *screen = 0 ;
-    /***
     QKindleFb *screen = QKindleFb::instance();
     if (!screen)
-    ***/    return;
+        return;
 
     if (image.isNull()) {
         cursor = QImage();
@@ -221,5 +173,55 @@ void QKindleCursor::set(const QImage &image, int hotx, int hoty)
     }
 
 }
+
+/***
+void QKindleCursor::set ( const QImage & image, int hotx, int hoty )
+{
+    QScreenCursor::set(image, hotx, hoty) ;
+    if (visible)
+    {
+        hide() ;
+        curw = image.width() ;
+        curx = image.height() ;
+        show() ;
+    }
+    else
+    {
+        curw = image.width() ;
+        curx = image.height() ;
+    }
+}
+***/
+/***
+void QKindleCursor::setBounds(int x0, int y0, int w, int h)
+{
+    if (visible)
+    {
+        hide() ;
+        curx = x0 ;
+        cury = y0 ;
+        curw = w ;
+        curx = h ;
+        show() ;
+    }
+    else
+    {
+        curx = x0 ;
+        cury = y0 ;
+        curw = w ;
+        curx = h ;
+    }
+}
+
+QRect boundingRect () const
+{
+    return this->QScreenCursor::boundingRect() ;
+}
+
+QImage 	image () const
+{
+    return this->QScreenCursor::image() ;
+}
+***/
 
 #endif

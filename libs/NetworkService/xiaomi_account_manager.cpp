@@ -6,10 +6,12 @@
 #include "AES/aes.h"
 #include "Device/fat.h"
 
+#define TEST_SERVER
+
 namespace network_service
 {
 
-static const QString TOKEN_PATH = "/mnt/us/DK_System/xKindle/";
+static const QString TOKEN_PATH = "/DuoKan/";
 static const QString WEB_BROWSER_DIR = "web_browser";
 
 static const QString BOOK_HOST = "http://book.duokan.com";
@@ -69,64 +71,85 @@ QString UrlEncode(const char* s)
     return result;
 }
 
+std::string UrlEncodeForStdString(const char* s)
+{
+    if (NULL == s)
+    {
+        return "";
+    }
+    const unsigned char* us = (const unsigned char*)s;
+    std::string result;
+    while (unsigned int c = *us++)
+    {
+        if (isalnum(c))
+        {
+            result.push_back(c);
+        }
+        else if (' ' == c)
+        {
+            result.push_back('+');
+        }
+        else
+        {
+            result.push_back('%');
+            result.push_back(IntToHexChar(c / 16));
+            result.push_back(IntToHexChar(c % 16));
+        }
+    }
+    return result;
+}
+
 class DuokanServerConfiguration
 {
 public:
     static bool isOnline()
     {
-#ifdef TEST_SERVER
-        return false;
-#else
-        return true;
-#endif
+        return is_testing_server_;
     }
 
     static QString xiaomiCheckinUrl()
     {
-#ifdef TEST_SERVER
-        return TEST_HOST + XIAOMI_CHECKIN;
-#else
-        return LOGIN_HOST + XIAOMI_CHECKIN;
-#endif
+        if (is_testing_server_)
+            return TEST_HOST + XIAOMI_CHECKIN;
+        else
+            return LOGIN_HOST + XIAOMI_CHECKIN;
     }
 
     static QString xiaomiExchangeUrl()
     {
-#ifdef TEST_SERVER
-        return TEST_HOST + XIAOMI_EXCHANGE;
-#else
-        return LOGIN_HOST + XIAOMI_EXCHANGE;
-#endif
+        if (is_testing_server_)
+            return TEST_HOST + XIAOMI_EXCHANGE;
+        else
+            return LOGIN_HOST + XIAOMI_EXCHANGE;
     }
 
     static QString xiaomiWebRegisterUrl()
     {
-#ifdef TEST_SERVER
-        return (TEST_HOST + XIAOMI_WEB_REGISTER);
-#else
-        return (LOGIN_HOST + XIAOMI_WEB_REGISTER);
-#endif
+        if (is_testing_server_)
+            return (TEST_HOST + XIAOMI_WEB_REGISTER);
+        else
+            return (LOGIN_HOST + XIAOMI_WEB_REGISTER);
 
     }
 
     static QString xiaomiFollowupUrl()
     {
-#ifdef TEST_SERVER
-        QString str_url(TEST_HOST + XIAOMI_WEB_FOLLOWUP);
-#else
-        QString str_url(LOGIN_HOST + XIAOMI_WEB_FOLLOWUP);
-#endif
+        QString str_url;
+        if (is_testing_server_)
+            str_url = (TEST_HOST + XIAOMI_WEB_FOLLOWUP);
+        else
+            str_url = (LOGIN_HOST + XIAOMI_WEB_FOLLOWUP);
+
         //QString transfered_url = UrlEncode(str_url.toStdString().c_str());
         return str_url;
     }
 
     static QString xiaomiAccountCallback()
     {
-#ifdef TEST_SERVER
-        return TEST_HOST + XIAOMI_CHECKIN;
-#else
-        return LOGIN_HOST + XIAOMI_CHECKIN;
-#endif
+        if (is_testing_server_)
+            return TEST_HOST + XIAOMI_CHECKIN;
+        else
+            return LOGIN_HOST + XIAOMI_CHECKIN;
     }
 
     static QString getTokenHome()
@@ -137,11 +160,32 @@ public:
         return QDir::home().path();
 #endif
     }
+
+    static bool checkOnlineOrTestingUrl(const QString& ref_url)
+    {
+        QString online_url  = (LOGIN_HOST + XIAOMI_WEB_REGISTER);
+        QString testing_url = (TEST_HOST + XIAOMI_WEB_REGISTER);
+        if (ref_url.contains(online_url))
+        {
+            is_testing_server_ = false;
+            return true;
+        }
+        if (ref_url.contains(testing_url))
+        {
+            is_testing_server_ = true;
+            return true;
+        }
+        return false;
+    }
+
+public:
+    static bool is_testing_server_;
 };
+
+bool DuokanServerConfiguration::is_testing_server_ = false;
 
 XiaomiAccountManager::XiaomiAccountManager()
     : view_(0)
-    , stoped_(false)
 {
 }
 
@@ -187,63 +231,78 @@ QString XiaomiAccountManager::getUserIdFromCookies(const QList<QNetworkCookie>& 
 void XiaomiAccountManager::onLoadStarted()
 {
     QUrl current_url = view_->url();
-    const QString & myUrl = current_url.toString();
-    if (myUrl.startsWith(DuokanServerConfiguration::xiaomiFollowupUrl()))
+    const QString & my_url = current_url.toString();
+    if (my_url.startsWith(DuokanServerConfiguration::xiaomiFollowupUrl()))
     {
         view_->stop();
         exchangeDuokanToken(current_url);
     }
-    else
-    {
-        if (myUrl.startsWith(DuokanServerConfiguration::xiaomiWebRegisterUrl()))
-        {
-            emit startLogin();
-        }
-        else if (myUrl.startsWith(MI_ACCOUNT_SERVICE_LOGIN_URI))
-        {
-            stoped_ = false;
-            emit startLoginAuth();
-        }
-    }
+    //else
+    //{
+    //    if (my_url.startsWith(DuokanServerConfiguration::xiaomiWebRegisterUrl()))
+    //    {
+    //        emit startLogin();
+    //    }
+    //    else if (my_url.startsWith(MI_ACCOUNT_SERVICE_LOGIN_URI))
+    //    {
+    //        emit startLoginAuth();
+    //    }
+    //}
 }
 
 void XiaomiAccountManager::onLoadFinished(bool ok)
 {
     QUrl current_url = view_->url();
-    QString myUrl = current_url.toEncoded();
-    if (myUrl.startsWith(MI_ACCOUNT_SERVICE_LOGIN_URI))
+    QString my_url = current_url.toEncoded();
+    static bool first_display = false;
+    if (my_url.startsWith(MI_ACCOUNT_SERVICE_LOGIN_URI) && !first_display)
     {
-        emit loginPageLoadFinished(ok);
-    }
-    else if (myUrl.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI) &&
-        !DuokanServerConfiguration::isOnline())
-    {
-        if (stoped_)
-        {
-            return;
-        }
-        CookieJar* cookieJar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
-        //QList<QNetworkCookie> cookies = cookieJar->cookiesForUrl(current_url);
-        //user_id_ = getUserIdFromCookies(cookies);
-
-        cookieJar->clear();
-        QString targetUrl = myUrl.replace(MI_ACCOUNT_REGISTERED_CALLBACK_URI,
-            DuokanServerConfiguration::xiaomiAccountCallback());
-        load(targetUrl);
+        first_display = true;
+        //emit loginPageLoadFinished(ok);
+        emit pageChanged(tr(""));
     }
 }
 
 void XiaomiAccountManager::onUrlChanged(const QUrl& url)
 {
-    QString myUrl = url.toString();
-    if (myUrl.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI) &&
-        !DuokanServerConfiguration::isOnline())
+    QString my_url = url.toEncoded();
+    if (my_url.startsWith(DuokanServerConfiguration::xiaomiWebRegisterUrl()))
     {
-        //view_->stop();
+        //emit startLogin();
+        emit pageChanged(tr("Loading Login Page..."));
     }
-    else if (myUrl.startsWith(DuokanServerConfiguration::xiaomiFollowupUrl()))
+    else if (my_url.startsWith(MI_ACCOUNT_SERVICE_LOGIN_URI))
     {
-        stoped_ = true;
+        if (my_url.startsWith(MI_ACCOUNT_SERVICE_LOGIN_AUTH_URI))
+        {
+            emit pageChanged(tr("Start Login..."));
+        }
+        else
+        {
+            emit startLoginAuth();
+        }
+    }
+    else if (my_url.startsWith(MI_ACCOUNT_REGISTERED_CALLBACK_URI))
+    {
+        //emit startCheckin();
+        emit pageChanged(tr("Check In..."));
+        if (DuokanServerConfiguration::isOnline())
+        {
+            qDebug("Replace URL for internal testing");
+            CookieJar* cookieJar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
+            //QList<QNetworkCookie> cookies = cookieJar->cookiesForUrl(current_url);
+            //user_id_ = getUserIdFromCookies(cookies);
+
+            cookieJar->clear();
+            QString targetUrl = my_url.replace(MI_ACCOUNT_REGISTERED_CALLBACK_URI,
+                DuokanServerConfiguration::xiaomiAccountCallback());
+            load(targetUrl);
+        }
+    }
+    else if (my_url.startsWith(DuokanServerConfiguration::xiaomiFollowupUrl()))
+    {
+        //emit startExchangeToken();
+        emit pageChanged(tr("Retrieving User Data..."));
         view_->stop();
         exchangeDuokanToken(url);
     }
@@ -251,7 +310,7 @@ void XiaomiAccountManager::onUrlChanged(const QUrl& url)
 
 bool XiaomiAccountManager::isXiaomiAccountPath(const QString& path)
 {
-    return path.contains(DuokanServerConfiguration::xiaomiWebRegisterUrl());
+    return DuokanServerConfiguration::checkOnlineOrTestingUrl(path);
 }
 
 void XiaomiAccountManager::connectWebView(QWebView* view)
@@ -262,6 +321,16 @@ void XiaomiAccountManager::connectWebView(QWebView* view)
     connect(view_, SIGNAL(loadStarted()), this, SLOT(onLoadStarted()));
     connect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
     connect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
+
+    // Use customized cookie jar
+    CookieJar* xiaomi_cookie_jar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
+    xiaomi_cookie_jar->setStorageName(QLatin1String("/xiaomi_cookies.ini"));
+    xiaomi_cookie_jar->setSettingName(QLatin1String("xiaomi_cookies"));
+    xiaomi_cookie_jar->load();
+    if (xiaomi_cookie_jar->keepPolicy() != CookieJar::KeepUntilExit)
+    {
+        xiaomi_cookie_jar->setKeepPolicy(CookieJar::KeepUntilExit);
+    }
 }
 
 void XiaomiAccountManager::disconnectWebView()
@@ -273,7 +342,13 @@ void XiaomiAccountManager::disconnectWebView()
         disconnect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
         disconnect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
 
+        disconnect(this, SIGNAL(loginFinished(bool)), view_, SLOT(onXiaomiAccountLoadFinished(bool)));
+
         view_ = 0;
+
+        // Use default cookie jar
+        CookieJar* xiaomi_cookie_jar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
+        xiaomi_cookie_jar->reset();
     }
 }
 
@@ -356,6 +431,7 @@ bool XiaomiAccountManager::exchangeDuokanToken(const QUrl& url)
         request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
         request.setHeader(QNetworkRequest::ContentLengthHeader, post_data.size());
 
+        qDebug("\nPost Data:%s\n", post_data.constData());
         reply_ = network_service::getAccessManagerInstance()->post(request, post_data);
         connectNetworkReply(reply_);
         return true;
@@ -383,7 +459,8 @@ void XiaomiAccountManager::onNetworkReplyFinished()
 {
     QByteArray result = reply_->readAll();
     qDebug("Network Reply Finished:%s", qPrintable(result));
-    parseAndSave(result);
+    bool ok = parseAndSave(result);
+    emit loginFinished(ok);
 }
 
 void XiaomiAccountManager::load(const QString& path)
@@ -395,15 +472,23 @@ void XiaomiAccountManager::load(const QString& path)
     }
 }
 
-void XiaomiAccountManager::login(bool login_or_register)
+void XiaomiAccountManager::login(const QString& ref_url, bool login_or_register)
 {
-    QString login_str = generateXiaomiAccountLoginUrl();
-    QUrl url = guessUrlFromString(login_str);
-    url.addEncodedQueryItem("followup", DuokanServerConfiguration::xiaomiFollowupUrl().toUtf8());
-    url.addEncodedQueryItem("login", login_or_register ? "1" : "0"); // 0 = register; 1 = login
+    if (DuokanServerConfiguration::checkOnlineOrTestingUrl(ref_url))
+    {
+        QString login_str = generateXiaomiAccountLoginUrl();
+        QUrl url = guessUrlFromString(login_str);
 
-    QByteArray str = url.toEncoded();
-    view_->load(url);
+        QUrl followup_url = guessUrlFromString(DuokanServerConfiguration::xiaomiFollowupUrl());
+        QByteArray followup_raw = followup_url.toEncoded();
+        //QByteArray followup_raw(UrlEncodeForStdString(DuokanServerConfiguration::xiaomiFollowupUrl().toStdString().c_str()).c_str());
+
+        url.addEncodedQueryItem("followup", followup_raw);
+        url.addEncodedQueryItem("source", "wap");
+        url.addEncodedQueryItem("login", login_or_register ? "1" : "0"); // 0 = register; 1 = login
+
+        view_->load(url);
+    }
 }
 
 bool XiaomiAccountManager::parseAndSave(const QByteArray& data)
@@ -415,13 +500,20 @@ bool XiaomiAccountManager::parseAndSave(const QByteArray& data)
 
     QVariant status_variant = sv.property("status").toVariant();
     QVariant token = sv.property("token").toVariant();
+    return saveResults(status_variant, token);
+}
+
+bool XiaomiAccountManager::saveResults(const QVariant& status, const QVariant& token)
+{
+    QString message;
     int result = -1;
-    if (status_variant.type() == QVariant::Map)
+    QString token_str;
+    if (status.type() == QVariant::Map)
     {
-        QMap<QString, QVariant> status_map = status_variant.toMap();
+        QMap<QString, QVariant> status_map = status.toMap();
         if (status_map.find("msg") != status_map.end())
         {
-            QString message = status_map["msg"].toString();
+            message = status_map["msg"].toString();
         }
         if (status_map.find("code") != status_map.end())
         {
@@ -429,27 +521,34 @@ bool XiaomiAccountManager::parseAndSave(const QByteArray& data)
         }
     }
 
-    if (result == 0)
+    if (token.type() == QVariant::String)
     {
-        if (token.type() == QVariant::String)
-        {
-            QString token_str = token.toString();
-            return saveToken(token_str);
-        }
+        token_str = token.toString();
     }
-    return false;
-}
 
-bool XiaomiAccountManager::saveToken(const QString& token)
-{
     QDomDocument doc("XiaomiToken");
     QDomElement root = doc.createElement("XiaomiToken");
     doc.appendChild(root);
 
+    QDomElement user_id_element = doc.createElement("id");
+    root.appendChild(user_id_element);
+    QDomText user_id = doc.createTextNode(user_id_);
+    user_id_element.appendChild(user_id);
+
+    QDomElement code_element = doc.createElement("code");
+    root.appendChild(code_element);
+    QString code_str = QString("%1").arg(result);
+    QDomText code = doc.createTextNode(code_str);
+    code_element.appendChild(code);
+
+    QDomElement msg_element = doc.createElement("msg");
+    root.appendChild(msg_element);
+    QDomText msg = doc.createTextNode(message);
+    msg_element.appendChild(msg);
+
     QDomElement token_element = doc.createElement("token");
     root.appendChild(token_element);
-
-    QDomText value = doc.createTextNode(token);
+    QDomText value = doc.createTextNode(token_str);
     token_element.appendChild(value);
 
     QString xml = doc.toString();

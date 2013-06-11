@@ -13,19 +13,24 @@ public:
     XiaomiAccountManager();
     virtual ~XiaomiAccountManager();
 
-    bool isXiaomiAccountPath(const QString& path);
+    static bool isXiaomiAccountPath(const QString& path);
     void connectWebView(QWebView* view);
     void disconnectWebView();
 
     QString generateXiaomiAccountLoginUrl();
 
     // true = login; false = register
-    void login(bool login_or_register = true);
+    void login(const QString& ref_url, bool login_or_register = true);
 
 Q_SIGNALS:
-    void startLogin();
+    //void startLogin();
     void startLoginAuth();
+    //void startCheckin();
+    //void startExchangeToken();
     void loginPageLoadFinished(bool);
+    void loginFinished(bool);
+
+    void pageChanged(const QString& message);
 
 private Q_SLOTS:
     void onLoadStarted();
@@ -47,15 +52,13 @@ private:
     bool exchangeDuokanToken(const QUrl& url);
     
     bool parseAndSave(const QByteArray& data);
-    bool saveToken(const QString& token);
+    bool saveResults(const QVariant& status, const QVariant& token);
 private:
     QWebView* view_;
 
     QNetworkReply *reply_;
     QString service_token_;
     QString user_id_;
-
-    bool stoped_;
 };
 
 };
