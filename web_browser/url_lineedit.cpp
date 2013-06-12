@@ -15,6 +15,54 @@ using namespace windowsmetrics;
 
 namespace  webbrowser
 {
+
+static const QString READER_BUTTON_STYLE = "                          \
+QAbstractButton                             \
+{                                       \
+    background: dark;                   \
+    border: 1px                         \
+    border-width: 1px;                  \
+    border-color: black;                \
+    border-style: solid;                \
+    color: black;                       \
+    padding: 2px;                       \
+}                                       \
+QAbstractButton:pressed                     \
+{                                       \
+    padding-left: 0px;                  \
+    padding-top: 0px;                   \
+    color: white;                       \
+    border-color: black;                \
+    background-color: black;            \
+}                                       \
+QAbstractButton:checked                     \
+{                                       \
+    padding-left: 0px;                  \
+    padding-top: 0px;                   \
+    color: white;                       \
+    border-color: black;                \
+    background-color: black;            \
+}                                       \
+QAbstractButton:focus                       \
+{                                       \
+    padding-left: 0px;                  \
+    padding-top: 0px;                   \
+    border: 1px                         \
+    color: black;                       \
+    border-width: 0px;                  \
+    border-color: black;                \
+    background-color: dark;            \
+}                                       \
+QAbstractButton:disabled                    \
+{                                       \
+    padding-left: 0px;                  \
+    padding-top: 0px;                   \
+    border-color: dark;                 \
+    color: dark;                        \
+    background-color: white;            \
+}";
+
+
 ClearButton::ClearButton(QWidget* parent)
     : QAbstractButton(parent)
 {
@@ -52,10 +100,76 @@ void ClearButton::textChanged(const QString &text)
 {
     setVisible(!text.isEmpty());
 }
+
+// Reader Button
+ReaderButton::ReaderButton(QWidget* parent)
+    : QAbstractButton(parent)
+    , is_reader_mode_(false)
+{
+    setText(QApplication::tr("reader"));
+    setMyStyleSheet();
+}
+
+void ReaderButton::setMyStyleSheet()
+{
+    setStyleSheet(READER_BUTTON_STYLE);
+}
+
+void ReaderButton::paintEvent(QPaintEvent* e)
+{
+    QPainter painter(this);
+    QFont btnFont = font();
+    btnFont.setBold(true);
+    btnFont.setPixelSize(ui::windowsmetrics::GetWindowFontSize(ui::windowsmetrics::DKPushButtonIndex));
+    setFont(btnFont);
+    if (pressed_)
+    {
+        painter.setPen(Qt::white);
+        painter.drawText(rect(), Qt::AlignCenter, text());
+    }
+    else
+    {
+        painter.setPen(Qt::black);
+        painter.drawText(rect(), Qt::AlignCenter, text());
+    }
+}
+
+void ReaderButton::mousePressEvent(QMouseEvent* e)
+{
+    pressed_ = true;
+    QAbstractButton::mousePressEvent(e);
+}
+
+void ReaderButton::mouseReleaseEvent(QMouseEvent* e)
+{
+    pressed_ = false;
+    QAbstractButton::mouseReleaseEvent(e);
+}
+
+void ReaderButton::setReaderMode(bool is_reader_mode)
+{
+    if (is_reader_mode_ == is_reader_mode)
+    {
+        return;
+    }
+
+    is_reader_mode_ = is_reader_mode;
+    if (is_reader_mode_)
+    {
+        setText(QApplication::tr("normal"));
+    }
+    else
+    {
+        setText(QApplication::tr("reader"));
+    }
+    update();
+}
+
 ExLineEdit::ExLineEdit(QWidget *parent)
     : QWidget(parent)
     , left_widget_(0)
     , line_edit_(new DKLineEdit(this))
+    , reader_button_(0)
     , clear_button_(0)
     , modify_line_edit_text_automatically_(true)
 {
@@ -76,6 +190,11 @@ ExLineEdit::ExLineEdit(QWidget *parent)
     QPalette clearPalette = line_edit_->palette();
     clearPalette.setBrush(QPalette::Base, QBrush(Qt::transparent));
     line_edit_->setPalette(clearPalette);
+
+    // clearButton
+    reader_button_ = new ReaderButton(0);
+    connect(reader_button_, SIGNAL(clicked()),
+            this, SLOT(onReaderButtonClicked()));
 
     // clearButton
     clear_button_ = new ClearButton(this);
@@ -122,6 +241,10 @@ void ExLineEdit::updateGeometries()
 
     clear_button_->setGeometry(this->width() - clearButtonWidth, 0,
                                clearButtonWidth, this->height());
+
+    int readerButtonWidth = reader_button_->width();
+    reader_button_->setGeometry(this->width() - clearButtonWidth - readerButtonWidth - 4, 0,
+                               readerButtonWidth, this->height());
 }
 
 void ExLineEdit::initStyleOption(QStyleOptionFrameV2 *option) const
@@ -204,6 +327,25 @@ void ExLineEdit::inputMethodEvent(QInputMethodEvent *e)
     line_edit_->event(e);
 }
 
+void ExLineEdit::onReaderButtonClicked()
+{
+    bool is_reader_mode = !reader_button_->isReaderMode();
+    reader_button_->setReaderMode(is_reader_mode);
+    emit enterReaderMode(is_reader_mode);
+}
+
+void ExLineEdit::displayReaderButton(bool display)
+{
+    if (reader_button_->isVisible() == display)
+    {
+        return;
+    }
+    if (!reader_button_->isVisible())
+    {
+        reader_button_->setReaderMode(false);
+    }
+    reader_button_->setVisible(display);
+}
 
 class UrlIconLabel : public QLabel
 {

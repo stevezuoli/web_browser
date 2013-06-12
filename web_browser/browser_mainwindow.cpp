@@ -52,6 +52,8 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     connect(&menu_tool_button_, SIGNAL(clicked()), this, SLOT(showMenu()));
     connect(address_lineedit_->lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
     connect(address_lineedit_->lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(onAddressInputFocus(bool)));
+    connect(view_, SIGNAL(displayReaderButton(bool)), address_lineedit_, SLOT(displayReaderButton(bool)));
+    connect(address_lineedit_, SIGNAL(enterReaderMode(bool)), view_, SLOT(enterReaderMode(bool)));
 
     connect(view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
     connect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));

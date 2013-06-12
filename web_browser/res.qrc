@@ -53,6 +53,7 @@
     <file>res/ime_key_A_upper_pressed@kt.png</file>
     <file>res/ime_key_A_upper_pressed@kp.png</file>
     <file>res/jquery.min.js</file>
+    <file>res/readability.js</file>
     <file>res/load_fail.html</file>
     <file>res/ota_status.html</file>
     <file>res/connecting.html</file>

@@ -8,6 +8,8 @@ WebPage::WebPage(QObject *parent)
     : QWebPage(parent)
     , network_error_(QNetworkReply::NoError)
 {
+    mainFrame()->setScrollBarPolicy(Qt::Vertical, Qt::ScrollBarAlwaysOff);
+    mainFrame()->setScrollBarPolicy(Qt::Horizontal, Qt::ScrollBarAlwaysOff);
     setNetworkAccessManager(WebApplication::accessManager());
     connect(this, SIGNAL(unsupportedContent(QNetworkReply *)),
             this, SLOT(handleUnsupportedContent(QNetworkReply *)));
@@ -102,14 +104,6 @@ void WebPage::handleUnsupportedContent(QNetworkReply *reply)
     network_error_ = reply->error();
     if (reply->error() == QNetworkReply::NoError)
     {
-        // Do NOT launch the DRM service by url
-        //QUrl url = reply->url();
-        //QString path = url.path();
-        //if (path.endsWith(".acsm", Qt::CaseInsensitive))
-        //{
-        //    emit requestOTA(url);
-        //    return;
-        //}
         return;
     }
 

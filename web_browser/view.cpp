@@ -13,11 +13,9 @@ using namespace gesture;
 namespace webbrowser
 {
 
-#define USE_JQUERY
-
 static const int PAGE_REPEAT = 20;
 static const int DELTA = 10;
-static const qreal DEFAULT_FONT = 1.5;
+static const qreal DEFAULT_FONT = 1.0;
 
 BrowserView::BrowserView(QWidget *parent)
     : QWebView(parent)
@@ -28,6 +26,7 @@ BrowserView::BrowserView(QWidget *parent)
     , page_(new WebPage(this))
     , bookmark_model_(0)
     , hand_tool_enabled_(true)
+    , is_current_page_readable_(false)
 {
     setPage(page_);
 
@@ -73,7 +72,16 @@ BrowserView::BrowserView(QWidget *parent)
         jquery_ = file.readAll();
         file.close();
     }
+
 #endif
+    QFile readability_file;
+    readability_file.setFileName(":/res/readability.js");
+    if (readability_file.open(QIODevice::ReadOnly))
+    {
+        readability_ = readability_file.readAll();
+        readability_file.close();
+    }
+
     setTextSizeMultiplier(DEFAULT_FONT);
 }
 
@@ -122,6 +130,7 @@ void BrowserView::hideScrollbar()
 {
     QString code = "$('body').css('overflow', 'hidden')";
     page()->mainFrame()->evaluateJavaScript(code);
+    
 }
 
 void BrowserView::onLoadStarted(void)
@@ -134,6 +143,7 @@ void BrowserView::onLoadStarted(void)
 
     // Experimental, set handle tool to be true
     hand_tool_enabled_ = true;
+    setIsArticlePage(false);
 
     // Store the screen update type.
     resetUpdateRect();
@@ -166,6 +176,7 @@ void BrowserView::onLoadFinished(bool ok)
     // Ensure we can get a gc update.
     progress_ = 100;
     update_rect_ = rect();
+    setIsArticlePage(false);
 
     // Check if we need to store the thumbnail.
     if (ok)
@@ -186,10 +197,12 @@ void BrowserView::onLoadFinished(bool ok)
         //hideEmbeddedElements();
         hideScrollbar();
 #endif
-
         // The keyboard can only be display after load finished
         addFormsFocusEvent();
         addSelectEvents();
+
+        // for reader mode
+        askForArticlePage();
     }
     else
     {
@@ -200,12 +213,12 @@ void BrowserView::onLoadFinished(bool ok)
     updateViewportRange();
 
     //collect the form elements in current page
-    form_elements_ = page()->currentFrame()->documentElement().findAll("input[type=text],input[type=password], textarea");
-    qDebug() << form_elements_.count();
-    foreach (QWebElement formElement, form_elements_)
-    {
-        qDebug() << formElement.toOuterXml();
-    }
+    //form_elements_ = page()->currentFrame()->documentElement().findAll("input[type=text],input[type=password], textarea");
+    //qDebug() << form_elements_.count();
+    //foreach (QWebElement formElement, form_elements_)
+    //{
+    //    qDebug() << formElement.toOuterXml();
+    //}
 }
 
 bool BrowserView::needConfigNetwork()
@@ -329,12 +342,6 @@ QWebView *BrowserView::createWindow(QWebPage::WebWindowType type)
 
 void BrowserView::mousePressEvent(QMouseEvent*me)
 {
-    if (disableMouse()) {
-        qDebug("Disable mousePressEvent");
-        me->accept();
-        return;
-    }
-    qDebug("BrowserView::mousePressEvent");
     emit inputFormLostFocus();
     position_ = me->pos();
 
@@ -343,12 +350,6 @@ void BrowserView::mousePressEvent(QMouseEvent*me)
 
 void BrowserView::mouseMoveEvent(QMouseEvent *me)
 {
-    if (disableMouse()) {
-        qDebug("Disable mouseMoveEvent");
-        me->accept();
-        return;
-    }
-    qDebug("BrowserView::mouseMoveEvent");
     if (!hand_tool_enabled_)
     {
         QWebView::mouseMoveEvent(me);
@@ -361,12 +362,6 @@ void BrowserView::mouseMoveEvent(QMouseEvent *me)
 
 void BrowserView::mouseReleaseEvent(QMouseEvent*me)
 {
-    if (disableMouse()) {
-        qDebug("Disable mouseReleaseEvent");
-        me->accept();
-        return;
-    }
-    qDebug("BrowserView::mouseReleaseEvent");
     QPoint delta = position_ - me->pos();
     if (isTextSelectionEnabled())
     {
@@ -447,6 +442,9 @@ void BrowserView::keyReleaseEvent(QKeyEvent *ke)
         break;
     case Qt::Key_C:
         clearCookies();
+        break;
+    case Qt::Key_R:
+        enterReaderMode(true);
         break;
     default:
         QWebView::keyReleaseEvent(ke);
@@ -762,7 +760,7 @@ void BrowserView::addFormsFocusEvent(void)
                         "continue;"
                 "}"
 
-                "inputList[i].setAttribute('onclick', \"__qWebViewWidget.formFocused('\" + formId + \"', '\" + formName + \"', '\" + formAction + \"','\" + tagName + \"','\" + inputId + \"','\" + inputName + \"')\");"
+                "inputList[i].setAttribute('onfocus', \"__qWebViewWidget.formFocused('\" + formId + \"', '\" + formName + \"', '\" + formAction + \"','\" + tagName + \"','\" + inputId + \"','\" + inputName + \"')\");"
                 "inputList[i].setAttribute('onblur', '__qWebViewWidget.formLostFocus()');"
             "}"
         "}"
@@ -787,6 +785,52 @@ void BrowserView::addSelectEvents(void)
         "addSelectHandler('select');";
 
     page()->mainFrame()->evaluateJavaScript(scriptSource);
+}
+
+void BrowserView::setIsArticlePage(bool is_article)
+{
+    qDebug("Current page is article:%s", is_article ? "yes" : "no");
+    is_current_page_readable_ = is_article;
+    emit displayReaderButton(is_current_page_readable_);
+}
+
+void BrowserView::askForArticlePage()
+{
+    //QTimer::singleShot(0, this, SLOT(checkIsArticlePage()));
+}
+
+void BrowserView::checkIsArticlePage()
+{
+    QString getTitleSource =
+        "function getTitleOfCurrentArticle(){"
+             "var curTitle = '',"
+             "origTitle = '';"
+             "curTitle = origTitle = document.title;"
+             "return curTitle;"
+         "}";
+    QString scriptSource = getTitleSource +
+        "var article_title = getTitleOfCurrentArticle();"
+        "if(!article_title) {"
+            "__qWebViewWidget.setIsArticlePage(false);"
+        "}"
+        "else{"
+            "__qWebViewWidget.setIsArticlePage(true);"
+        "}";
+    QString code = scriptSource;
+    page()->mainFrame()->evaluateJavaScript(code);
+}
+
+void BrowserView::enterReaderMode(bool is_reader_mode)
+{
+    if (is_reader_mode)
+    {
+        QString code = readability_;// + "readability.init();";
+        page()->mainFrame()->evaluateJavaScript(code);
+    }
+    else
+    {
+        reloadCurrentUrl();
+    }
 }
 
 static void collectPopupMenus(const QObject *parent,
@@ -983,12 +1027,6 @@ void BrowserView::onScaleEnd()
 void BrowserView::onScaling()
 {
     qDebug("Web View is scaling");
-}
-
-bool BrowserView::disableMouse()
-{
-    // TODO. more limitation to this function should be added
-    return ScaleGestureDetector::instance()->isScaling();
 }
 
 }

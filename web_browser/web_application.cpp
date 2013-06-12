@@ -29,8 +29,8 @@ WebApplication::WebApplication(int &argc, char **argv)
     QCoreApplication::setOrganizationName(QLatin1String("Duokan"));
     QCoreApplication::setApplicationName(QLatin1String("Web Browser"));
 
-    QWebSettings::setMaximumPagesInCache(4);
-    QWebSettings::setObjectCacheCapacities(CACHE_MIN_DEAD_CAPACITY, CACHE_MAX_DEAD, TOTAL_CAPACITY);
+    //QWebSettings::setMaximumPagesInCache(4);
+    //QWebSettings::setObjectCacheCapacities(CACHE_MIN_DEAD_CAPACITY, CACHE_MAX_DEAD, TOTAL_CAPACITY);
 
     // parse arguments
     if (argc >= 2)

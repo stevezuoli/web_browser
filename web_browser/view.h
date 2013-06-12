@@ -71,6 +71,9 @@ Q_SIGNALS:
     void inputFormLostFocus(void);
     void keyboardKeyPressed();
 
+    // reader mode
+    void displayReaderButton(bool display);
+
 public Q_SLOTS:
     void formLostFocus (void);
     void formFocused (const QString& form_id,
@@ -92,6 +95,10 @@ public Q_SLOTS:
     void selectBlur();
     void selectChanged();
     void returnToLibrary();
+
+    // reader mode
+    void setIsArticlePage(bool is_article);
+    void enterReaderMode(bool is_reader_mode);
 
     void onScaleBegin();
     void onScaleEnd();
@@ -150,6 +157,10 @@ private Q_SLOTS:
 
     void clearHistory();
 
+    // reader mode
+    void checkIsArticlePage();
+    void askForArticlePage();
+
     //void onMicroFocusChanged();
 private:
     void addFormsFocusEvent(void);
@@ -180,9 +191,6 @@ private:
     static bool isInViewport(const BrowserView* view, const QWebElement& element);
     bool isformFocused();
 
-    // scale
-    bool disableMouse();
-
 private:
     QPoint position_;
     QPoint offset_;
@@ -204,12 +212,14 @@ private:
     QUrl current_url_;
 
     QString jquery_;
+    QString readability_;
     WebPage *page_;
     BookmarkModel *bookmark_model_;
     QWidgets focus_widgets_;
     QWebElementCollection form_elements_;
 
     bool hand_tool_enabled_;
+    bool is_current_page_readable_;
 
 private:
     friend class HoldAutoSaver;

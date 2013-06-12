@@ -106,11 +106,11 @@ bool ScaleGestureDetector::onTouchEvent(TouchEvent* moveEvent)
                     setContext(moveEvent);
                     int actionIndex = moveEvent->actionIndex();
                     int actionId = moveEvent->pointerId(actionIndex);
-                    setContext(moveEvent);
+                    //setContext(moveEvent);
                     int activeId = actionId == active_id0_ ? active_id1_ : active_id0_;
                     int index = moveEvent->findPointerIndex(activeId);
-                    focus_x_ = moveEvent->x(index);
-                    focus_y_ = moveEvent->y(index);
+                    //focus_x_ = moveEvent->x(index);
+                    //focus_y_ = moveEvent->y(index);
                     
                     //m_listener->OnScaleEnd(this);
                     //qDebug("scaleEnd");
