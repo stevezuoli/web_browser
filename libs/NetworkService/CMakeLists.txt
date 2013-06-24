@@ -18,8 +18,9 @@ ADD_LIBRARY(network_service
 
 TARGET_LINK_LIBRARIES(network_service
   aes
+  kqoauth
   device
   duokan_base
-  fblib
+  database
   ${QT_LIBRARIES}
   ${ADD_LIB})

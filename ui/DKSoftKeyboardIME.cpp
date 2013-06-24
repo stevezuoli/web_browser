@@ -284,10 +284,18 @@ void DKSoftKeyboardIME::keyPressEvent(QKeyEvent* event)
         case Qt::Key_Down:
             onArrowKeyPressed(event->key());
             return;
+#ifndef Q_WS_QWS
+        case Qt::Key_F1:
+#else
         case Qt::Key_Select:
+#endif
             onOkKeyPressed();
             return;
+#ifndef Q_WS_QWS
+        case Qt::Key_F2:
+#else
         case Qt::Key_AltGr:
+#endif
             setVisible(false);
             return;
     }

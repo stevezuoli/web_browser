@@ -10,6 +10,7 @@ KindleTS::KindleTS(const QString & driver, const QString & device)
 #else
 :
 #endif
+  input_captured(false),
   current_slot_id(0),
   current_pointer_count(0)
 {
@@ -25,9 +26,9 @@ KindleTS::KindleTS(const QString & driver, const QString & device)
 
 #ifdef BUILD_FOR_ARM
     if (isKT) {
-        _fd = open("/dev/input/event3", O_RDONLY);
+        _fd = open("/dev/input/event3", O_RDONLY|O_NOCTTY);
         // Kindle Touch Home button
-        kt_fd = open("/dev/input/event2", O_RDONLY);
+        kt_fd = open("/dev/input/event2", O_RDONLY|O_NOCTTY);
         kt_sn = new QSocketNotifier(kt_fd, QSocketNotifier::Read);
         connect(kt_sn, SIGNAL(activated(int)), this, SLOT(kt_activity(int)));
         kt_sn->setEnabled(true);
@@ -58,15 +59,21 @@ KindleTS::KindleTS(const QString & driver, const QString & device)
 
     oldX=0; oldY=0;
 
-    capture_input();
+    // Do not capture input when KindleApp exsits
+    // It maybe a bug of touch driver. To refine it later.
+    //capture_input();
 #endif
 }
 
 KindleTS::~KindleTS()
 {
 #ifdef BUILD_FOR_ARM
-    release_input() ;
     delete _sn;
+
+    // Do not release input when KindleApp exsits
+    // It maybe a bug of touch driver. To refine it later.
+    //release_input();
+
     close(_fd);
     if (isKT) {
         delete kt_sn;
@@ -119,14 +126,21 @@ void KindleTS::activity(int)
     _sn->setEnabled(false);
 
     TouchEvent* te = readTouchEvent(_fd);
-    if (te != 0)
+
+    bool is_up = te != 0 ? (te->actionMasked() == TouchEvent::ACTION_UP) : false;
+    if (is_up)
     {
-        if (te->pointerCount() >= 2)
-        {
-            qDebug("Emit multi-touch event, pos1(%d, %d), pos2(%d, %d), action:%d", te->x(0), te->y(0), te->x(1), te->y(1), te->action());
-            emit touchEvent(te);
-        }
+        qDebug("Clear pointer count");
+        current_pointer_count = 0;
+    }
+
+    if (te != 0 && te->pointerCount() >= 2)
+    {
+        qDebug("Emit multi-touch event, pos1(%d, %d), pos2(%d, %d), action:%d", te->x(0), te->y(0), te->x(1), te->y(1), te->action());
+        emit touchEvent(te);
         delete te;
+        _sn->setEnabled(true);
+        return;   
     }
 
     if (te == 0 //EV_KEY
@@ -137,8 +151,11 @@ void KindleTS::activity(int)
         {
             readSingleTouchEvent(event_stack_[i]);
         }
+        qDebug("Send Single Event-------------------");
     }
 
+    if (te != 0)
+        delete te;
     _sn->setEnabled(true);
 #endif
 }
@@ -147,25 +164,30 @@ void KindleTS::capture_input(void)
 {
 #ifdef BUILD_FOR_ARM
     int on = 1 ;
-
     if (!input_captured )
     {
         qDebug("attempting to capture input...");
-
         if (_fd != -1)
         {
-            if (ioctl(_fd, EVIOCGRAB, on)) {
-                qDebug("Capture touch input: error");
+            int touch_ret = ioctl(_fd, EVIOCGRAB, &on);
+            if (touch_ret != 0) {
+                qDebug("Capture touch input: %d", touch_ret);
+            }
+            else {
+                qDebug("Capture touch input succeeded");
             }
         }
 
         if (isKT && kt_fd != -1)
         {
-            if (ioctl(kt_fd, EVIOCGRAB, on)) {
-                qDebug("Capture touch input: error");
+            int kt_ret = ioctl(kt_fd, EVIOCGRAB, &on);
+            if (kt_ret != 0) {
+                qDebug("Capture key input: %d", kt_ret);
+            }
+            else {
+                qDebug("Capture key input succeeded");
             }
         }
-
         input_captured = true ;
     }
 #endif
@@ -174,25 +196,30 @@ void KindleTS::capture_input(void)
 void KindleTS::release_input(void)
 {
 #ifdef BUILD_FOR_ARM
-    int off = 0 ;
-
     if (input_captured )
     {
         qDebug("attempting to release input...");
         if (_fd != -1)
         {
-            if (ioctl(_fd, EVIOCGRAB, off)) {
-                qDebug("Release touch input: error");
+            int touch_ret = ioctl(_fd, EVIOCGRAB, 0);
+            if (touch_ret != 0) {
+                qDebug("Release touch input: %d", touch_ret);
+            }
+            else {
+                qDebug("Release touch input succeeded");
             }
         }
 
         if (isKT && kt_fd != -1)
         {
-            if (ioctl(kt_fd, EVIOCGRAB, off)) {
-                    qDebug("Release kbd input: error");
+            int fd_ret = ioctl(kt_fd, EVIOCGRAB, 0);
+            if (fd_ret != 0) {
+                qDebug("Release kbd input: %d", fd_ret);
+            }
+            else {
+                qDebug("Release kbd input succeeded");
             }
         }
-
         input_captured = false ;
     }
 #endif
@@ -254,8 +281,8 @@ void KindleTS::readSingleTouchEvent(const input_data& in)
     }
 
     //qDebug("Single Event x=%d, y=%d, touch=%d %d, doubletap=%d %d", p.x(), p.y(), touch, newtouch, doubletap, newdoubletap);
-    if (in.type == EV_SYN)
-        qDebug("________________");
+    //if (in.type == EV_SYN)
+    //    qDebug("________________");
 #endif
 }
 
@@ -273,7 +300,7 @@ TouchEvent* KindleTS::readTouchEvent(int _touch_device)
     static int index_to_slots[2] ={-1, -1};
     static qint64 down_time = -1;
     int read_count = 0;
-  
+
     // clear event stack
     event_stack_.clear();
 
@@ -288,21 +315,35 @@ TouchEvent* KindleTS::readTouchEvent(int _touch_device)
             in.value = ie_buf.value;
             event_stack_.push_back(in);
 
+            int position_value = ie_buf.value;
             if (EV_ABS == ie_buf.type)
             {
+                if (isKT)
+                {
+                    position_value = (ie_buf.code == ABS_MT_POSITION_X ? width : height) * (ie_buf.value) / 0x1000;
+                }
                 ++read_count;
             }
             
             if (ie_buf.type == EV_ABS && ie_buf.code == ABS_MT_SLOT)
             {
                 current_slot_id = ie_buf.value;
+                //qDebug("current_slot_id = ie_buf.value; %d", ie_buf.value);
                 continue;
             }
             if (ie_buf.type == EV_ABS && ie_buf.code == ABS_MT_TRACKING_ID && ie_buf.value >=0)
             {
+                qDebug("ie_buf.type == EV_ABS && ie_buf.code == ABS_MT_TRACKING_ID && ie_buf.value >=0");
                 ++current_index;
                 index_to_slots[current_index] = current_slot_id;
+                
                 ++current_pointer_count;
+                if (current_pointer_count > 2)
+                {
+                    current_pointer_count = 2;
+                }
+                
+                qDebug("current_pointer_count at ie_buf.value >=0:%d", current_pointer_count);
                 if (1 == current_pointer_count)
                 {
                     touch_action = TouchEvent::ACTION_DOWN;
@@ -321,10 +362,15 @@ TouchEvent* KindleTS::readTouchEvent(int _touch_device)
                 ++current_index;
                 index_to_slots[current_index] = current_slot_id;
                 --current_pointer_count;
+                if (current_pointer_count < 0)
+                {
+                    current_pointer_count = 0;
+                }
+
                 current_action_index = current_index;
+                qDebug("current_pointer_count at ie_buf.value ==-1:%d", current_pointer_count);
                 if (1 == current_pointer_count)
                 {
-                    qDebug("touch_action = TouchEvent::ACTION_POINTER_UP;");
                     touch_action = TouchEvent::ACTION_POINTER_UP;
                     // sometimes we get two ABS_MT_TRACKING_ID in one loop
                     // and must break it in two
@@ -347,7 +393,8 @@ TouchEvent* KindleTS::readTouchEvent(int _touch_device)
                 {
                     current_action_index = current_index;
                 }
-                s_oldX[current_slot_id] = ie_buf.value;
+                s_oldX[current_slot_id] = position_value;
+
                 if (TouchEvent::ACTION_MASK == touch_action)
                 {
                     touch_action = TouchEvent::ACTION_MOVE;
@@ -365,7 +412,7 @@ TouchEvent* KindleTS::readTouchEvent(int _touch_device)
                 {
                     current_action_index = current_index;
                 }
-                s_oldY[current_slot_id] = ie_buf.value;
+                s_oldY[current_slot_id] = position_value;
 
                 if (TouchEvent::ACTION_MASK == touch_action)
                 {
@@ -411,8 +458,10 @@ TouchEvent* KindleTS::readTouchEvent(int _touch_device)
     // 2. previously there're two fingers on toush screen 
     //  but only one finger up information is reported in this loop
     // adding another's information
+    ////qDebug("Pre-send touch event, current_pointer_count:%d, current_index:%d, touch_action:%d",
+    ////    current_pointer_count, current_index, touch_action);
     if ((2 == current_pointer_count && 0 == current_index) ||
-        (TouchEvent::ACTION_POINTER_UP == touch_action && 0 == current_index))
+       (TouchEvent::ACTION_POINTER_UP == touch_action && 0 == current_index))
     {
         int another_slot = 1 - index_to_slots[0];
         te.x_[1] = s_oldX[another_slot];

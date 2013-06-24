@@ -47,13 +47,8 @@ int main(int argc, char * argv[])
 #endif
 #endif
     Q_INIT_RESOURCE(res);
-    QTextCodec::setCodecForTr(QTextCodec::codecForName("utf8"));
-    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("utf8"));
-    QTranslator* translator = new QTranslator();
-    translator->load(":/res/WebBrowser_Chn.qm");
 
     WebApplication app(argc, argv);
-    app.installTranslator(translator);
     //WebApplicationAdaptor adaptor(&app);
     
     // initialize system manager. TO remove to standalone server process in the future

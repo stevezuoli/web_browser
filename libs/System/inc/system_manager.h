@@ -2,8 +2,7 @@
 #define SYSTEM_MANAGER_ADAPTOR_H_
 
 #include <QtGui/QtGui>
-#include <QtDBus/QtDBus>
-#include "screen_manager.h"
+//#include <QtDBus/QtDBus>
 
 class KindleTS;
 class KindleKeyboard;

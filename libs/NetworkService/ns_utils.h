@@ -22,6 +22,7 @@
 namespace network_service
 {
 
+QString getWebBrowserStoragePath();
 QString getCacheLocation();
 QString getDownloadFileLocation();
 QUrl guessUrlFromString(const QString &string);

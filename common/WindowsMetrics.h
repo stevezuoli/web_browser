@@ -18,7 +18,13 @@ namespace windowsmetrics
     MACRO_NAME(WebBrowserNavigationBarIconHeight, 72, 92) \
     MACRO_NAME(WebBrowserAddressEditHeight, 41, 53) \
     MACRO_NAME(UrlFaviconSize, 16, 21) \
-    MACRO_NAME(NavigationBarLinePixel, 2, 3)
+    MACRO_NAME(NavigationBarLinePixel, 2, 3)\
+    MACRO_NAME(HistoryItemHeight, 63, 80)\
+    MACRO_NAME(HistoryItemLabelMargin, 20, 24)\
+    MACRO_NAME(HistoryButtonSpace, 16, 21)\
+    MACRO_NAME(HistoryButtonHeight, 59, 75)\
+    MACRO_NAME(MenuItemPadding, 21, 25)\
+    MACRO_NAME(MenuSeparatorPadding, 20, 24)\
 
 enum WindowMetricsIndex
 {
@@ -30,7 +36,10 @@ enum WindowMetricsIndex
 
 
 #define FONTS_LIST(MACRO_NAME)    \
-    MACRO_NAME(DKPushButton, 20, 24)
+    MACRO_NAME(DKPushButton, 20, 24)    \
+    MACRO_NAME(DKLabel, 16, 20)     \
+    MACRO_NAME(DKMenu, 24, 30)      \
+    MACRO_NAME(HistoryDate, 20, 24) 
 
 enum WindowFontsIndex
 {

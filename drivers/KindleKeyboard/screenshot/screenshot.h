@@ -87,7 +87,7 @@ struct rgba_color {
 extern "C" {
 #endif
 
-int do_screenshot(char *path) ;
+int do_screenshot(const char *path) ;
 
 #ifdef __cplusplus
 }

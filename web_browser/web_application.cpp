@@ -23,14 +23,20 @@ WebApplication* WebApplication::instance()
 
 WebApplication::WebApplication(int &argc, char **argv)
     : QApplication(argc, argv)
-    , main_window_(new BrowserMainWindow())
-    , bookmark_model_(new BookmarkModel())
 {
+    QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
+    QTranslator* translator = new QTranslator();
+    translator->load(":/res/WebBrowser_Chn");
+    installTranslator(translator);
+
+    main_window_ = new BrowserMainWindow();
+    bookmark_model_ = new BookmarkModel();
+
     QCoreApplication::setOrganizationName(QLatin1String("Duokan"));
     QCoreApplication::setApplicationName(QLatin1String("Web Browser"));
 
-    //QWebSettings::setMaximumPagesInCache(4);
-    //QWebSettings::setObjectCacheCapacities(CACHE_MIN_DEAD_CAPACITY, CACHE_MAX_DEAD, TOTAL_CAPACITY);
+    QWebSettings::setMaximumPagesInCache(4);
+    QWebSettings::setObjectCacheCapacities(CACHE_MIN_DEAD_CAPACITY, CACHE_MAX_DEAD, TOTAL_CAPACITY);
 
     // parse arguments
     if (argc >= 2)

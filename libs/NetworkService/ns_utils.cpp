@@ -3,12 +3,18 @@
 namespace network_service
 {
 
-static const QString CACHE_DIR = ".network_service_cache";
+static const QString CACHE_DIR = ".web_cache";
 static const QString DOWNLOAD_FILE_DIR = "downloads";
+static const QString WEB_STORE_PATH = "/mnt/us/DK_System/xKindle/web_browser/";
+
+QString getWebBrowserStoragePath()
+{
+    return WEB_STORE_PATH;
+}
 
 QString getCacheLocation()
 {
-    QString path = QDir::home().path();
+    QString path = getWebBrowserStoragePath();
     QDir dir(path);
     QString ret;
     if (!dir.exists(CACHE_DIR))

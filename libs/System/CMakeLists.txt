@@ -13,7 +13,6 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 
 ADD_LIBRARY(system ${SRCS})
 TARGET_LINK_LIBRARIES(system
- fblib
  screen
  gesture
  KindleTS

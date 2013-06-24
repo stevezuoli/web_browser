@@ -7,6 +7,29 @@ class TouchEvent;
 namespace gesture
 {
 
+class ScaleGestureContext
+{
+public:
+    enum ScaleStatus
+    {
+        WAIT_FOR_SCALE = 0,
+        START_SCALE,
+        SCALING,
+        STOP_SCALE
+    };
+
+public:
+    ScaleGestureContext();
+    ~ScaleGestureContext();
+
+    void reset();
+
+public:
+    ScaleStatus status_;
+    int         previous_span_;
+    qreal       previous_zoom_;
+};
+
 class ScaleGestureDetector: public QObject
 {
     Q_OBJECT

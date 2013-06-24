@@ -37,11 +37,19 @@ ELSE(BUILD_FOR_ARM)
 link_directories("/usr/lib")
 ENDIF(BUILD_FOR_ARM)
 
+# Find Thrift & Boost
+include(FindThrift)
+include(enable_boost)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${THRIFT_INCLUDE_DIR})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIR})
+
 # Project include directories.
 INCLUDE_DIRECTORIES(BEFORE
     ${CMAKE_SOURCE_DIR}
     ${CMAKE_SOURCE_DIR}/libs
     ${CMAKE_SOURCE_DIR}/drivers
+    ${CMAKE_SOURCE_DIR}/third_party
     ${CMAKE_SOURCE_DIR}/libs/DkReader/inc
 )
 
@@ -61,13 +69,13 @@ SET(QT_PLUGINS_OUTPUT_PATH ${PROJECT_BINARY_DIR}/plugins)
 
 add_subdirectory(system_manager)
 add_subdirectory(web_browser)
+add_subdirectory(third_party)
 add_subdirectory(libs)
-add_subdirectory(drivers/screen)
-add_subdirectory(drivers/kermit)
+IF(BUILD_FOR_ARM)
 add_subdirectory(drivers/QKindleFb)
+ENDIF(BUILD_FOR_ARM)
 add_subdirectory(drivers/KindleTS)
 add_subdirectory(drivers/KindleFiveWay)
 add_subdirectory(drivers/KindleKeyboard)
 add_subdirectory(ui)
 add_subdirectory(common)
-

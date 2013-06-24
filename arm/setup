@@ -1,5 +1,5 @@
-export PATH=/mnt/us/DK_System/duokan/bin:/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:/usr/local/python/bin
-export LD_LIBRARY_PATH=/mnt/us/DK_System/duokan/lib:/lib:/usr/lib
-export QT_PLUGIN_PATH=/mnt/us/DK_System/duokan/plugins
+export PATH=/DuoKan:/usr/local/bin:/bin:/usr/bin:/usr/sbin:/sbin:/usr/local/python/bin
+export LD_LIBRARY_PATH=/DuoKan/lib:/mnt/us/DK_System/xKindle/web_browser/lib:/lib:/usr/lib
+export QT_PLUGIN_PATH=/DuoKan/plugins
 export QWS_DISPLAY=QKindleFb
 export QT_QWS_FONTDIR=/mnt/us/DK_System/xKindle/res/userfonts

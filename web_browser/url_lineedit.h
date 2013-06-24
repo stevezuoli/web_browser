@@ -23,33 +23,6 @@ public slots:
     void textChanged(const QString& text);
 };//ClearButton
 
-class ReaderButton : public QAbstractButton
-{
-    Q_OBJECT
-public:
-    ReaderButton(QWidget* parent = 0);
-
-    void setBackGroundImagePaths(const QString& focusInPath, const QString& focusOutPath);
-    void setPressed(bool press)
-    {
-        pressed_ = press;
-        update();
-    }
-
-    void setReaderMode(bool is_reader_mode);
-    bool isReaderMode() { return is_reader_mode_; }
-
-protected:
-    virtual void paintEvent(QPaintEvent*);
-    virtual void mousePressEvent(QMouseEvent* e);
-    virtual void mouseReleaseEvent(QMouseEvent* e);
-
-private:
-    void setMyStyleSheet();
-    bool pressed_;
-    bool is_reader_mode_;
-};//ReaderButton
-
 class ExLineEdit : public QWidget
 {
     Q_OBJECT
@@ -69,14 +42,6 @@ public:
     }
 
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
-
-Q_SIGNALS:
-    void enterReaderMode(bool enter);
-
-public Q_SLOTS:
-    void onReaderButtonClicked();
-    void displayReaderButton(bool display);
-
 protected:
     void focusInEvent(QFocusEvent *event);
     void focusOutEvent(QFocusEvent *event);
@@ -92,7 +57,6 @@ protected:
 
     QWidget *left_widget_;
     QLineEdit *line_edit_;
-    ReaderButton *reader_button_;
     ClearButton *clear_button_;
     bool modify_line_edit_text_automatically_;
 };

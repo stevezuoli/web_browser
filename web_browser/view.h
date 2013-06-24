@@ -3,9 +3,12 @@
 
 #include <QtGui/QtGui>
 #include <QtWebKit/QtWebKit>
-
+#include "Database/web_data.h"
 #include "page.h"
 #include "bookmark_model.h"
+#include "Gesture/scale_gesture_detector.h"
+
+using namespace web_database;
 
 namespace webbrowser
 {
@@ -41,6 +44,13 @@ public:
 
     QString getHtmlFromMainFrame();
 
+    QVariantList GetSiteList() const
+    {
+        return site_list_;
+    }
+    // Clear HistoryData
+    void clearHistoryData();
+
 protected:
     virtual QWebView *createWindow(QWebPage::WebWindowType type);
     virtual void mousePressEvent (QMouseEvent * );
@@ -72,7 +82,10 @@ Q_SIGNALS:
     void keyboardKeyPressed();
 
     // reader mode
-    void displayReaderButton(bool display);
+    void enableReaderMode(bool);
+    
+    // update text on linedit
+    void displayTextOnAddressEdit(const QString& message);
 
 public Q_SLOTS:
     void formLostFocus (void);
@@ -97,7 +110,6 @@ public Q_SLOTS:
     void returnToLibrary();
 
     // reader mode
-    void setIsArticlePage(bool is_article);
     void enterReaderMode(bool is_reader_mode);
 
     void onScaleBegin();
@@ -139,7 +151,6 @@ private Q_SLOTS:
 
     void storeUrl();
     void sync();
-    void saveThumbnails();
     QImage thumbnail(const QSize & size);
 
     void myScroll(int dx, int dy);
@@ -156,10 +167,6 @@ private Q_SLOTS:
     void hideScrollbar();
 
     void clearHistory();
-
-    // reader mode
-    void checkIsArticlePage();
-    void askForArticlePage();
 
     //void onMicroFocusChanged();
 private:
@@ -182,14 +189,14 @@ private:
 
     // Clear Cookies
     void clearCookies();
-
-    // Thumbnail
-    void saveThumbnailForExplorer();
     
     // Navigation
     QWebElement searchElement(QWebElement element, bool func(const BrowserView* view, const QWebElement& e));
     static bool isInViewport(const BrowserView* view, const QWebElement& element);
     bool isformFocused();
+
+    // Scaling
+    bool zoom(qreal zoom_span, int focus_x, int focus_y);
 
 private:
     QPoint position_;
@@ -208,8 +215,10 @@ private:
     QString selected_text_;
     bool enable_text_selection_;
 
+    // web data
     bool need_save_url_;
     QUrl current_url_;
+    WebData db_;
 
     QString jquery_;
     QString readability_;
@@ -219,7 +228,9 @@ private:
     QWebElementCollection form_elements_;
 
     bool hand_tool_enabled_;
-    bool is_current_page_readable_;
+
+    // scaling
+    gesture::ScaleGestureContext scale_context_;
 
 private:
     friend class HoldAutoSaver;

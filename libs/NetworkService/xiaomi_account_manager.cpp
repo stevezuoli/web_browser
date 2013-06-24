@@ -2,17 +2,18 @@
 #include "access_manager.h"
 #include "cookie_jar.h"
 
-#include "FbLib/DeviceInfo.h"
-#include "AES/aes.h"
+#include "Device/DeviceInfo.h"
 #include "Device/fat.h"
+#include "AES/aes.h"
+#include "Database/xiaomi_token.h"
+#include "Database/token_ring.h"
 
 #define TEST_SERVER
 
+using namespace web_database;
+
 namespace network_service
 {
-
-static const QString TOKEN_PATH = "/DuoKan/";
-static const QString WEB_BROWSER_DIR = "web_browser";
 
 static const QString BOOK_HOST = "http://book.duokan.com";
 static const QString LOGIN_HOST = "http://login.dushu.xiaomi.com";
@@ -150,15 +151,6 @@ public:
             return TEST_HOST + XIAOMI_CHECKIN;
         else
             return LOGIN_HOST + XIAOMI_CHECKIN;
-    }
-
-    static QString getTokenHome()
-    {
-#ifdef BUILD_FOR_ARM
-        return TOKEN_PATH;
-#else
-        return QDir::home().path();
-#endif
     }
 
     static bool checkOnlineOrTestingUrl(const QString& ref_url)
@@ -341,9 +333,6 @@ void XiaomiAccountManager::disconnectWebView()
         disconnect(view_, SIGNAL(loadStarted()), this, SLOT(onLoadStarted()));
         disconnect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
         disconnect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
-
-        disconnect(this, SIGNAL(loginFinished(bool)), view_, SLOT(onXiaomiAccountLoadFinished(bool)));
-
         view_ = 0;
 
         // Use default cookie jar
@@ -551,20 +540,27 @@ bool XiaomiAccountManager::saveResults(const QVariant& status, const QVariant& t
     QDomText value = doc.createTextNode(token_str);
     token_element.appendChild(value);
 
+    // save token to db
+    XiaomiToken token_for_db;
+    token_for_db.mutableToken() = token_str;
+    token_for_db.mutableUserId() = user_id_;
+    TokenRing token_ring;
+    token_ring.setXiaomiToken(token_for_db);
+
     QString xml = doc.toString();
     qDebug("XiaomiToken:%s", qPrintable(xml));
 
-    QString path = DuokanServerConfiguration::getTokenHome();
+    QString path = XiaomiToken::home();
     QDir dir(path);
-    if (!dir.exists(WEB_BROWSER_DIR))
+    if (!dir.exists(XiaomiToken::dirName()))
     {
-        if (!dir.mkdir(WEB_BROWSER_DIR))
+        if (!dir.mkdir(XiaomiToken::dirName()))
         {
             return false;
         }
     }
 
-    if (dir.cd(WEB_BROWSER_DIR))
+    if (dir.cd(XiaomiToken::dirName()))
     {
         // Change folder attribute.
         changeToHidden(dir.absolutePath().toLocal8Bit().constData());

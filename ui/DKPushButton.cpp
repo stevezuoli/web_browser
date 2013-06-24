@@ -1,21 +1,21 @@
 #include "ui/DKPushButton.h"    
 #include <QPainter>
 #include "common/WindowsMetrics.h"
+#include "Device/device.h"
+#include <QDebug>
 
 namespace ui
 {
 static const QString PUSH_BUTTON_STYLE = "                          \
-QAbstractButton                             \
+QPushButton                             \
 {                                       \
-    background: transparent;            \
-    border: 0px                         \
+    font: %1px;                         \
     border-width: 0px;                  \
     border-color: transparent;          \
-    border-style: solid;                \
-    color: black;                       \
+    background-color: transparent;                       \
     padding: 0px;                       \
 }                                       \
-QAbstractButton:pressed                     \
+QPushButton:pressed                     \
 {                                       \
     padding-left: 0px;                  \
     padding-top: 0px;                   \
@@ -23,62 +23,54 @@ QAbstractButton:pressed                     \
     border-color: white;                \
     background-color: black;            \
 }                                       \
-QAbstractButton:checked                     \
+QPushButton:checked                     \
 {                                       \
     padding-left: 0px;                  \
     padding-top: 0px;                   \
     color: white;                       \
-    border-color: white;                \
     background-color: black;            \
 }                                       \
-QAbstractButton:focus                       \
+QPushButton:focus                       \
 {                                       \
     padding-left: 0px;                  \
     padding-top: 0px;                   \
-    border: 0px                         \
-    color: black;                       \
+    color: white;                       \
     border-width: 0px;                  \
     border-color: white;                \
-    background-color: white;            \
+    background-color: black;            \
 }                                       \
-QAbstractButton:disabled                    \
+QPushButton:disabled                    \
 {                                       \
     padding-left: 0px;                  \
     padding-top: 0px;                   \
     border-color: dark;                 \
     color: dark;                        \
-    background-color: white;            \
+    background: white;                  \
 }";
 
 DKPushButton::DKPushButton(QWidget* parent)
-    : QAbstractButton(parent)
+    : QPushButton(parent)
     , pressed_(false)
 {
     InitDKProperty();
 }
 
 DKPushButton::DKPushButton(const QString& text, QWidget* parent)
-    : QAbstractButton(parent)
+    : QPushButton(parent)
 {
     setText(text);
     InitDKProperty();
-}
-
-DKPushButton::DKPushButton(const QString& path, const QString& text, QWidget* parent)
-    : QAbstractButton(parent)
-{
-    setText(text);
-    InitDKProperty();
-    setBackGroundImagePaths(path, "");
 }
 
 void DKPushButton::setDKStyleSheet()
 {
-    setStyleSheet(PUSH_BUTTON_STYLE);
+    setStyleSheet(PUSH_BUTTON_STYLE.
+            arg(ui::windowsmetrics::GetWindowFontSize(ui::windowsmetrics::DKPushButtonIndex)));
 }
 
 void DKPushButton::InitDKProperty()
 {
+    setDKStyleSheet();
 }
 
 void DKPushButton::setBackGroundImagePaths(const QString& focusInPath, const QString& focusOutPath)
@@ -89,41 +81,47 @@ void DKPushButton::setBackGroundImagePaths(const QString& focusInPath, const QSt
 
 void DKPushButton::paintEvent(QPaintEvent* e)
 {
-    QPainter painter(this);
-    QFont btnFont = font();
-    btnFont.setBold(true);
-    btnFont.setPixelSize(ui::windowsmetrics::GetWindowFontSize(ui::windowsmetrics::DKPushButtonIndex));
-    setFont(btnFont);
-    if (pressed_)
+    if (!m_focusInBackgroundImage.isNull() && !m_focusOutBackgroundImage.isNull())
     {
-        if (!m_focusInBackgroundImage.isNull())
+        QPainter painter(this);
+        QFont btnFont = font();
+        btnFont.setBold(true);
+        btnFont.setPixelSize(ui::windowsmetrics::GetWindowFontSize(ui::windowsmetrics::DKPushButtonIndex));
+        setFont(btnFont);
+        if (pressed_)
         {
-            painter.drawPixmap(rect(), m_focusInBackgroundImage);
+            if (!m_focusInBackgroundImage.isNull())
+            {
+                painter.drawPixmap(rect(), m_focusInBackgroundImage);
+            }
+            painter.setPen(Qt::white);
+            painter.drawText(rect(), Qt::AlignCenter, text());
         }
-        painter.setPen(Qt::white);
-        painter.drawText(rect(), Qt::AlignCenter, text());
+        else
+        {
+            if (!m_focusOutBackgroundImage.isNull())
+            {
+                painter.drawPixmap(rect(), m_focusOutBackgroundImage);
+            }
+            painter.setPen(Qt::black);
+            painter.drawText(rect(), Qt::AlignCenter, text());
+        }
     }
     else
     {
-        if (!m_focusOutBackgroundImage.isNull())
-        {
-            painter.drawPixmap(rect(), m_focusOutBackgroundImage);
-        }
-        painter.setPen(Qt::black);
-        painter.drawText(rect(), Qt::AlignCenter, text());
+        QPushButton::paintEvent(e);
     }
-
 }
 
 void DKPushButton::mousePressEvent(QMouseEvent* e)
 {
     pressed_ = true;
-    QAbstractButton::mousePressEvent(e);
+    QPushButton::mousePressEvent(e);
 }
 
 void DKPushButton::mouseReleaseEvent(QMouseEvent* e)
 {
     pressed_ = false;
-    QAbstractButton::mouseReleaseEvent(e);
+    QPushButton::mouseReleaseEvent(e);
 }
 }//ui

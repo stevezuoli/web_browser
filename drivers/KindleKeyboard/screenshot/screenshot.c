@@ -30,7 +30,7 @@
 
 #include "screenshot.h"
 
-int do_screenshot(char *pdest)
+int do_screenshot(const char *pdest)
 {
     int rc = 0 ;
 #ifdef BUILD_FOR_ARM

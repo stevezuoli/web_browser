@@ -1,17 +1,16 @@
 #ifndef __UI_DKPUSHBUTTON_H__
 #define __UI_DKPUSHBUTTON_H__
 
-#include <QAbstractButton>
+#include <QPushButton>
 namespace ui
 {
-class DKPushButton : public QAbstractButton
+class DKPushButton : public QPushButton
 {
     Q_OBJECT
 
 public:
     DKPushButton(QWidget* parent = 0);
     DKPushButton(const QString& text, QWidget* parent = 0);
-    DKPushButton(const QString& iconPath, const QString& text, QWidget* parent = 0);
 
     void setBackGroundImagePaths(const QString& focusInPath, const QString& focusOutPath);
     void setPressed(bool press)

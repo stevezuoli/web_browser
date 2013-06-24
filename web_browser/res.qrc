@@ -1,21 +1,27 @@
 <!DOCTYPE RCC><RCC version="1.0">
   <qresource>
-    <file>res/clear_all.png</file>
-    <file>res/menu.png</file>
     <file>res/menu@kt.png</file>
     <file>res/menu@kp.png</file>
+    <file>res/menu_pressed@kt.png</file>
+    <file>res/menu_pressed@kp.png</file>
     <file>res/back@kt.png</file>
     <file>res/back@kp.png</file>
     <file>res/back_grey@kt.png</file>
     <file>res/back_grey@kp.png</file>
+    <file>res/back_pressed@kt.png</file>
+    <file>res/back_pressed@kp.png</file>
     <file>res/forward@kt.png</file>
     <file>res/forward@kp.png</file>
     <file>res/forward_grey@kt.png</file>
     <file>res/forward_grey@kp.png</file>
+    <file>res/forward_pressed@kt.png</file>
+    <file>res/forward_pressed@kp.png</file>
     <file>res/browser@kt.png</file>
     <file>res/browser@kp.png</file>
     <file>res/homepage@kt.png</file>
     <file>res/homepage@kp.png</file>
+    <file>res/homepage_pressed@kt.png</file>
+    <file>res/homepage_pressed@kp.png</file>
     <file>res/ime_key_50@kt.png</file>
     <file>res/ime_key_50_pressed@kt.png</file>
     <file>res/ime_key_64@kp.png</file>
@@ -52,11 +58,18 @@
     <file>res/ime_key_A_upper@kp.png</file>
     <file>res/ime_key_A_upper_pressed@kt.png</file>
     <file>res/ime_key_A_upper_pressed@kp.png</file>
+    <file>res/reader_mode@kt.png</file>
+    <file>res/reader_mode@kp.png</file>
+    <file>res/reader_mode_disabled@kt.png</file>
+    <file>res/reader_mode_disabled@kp.png</file>
+    <file>res/reader_mode_pressed@kt.png</file>
+    <file>res/reader_mode_pressed@kp.png</file>
+    <file>res/normal_mode@kt.png</file>
+    <file>res/normal_mode@kp.png</file>
     <file>res/jquery.min.js</file>
     <file>res/readability.js</file>
     <file>res/load_fail.html</file>
-    <file>res/ota_status.html</file>
-    <file>res/connecting.html</file>
+    <file>res/network_error.html</file>
     <file>res/WebBrowser_Chn.qm</file>
   </qresource>
 </RCC>

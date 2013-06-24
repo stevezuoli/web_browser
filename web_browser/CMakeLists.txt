@@ -16,6 +16,7 @@ QT4_ADD_RESOURCES(RES ${RESOURCE_SRCS})
 # Executable file.
 ADD_EXECUTABLE(web_browser ${SRCS} ${RES})
 TARGET_LINK_LIBRARIES(web_browser
+   database
    network_service
    system
    screen

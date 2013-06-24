@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- ### strings ### -->
+    <string name="reading__shared__loading_page">处理中，请稍候&#8230;</string>
+    <string name="reading__shared__pages_left">本章还剩 %1$d 页</string>
+    <string name="reading__shared__failed_to_open_book">书籍打开失败</string>
+    <string name="reading__shared__reached_first_page">已到达第一页</string>
+    <string name="reading__shared__reached_last_page">已到达最后一页</string>
+    <string name="reading__shared__reached_max_size">已到达最大字号</string>
+    <string name="reading__shared__reached_min_size">已到达最小字号</string>
+    <string name="reading__shared__reached_first_chapter">已到达第一章</string>
+    <string name="reading__shared__reached_last_chapter">已到达最后一章</string>
+    <string name="reading__shared__chapter_num">第 %1$d 章</string>
+    <string name="reading__shared__page_num_with_total_pages">%1$d / %2$d</string>
+    <string name="reading__shared__search_next">下一个</string>
+    <string name="reading__shared__search_prev">上一个</string>
+    <string name="reading__shared__sync_down_reading_progress_title">阅读进度同步</string>
+    <string name="reading__shared__sync_down_reading_progress_ok">跳转</string>
+    <string name="reading__shared__sync_down_reading_progress_prompt1">您正在阅读第%1$d页，从服务器获取的最新阅读进度为第%2$d页，是否要跳转到新位置？</string>
+    <string name="reading__shared__sync_down_reading_progress_prompt2">您正在阅读“%1$s”，从服务器获取的最新阅读进度为“%2$s”，是否要跳转到新位置？</string>
+    <string name="reading__shared__sync_down_reading_progress_prompt3">您正在阅读的进度为%1$.1f%%，从服务器获取的最新阅读进度为%2$.1f%%，是否要跳转到新位置？</string>
+    <string name="reading__shared__toc">目录</string>
+    <string name="reading__shared__bookmarks">书签</string>
+    <string name="reading__shared__annotations">笔记</string>
+    <string name="reading__shared__fail_to_open_not_exist">书籍打开失败，请检查文件或SD卡是否可用</string>
+    <string name="reading__serial_chapter_view__buy_to_read">需要购买后阅读</string>
+    <string name="reading__serial_chapter_view__fetching">加载中，请稍候&#8230;</string>
+    <string name="reading__serial_chapter_view__refetching">点击重试</string>
+    <string name="reading__bookmark_empty_view__no_bookmark">暂时没有书签</string>
+    <string name="reading__bookmark_empty_view__hint">在阅读时向下拉动屏幕添加书签</string>
+    <string name="reading__comment_empty_view__no_comment">暂时没有笔记</string>
+    <string name="reading__comment_empty_view__hint">在阅读时长按以选中文字添加笔记</string>
+    <string name="reading__predef_theme_view__default_theme">默认</string>
+    <string name="reading__predef_theme_view__custom_theme">自定义</string>
+    <string name="reading__custom_background_color_tab_view__title">背景</string>
+    <string name="reading__custom_text_color_tab_view__title">文字</string>
+    <string name="reading__typesetting_view__zoom_out">A-</string>
+    <string name="reading__typesetting_view__zoom_in">A+</string>
+    <string name="reading__typesetting_view__chs">简</string>
+    <string name="reading__typesetting_view__cht">繁</string>
+    <string name="reading__typesetting_view__original">原版</string>
+    <string name="reading__typesetting_view__custom">自定义</string>
+    <string name="reading__brightness_view__auto">自动亮度调节</string>
+    <string name="reading__reading_menu_view__seek_page">进度</string>
+    <string name="reading__reading_menu_view__options">选项</string>
+    <string name="reading__reading_menu_view__nightly_mode">夜间</string>
+    <string name="reading__reading_menu_view__landscape">横屏</string>
+    <string name="reading__reading_menu_view__portrait">竖屏</string>
+    <string name="reading__seek_page_view__prev_chapter">上一章</string>
+    <string name="reading__seek_page_view__next_chapter">下一章</string>
+    <string name="reading__reading_options_view__brightness_auto">系统</string>
+    <string name="reading__reading_options_view__slide_show_anim">切换动画</string>
+    <string name="reading__reading_options_view__typesetting_original">原版</string>
+    <string name="reading__reading_options_view__typesetting_custom">自定义</string>
+    <string name="reading__reading_options_view__chs">简</string>
+    <string name="reading__reading_options_view__cht">繁</string>
+    <string name="reading__reading_options_view__more">更多阅读选项&#8230;</string>
+    <string name="reading__reading_prefs_view__title">更多阅读选项</string>
+    <string name="reading__reading_prefs_view__read_last">启动后继续上次阅读</string>
+    <string name="reading__reading_prefs_view__left_tap">轻按页面两侧下翻页</string>
+    <string name="reading__reading_prefs_view__volume_key">音量键翻页</string>
+    <string name="reading__reading_prefs_view__animation">翻页动画</string>
+    <string name="reading__reading_prefs_view__screen_timeout">阅读界面屏保时间</string>
+    <string name="reading__reading_prefs_view__custom_fonts">字体</string>
+    <string name="reading__reading_prefs_view__custom_screen">布局</string>
+    <string name="reading__reading_prefs_view__custom_typesetting">版式</string>
+    <string name="reading__reading_prefs_view__custom">自定义选项</string>
+    <string name="reading__reading_prefs_view__anim_slide_out">滑动</string>
+    <string name="reading__reading_prefs_view__anim_translation">平移</string>
+    <string name="reading__reading_prefs_view__anim_fade_out">淡出</string>
+    <string name="reading__reading_prefs_view__anim_simple">无</string>
+    <string name="reading__reading_prefs_view__2min">2分钟</string>
+    <string name="reading__reading_prefs_view__5min">5分钟</string>
+    <string name="reading__reading_prefs_view__10min">10分钟</string>
+    <string name="reading__reading_prefs_view__forever">无</string>
+    <string name="reading__custom_typesetting_view__title">自定义版式</string>
+    <string name="reading__custom_typesetting_view__demo">爱看书的青年，大可以看看本分以外的书，即课外书……\r\n譬如学理科的，偏看看文学书，学文学的，偏看看科学书，看看别人在那里研究的，究竟是怎么一回事。这样子，对于别人，别事，可以更深的了解。</string>
+    <string name="reading__custom_typesetting_view__line_gap">行间距</string>
+    <string name="reading__custom_typesetting_view__line_gap_hint">手指上下滑动调节行间距</string>
+    <string name="reading__custom_typesetting_view__para_spacing">段间距</string>
+    <string name="reading__custom_typesetting_view__para_spacing_hint">手指上下滑动调节段间距</string>
+    <string name="reading__custom_typesetting_view__page_padding">页边距</string>
+    <string name="reading__custom_typesetting_view__page_padding_hint">拖拽锚点调整页边距</string>
+    <string name="reading__custom_typesetting_view__indent">首行缩进</string>
+    <string name="reading__custom_typesetting_view__indent_hint">手指左右滑动调节缩进</string>
+    <string name="reading__custom_screen_view__hide_system_bar">全屏阅读</string>
+    <string name="reading__custom_screen_view__show_chapter_name">显示章节名</string>
+    <string name="reading__custom_screen_view__show_reading_status">显示阅读信息条</string>
+    <string name="reading__custom_screen_view__show_reading_status_hint">电池电量、页码信息等</string>
+    <string name="reading__custom_screen_view__chapter_name">章节名</string>
+    <string name="reading__custom_screen_view__page_num">页码</string>
+    <string name="reading__custom_fonts_view__title">自定义字体</string>
+    <string name="reading__custom_fonts_view__help">自定义字体仅对TXT文档和没有设置默认字体的ePub文档有效</string>
+    <string name="reading__custom_fonts_view__zh">中文字体</string>
+    <string name="reading__custom_fonts_view__en">英文字体</string>
+    <string name="reading__custom_font_list_view__title_zh">中文字体</string>
+    <string name="reading__custom_font_list_view__title_en">英文字体</string>
+    <string name="reading__custom_font_list_view__download_all">一键下载多看默认字体</string>
+    <string name="reading__custom_font__download_title">字体下载</string>
+    <string name="reading__custom_font__download">下载</string>
+    <string name="reading__custom_font__postpone">以后再说</string>
+    <string name="reading__custom_font__batch_download_prompt">将要下载%1$d种字体，大约%2$s。</string>
+    <string name="reading__custom_font__batch_download_prompt_at_data_plan">将要下载%1$d种字体，大约%2$s。您正在使用按照流量计费的2G/3G网络。</string>
+    <string name="reading__custom_font__download_prompt_at_data_plan">将要下载字体，大约%1$s。您正在使用按照流量计费的2G/3G网络。</string>
+    <string name="reading__custom_font__download_prompt">将要下载字体，大约%1$s。</string>
+    <string name="reading__custom_font_list_view__default_font">选择默认字体</string>
+    <string name="reading__custom_font_list_view__add_font">添加字体</string>
+    <string name="reading__custom_font_list_view__wifi">通过WiFi添加字体</string>
+    <string name="reading__custom_font_list_view__wifi_hint">在DuoKan/Resource/Font路径添加字体</string>
+    <string name="reading__custom_font_list_view__zh">选择中文默认字体</string>
+    <string name="reading__custom_font_list_view__en">选择英文默认字体</string>
+    <string name="reading__export_comments_view__export">导出笔记</string>
+    <string name="reading__comment_item_view__note_mark">注</string>
+    <string name="reading__navigation_view__jump">跳转</string>
+    <string name="reading__navigation_view__delete_bookmark">删除该书签</string>
+    <string name="reading__navigation_view__delete_note">删除该批注</string>
+    <string name="reading__navigation_view__delete_annotation">删除该书摘</string>
+    <string name="reading__shared__title"><![CDATA[<div><div style=\"width:90%; max-width:600px; margin:0px auto; padding:5px; font-size:12pt; font-family:Times\"><h2 style=\"font-size:18pt; text-align:right;\">]]></string>
+    <string name="reading__shared__title_suffix"><![CDATA[ </h2> ]]></string>
+    <string name="reading__shared__foot">
+<![CDATA[
+            <div style=\"margin-top:2em; margin-bottom:1em\">
+                <hr style=\"height:2px; border:0; background-color:#ddd;\"/>
+                <span style=\"font-size:10pt; color:gray;\">多看笔记 来自多看阅读 for Android</span>
+            </div>
+            </div>
+            </div>
+            <div style=\"width:90%%; max-width:600px;text-align:right;margin-top:-37px;margin-right:auto;margin-left:auto;color:#EEEEEE;font-size:10px\">duokanbookid:%s</div>
+        ]]>
+    </string>
+    <string name="reading__shared__author">
+<![CDATA[
+        <h5 style=\"font-size:12pt; text-align:right; color:gray;\">%s</h5>
+        ]]>
+    </string>
+    <string name="reading__shared__chapter">
+<![CDATA[
+        <div style=\"font-size:14pt; text-align:center; margin-top:0.5em; margin-bottom:0.3em;\">
+                    <div style=\"position:relative; z-index:-1; top:0.7em; height:2px; max-height:2px; border-top:1px dotted gray; border-bottom:1px dotted gray;\">&nbsp;
+                    </div>
+                    <span style=\"font-weight:bold; background-color:white; position:relative;\">&nbsp;%s</span>
+                </div>
+        ]]>
+    </string>
+    <string name="reading__shared__comment">
+<![CDATA[ 
+        <div style=\"padding-top:0.5em; padding-bottom:0.5em; %1$s \">
+                    <div style=\"font-size:10pt; margin-bottom:0.2em;\">
+                        <div style=\"display:inline-block; width:0.25em; height:0.9em; margin-right:0.5em; background-color:rgb(%2$s);\">&nbsp;
+                        </div>
+                        <span style=\"color:darkgray\">%3$s</span>
+                    </div>
+                    <div style=\"font-size:12pt;\">
+                        <span>%4$s</span>
+                    </div>
+                    %5$s
+                </div>
+        ]]>
+    </string>
+    <string name="reading__shared__comment_split">
+<![CDATA[ 
+            border-top:1px dotted lightgray;
+        ]]>
+    </string>
+    <string name="reading__shared__note">
+<![CDATA[
+     <div style=\"font-size:11pt; margin-top:0.2em;\">
+                        <span style=\"font-weight:bold;\">注: </span>
+                        <span style=\"color:#888888\">%s</span>
+                    </div>
+    ]]>
+    </string>
+    <string name="reading__shared__note_tag">读书笔记</string>
+    <string name="reading__shared__note_book_name">多看笔记</string>
+    <string name="reading__shared__note_title">《%1$s》的笔记</string>
+    <string name="reading__shared__note_title_author">（作者: %1$s）</string>
+
+    <!-- ### styles ### -->
+
+
+    <!-- 华丽的分割线 -->
+    <string name="reading__search_text_view__search">搜索</string>
+    <string name="reading__search_text_view__empty_hint">搜索全文</string>
+    <string name="reading__search_text_view__searchkey_null">搜索关键词不能为空</string>
+    <string name="reading__search_text_view__searchmsg">输入关键词，看看TA都藏在哪？</string>
+    <string name="reading__search_next_view__searchmore">正在为您搜索中&#8230;</string>
+    <string name="reading__search_text_view__nosearch_result">很抱歉，文中没有此关键词\n试试修改您的关键词？</string>
+    <string name="reading__search_next_view__next">下一个</string>
+    <string name="reading__search_next_view__prev">上一个</string>
+    <string name="reading__search_next_view__search_reach_last_match">已搜索至文件末尾！</string>
+    <string name="reading__search_next_view__search_reach_first_match">已搜索至文件起始！</string>
+    <string name="reading__custom_screen_view__description">界面布局:&#160;</string>
+    <string name="reading__custom_screen_view__setting">自定义界面布局设置</string>
+    <string name="reading__custom_screen_view__title">自定义界面布局</string>
+    <string name="reading__custom_screen_view__reading_state_description">阅读进度、时间和电量等信息</string>
+    <string name="reading__textinteract_view___copy">复制</string>
+    <string name="reading__textinteract_view___summary">书摘</string>
+    <string name="reading__textinteract_view___search">搜索</string>
+    <string name="reading__textinteract_view___note">批注</string>
+    <string name="reading__textinteract_view___share">分享</string>
+    <string name="reading__shared__dict">字典</string>
+    <string name="reading__shared__check_error">纠错</string>
+    <string name="reading__annotationoperatordlg_view__copy">复制</string>
+    <string name="reading__annotationoperatordlg_view__search">搜索</string>
+    <string name="reading__annotationoperatordlg_view__note">批注</string>
+    <string name="reading__annotationoperatordlg_view__share">分享</string>
+    <string name="reading__annotationoperatordlg_view__delete">删除</string>
+    <string name="reading__theme__custom">自定义</string>
+    <string name="reading__theme__long_click">长按编辑</string>
+    <string name="reading__addnotedlg_view__cancel">取消</string>
+    <string name="reading__addnotedlg_view__save">保存</string>
+    <string name="reading__addnotedlg_view__note">批注</string>
+    <string name="reading__export_notes">导出&#8230;</string>
+    <string name="reading__translate_view__power_by">Powered by 金山词霸</string>
+    <string name="reading__translate_view__no_result">没有找到相关解释</string>
+    <string name="reading__translate_view__more">更多网络解释&#8230;</string>
+    <string name="reading__copytext__success">文字复制成功</string>
+    <string name="reading__seek_page_view__paginating">正在分页&#8230;</string>
+    <string name="reading__media_loading_failed">多媒体加载失败！</string>
+    <string name="reading__to_be_continue_view__not_complete">未完待续</string>
+    <string name="reading__to_be_continue_view__more_in_full_book">购买完整版，后面的内容更精彩&#8230;</string>
+    <string name="reading__to_be_continue_view__buy_full_book">购买完整版</string>
+    <string name="reading__menu_view__buy_full_book">购买</string>
+    <string name="reading__menu_view__full_book_downloading">完整版已下载:&#160;%.1f%%</string>
+    <string name="reading__menu_view__revision_book_downloading">修订版已下载:&#160;%.1f%%</string>
+    <string name="reading__menu_view__revision_book_short_downloading">下载中:&#160;%.1f%%</string>
+    <string name="reading__shared__full_book_downloaded_title">完整版下载完成</string>
+    <string name="reading__shared__full_book_downloaded_prompt">《%s》完整版已经下载完成，即将为您切换到完整版继续阅读。</string>
+    <string name="reading__shared__full_book_downloaded_ok">切换到完整版</string>
+    <string name="reading__shared__revision_book_downloaded_title">修订版下载完成</string>
+    <string name="reading__shared__revision_book_downloaded_prompt">《%s》修订版已经下载完成，即将为您切换到修订版继续阅读。</string>
+    <string name="reading__shared__revision_book_downloaded_ok">切换到修订版</string>
+    <string name="reading__shared__full_book_start_download_title">购买成功</string>
+    <string name="reading__shared__full_book_start_download_prompt">《%s》完整版已经加入您的下载队列，下载完成后将替换书架上的试读版。</string>
+    <string name="reading__shared__full_book_start_download_ok">确定</string>
+    <string name="reading__send_error_view__title">纠错</string>
+    <string name="reading__send_error_view__hint">请输入修改意见</string>
+    <string name="reading__send_error_view__toast">修改意见不能为空~</string>
+    <string name="reading__send_error_view__thx">纠错已记录，感谢您的帮助~</string>
+    <string name="reading__send_error_view__error_type">类型或范围（可多选）</string>
+    <string name="reading__send_error_view__error_type1">错别字</string>
+    <string name="reading__send_error_view__error_type2">章节错漏</string>
+    <string name="reading__send_error_view__error_type3">注释错误</string>
+    <string name="reading__send_error_view__error_type4">标点错误</string>
+    <string name="reading__send_error_view__proposal">#%s#\n</string>
+    <string name="reading__send_error_view__prompt">确定放弃提交？</string>
+    <string name="reading__fast_operation_view__comment">评论</string>
+    <string name="reading__fast_operation_view__navigation">目录</string>
+    <string name="reading__fast_operation_view__back">返回</string>
+
+    <style name="search_dialog_style">
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <style name="reading__note__notetextview_style">
+        <item name="android:textColor">#37312b</item>
+        <item name="android:textSize">14dip</item>
+        <item name="android:paddingLeft">28dip</item>
+        <item name="android:paddingTop">28dip</item>
+        <item name="android:paddingRight">26dip</item>
+        <item name="android:paddingBottom">34dip</item>
+    </style>
+
+    <style name="NoteDialog" parent="android:style/Theme.Dialog">
+
+        <!-- 边框 -->
+        <item name="android:windowFrame">@null</item>
+        <!-- 浮在activity上 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 半透明 -->
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <!-- 模糊 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 模糊程度 -->
+        <item name="android:backgroundDimAmount">0</item>
+        <item name="android:layout_width">fill_parent</item>
+    </style>
+
+    <style name="color_picker" parent="android:style/Theme.Dialog">
+
+        <!-- 边框 -->
+        <item name="android:windowFrame">@null</item>
+        <!-- 浮在activity上 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 半透明 -->
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <!-- 模糊 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 模糊程度 -->
+        <item name="android:backgroundDimAmount">0.1</item>
+        <item name="android:layout_width">fill_parent</item>
+        <!-- 设置跳转效果 -->
+        <item name="android:windowAnimationStyle">@style/color_picker_animation</item>
+    </style>
+
+    <style name="color_picker_animation" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/color_picker_push_up_in</item>
+        <item name="android:windowExitAnimation">@anim/color_picker_push_down_out</item>
+    </style>
+
+    <string name="reading__font_setting_view__auto_download">一键下载多看字体包</string>
+    <string name="reading__reading_view__notify">为了保证多看精品书的最佳阅读效果，强烈建议您下载完整的字体包。</string>
+    <string name="reading__font_setting_view__size">字体文件大小约为%sM，是否下载？</string>
+    <string name="reading__font_settting_view__downloading">下载中&#8230;</string>
+    <string name="reading__font_setting_view__updating">升级中&#8230;</string>
+    <string name="reading__reading_view__font_downloaded">字体下载完成</string>
+    <string name="reading__audioplayerwindow_view__play">播放</string>
+    <string name="reading__audioplayerwindow_view__pause">暂停</string>
+    <string name="reading__translate__loading">载入中&#8230;</string>
+    <string name="reading__export_notes_title">《%1$s》的笔记</string>
+    <string name="reading__export_notes_author">（作者:%1$s）</string>
+    <string name="reading__export_notes_item_note">注: %1$s</string>
+    <string name="reading__export_notes_prompt_title">导出笔记到</string>
+    <string name="reading__check_error__choice_email">请选择邮件客户端</string>
+    <string name="reading__check_error__title">[勘误]%s</string>
+    <string name="reading__check_error__template">        ----修改建议----\n
+        \n
+        \n
+        ----原文信息----\n
+        %1$s\n
+        \n
+        \n
+                    以下数据用于定位错误，请勿修改。\n
+        ----begin----\n
+        app: 多看阅读 for Android %2$s\n
+        bookid: %3$s\n
+        revision: %4$s\n
+        position: (%5$d,%6$d,%7$d)\n
+        convertcht:%8$b\n
+        <!-- 多看id -->
+        %9$s
+        ----end----
+</string>
+    <string name="reading__comment_view__how_about_this_book">这本书怎么样?</string>
+    <string name="reading__comment_view__publish_comment">我要写评论</string>
+    <string name="reading__comment_view__look_comment">书友的评论</string>
+    <string name="reading__comment_view__no_competence_title">当前用户不能打分和发表书评</string>
+    <string name="reading__comment_view__no_competence_prompt">请切换到购买此书的多看帐号</string>
+    <string name="reading__comment_view__no_competence_ok">切换帐号</string>
+    <string name="reading__comment_view__socre">轻按星星评分</string>
+    <string name="reading__comment_view__level1">浪费时间</string>
+    <string name="reading__comment_view__level2">不置可否</string>
+    <string name="reading__comment_view__level3">马马虎虎</string>
+    <string name="reading__comment_view__level4">值得一看</string>
+    <string name="reading__comment_view__level5">强烈推荐</string>
+    <string name="reading__comment_view__success">多谢了</string>
+
+    <string-array name="reading__comment_view__level">
+        <item>@string/reading__comment_view__level1</item>
+        <item>@string/reading__comment_view__level2</item>
+        <item>@string/reading__comment_view__level3</item>
+        <item>@string/reading__comment_view__level4</item>
+        <item>@string/reading__comment_view__level5</item>
+    </string-array>
+
+    <style name="reading__menu__text">
+        <item name="android:paddingLeft">14dip</item>
+        <item name="android:paddingRight">14dip</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">16dip</item>
+    </style>
+
+</resources>

@@ -4,6 +4,24 @@
 namespace gesture
 {
 
+ScaleGestureContext::ScaleGestureContext()
+    : status_(WAIT_FOR_SCALE)
+    , previous_span_(0)
+    , previous_zoom_(0.0f)
+{
+}
+
+ScaleGestureContext::~ScaleGestureContext()
+{
+}
+
+void ScaleGestureContext::reset()
+{
+    status_ = WAIT_FOR_SCALE;
+    previous_span_ = 0;
+    previous_zoom_ = 0.0f;
+}
+
 ScaleGestureDetector::ScaleGestureDetector()
     : prev_event_(0)
     , current_event_(0)
@@ -51,7 +69,7 @@ bool ScaleGestureDetector::onTouchEvent(TouchEvent* moveEvent)
     int action = moveEvent->actionMasked();
     bool handled = true;
 
-    qDebug("ScaleGestureDetector::onTouchEvent, action:%d, gesture_in_progress:%d", moveEvent->action(), gesture_in_progress_ ? 1 : 0);
+    //qDebug("ScaleGestureDetector::onTouchEvent, action:%d, gesture_in_progress:%d", moveEvent->action(), gesture_in_progress_ ? 1 : 0);
     if (invalid_gesture_)
     {
         qDebug("Invalid Gesture");
@@ -69,7 +87,7 @@ bool ScaleGestureDetector::onTouchEvent(TouchEvent* moveEvent)
                 reset();
                 break;
             case TouchEvent::ACTION_POINTER_DOWN:
-            case TouchEvent::ACTION_MOVE:
+            //case TouchEvent::ACTION_MOVE:
                 {
                     if (NULL != prev_event_)
                     {
@@ -93,6 +111,7 @@ bool ScaleGestureDetector::onTouchEvent(TouchEvent* moveEvent)
                 }
                 break;
             default:
+                reset();
                 break;
 
         }
@@ -103,12 +122,12 @@ bool ScaleGestureDetector::onTouchEvent(TouchEvent* moveEvent)
         {
             case TouchEvent::ACTION_POINTER_UP:
                 {
-                    setContext(moveEvent);
+                    //setContext(moveEvent);
                     int actionIndex = moveEvent->actionIndex();
                     int actionId = moveEvent->pointerId(actionIndex);
-                    //setContext(moveEvent);
+                    setContext(moveEvent);
                     int activeId = actionId == active_id0_ ? active_id1_ : active_id0_;
-                    int index = moveEvent->findPointerIndex(activeId);
+                    //int index = moveEvent->findPointerIndex(activeId);
                     //focus_x_ = moveEvent->x(index);
                     //focus_y_ = moveEvent->y(index);
                     
@@ -198,8 +217,8 @@ void ScaleGestureDetector::setContext(TouchEvent* moveEvent)
     int cx1 = curr->x(currIndex1);
     int cy1 = curr->y(currIndex1);
     
-    current_finger_diff_x_ = px1 - px0;
-    current_finger_diff_y_ = py1 - py0;
+    prev_finger_diff_x_ = px1 - px0;
+    prev_finger_diff_y_ = py1 - py0;
     current_finger_diff_x_ = cx1 - cx0;
     current_finger_diff_y_ = cy1 - cy0;
     focus_x_ = (cx0 + cx1) / 2;

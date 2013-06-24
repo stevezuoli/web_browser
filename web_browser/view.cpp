@@ -1,14 +1,14 @@
 #include <QtGui/QtGui>
 #include "NetworkService/auto_complete.h"
 #include "NetworkService/password_model.h"
-#include "Gesture/scale_gesture_detector.h"
-
+#include "Device/device.h"
 #include "view.h"
 #include "web_application.h"
 #include "common/debug.h"
 
 using namespace network_service;
 using namespace gesture;
+using namespace web_database;
 
 namespace webbrowser
 {
@@ -16,6 +16,9 @@ namespace webbrowser
 static const int PAGE_REPEAT = 20;
 static const int DELTA = 10;
 static const qreal DEFAULT_FONT = 1.0;
+
+static const qreal MAX_ZOOM_VALUE = 2.4;
+static const qreal MIN_ZOOM_SPAN  = 0.3;
 
 BrowserView::BrowserView(QWidget *parent)
     : QWebView(parent)
@@ -26,7 +29,6 @@ BrowserView::BrowserView(QWidget *parent)
     , page_(new WebPage(this))
     , bookmark_model_(0)
     , hand_tool_enabled_(true)
-    , is_current_page_readable_(false)
 {
     setPage(page_);
 
@@ -82,7 +84,8 @@ BrowserView::BrowserView(QWidget *parent)
         readability_file.close();
     }
 
-    setTextSizeMultiplier(DEFAULT_FONT);
+    db_.load(site_list_);
+    //setTextSizeMultiplier(DEFAULT_FONT);
 }
 
 BrowserView::~BrowserView()
@@ -143,7 +146,9 @@ void BrowserView::onLoadStarted(void)
 
     // Experimental, set handle tool to be true
     hand_tool_enabled_ = true;
-    setIsArticlePage(false);
+
+    // Disable reader mode
+    emit enableReaderMode(false);
 
     // Store the screen update type.
     resetUpdateRect();
@@ -172,11 +177,11 @@ void BrowserView::onSavePassword(const QByteArray & data)
 
 void BrowserView::onLoadFinished(bool ok)
 {
+    DebugWB("%d", ok);
     // Restore the screen update type.
     // Ensure we can get a gc update.
     progress_ = 100;
     update_rect_ = rect();
-    setIsArticlePage(false);
 
     // Check if we need to store the thumbnail.
     if (ok)
@@ -197,28 +202,33 @@ void BrowserView::onLoadFinished(bool ok)
         //hideEmbeddedElements();
         hideScrollbar();
 #endif
+
         // The keyboard can only be display after load finished
         addFormsFocusEvent();
         addSelectEvents();
 
-        // for reader mode
-        askForArticlePage();
+        // Enable reader mode
+        emit enableReaderMode(true);
     }
     else
     {
         // Failed.
         progress_ = -1;
         reportCurrentProcess();
+        QFile file(":/res/network_error.html");
+        if (file.open(QIODevice::ReadOnly))
+        {
+            QString html = QString(QLatin1String(file.readAll())).
+                arg(tr("Unable to connect to the Internet")).
+                arg(tr("can't display the webpage"));
+            setHtml(html);
+        }
     }
     updateViewportRange();
 
+    //qDebug() << page()->currentFrame()->documentElement().toOuterXml();
     //collect the form elements in current page
-    //form_elements_ = page()->currentFrame()->documentElement().findAll("input[type=text],input[type=password], textarea");
-    //qDebug() << form_elements_.count();
-    //foreach (QWebElement formElement, form_elements_)
-    //{
-    //    qDebug() << formElement.toOuterXml();
-    //}
+    form_elements_ = page()->currentFrame()->documentElement().findAll("input[type=text],input[type=password], textarea");
 }
 
 bool BrowserView::needConfigNetwork()
@@ -446,6 +456,12 @@ void BrowserView::keyReleaseEvent(QKeyEvent *ke)
     case Qt::Key_R:
         enterReaderMode(true);
         break;
+    case Qt::Key_Z:
+        setZoomFactor(zoomFactor() + 1.0f);
+        break;
+    case Qt::Key_D:
+        setZoomFactor(zoomFactor() > 2.0f ? zoomFactor() - 1.0f : 1.0f);
+        break;
     default:
         QWebView::keyReleaseEvent(ke);
         break;
@@ -477,22 +493,42 @@ void BrowserView::storeUrl()
     const QString & myurl = url().toString();
     if (!myurl.startsWith("http",Qt::CaseInsensitive) && !myurl.startsWith("ftp",Qt::CaseInsensitive) && !myurl.startsWith("www",Qt::CaseInsensitive))
     {
+        qDebug("Cannot save invalid URL");
         return ;
     }
+
+    if (site_list_.size() <= 0)
+    {
+        db_.load(site_list_);
+    }
+
+    QString host = url().host();
+    for(int i = 0; i < site_list_.size(); ++i)
+    {
+        WebThumbnail site(site_list_.at(i).toMap());
+        if ((site.url().host() == host && !host.isEmpty()) ||
+            (site.url() == url()))
+        {
+            site_list_.removeAt(i);
+            break;
+        }
+    }
+
+    WebThumbnail item;
+    item.updateAccessDateTime();
+    item.setTitle(title());
+    item.setUrl(url());
+    site_list_.prepend(item);
 
     sync();
 }
 
-void BrowserView::saveThumbnailForExplorer()
-{
-}
-
 void BrowserView::sync()
 {
-}
-
-void BrowserView::saveThumbnails()
-{
+    if (need_save_url_)
+    {
+        db_.save(site_list_);
+    }
 }
 
 QImage BrowserView::thumbnail(const QSize & size)
@@ -500,7 +536,6 @@ QImage BrowserView::thumbnail(const QSize & size)
     QImage image(page()->viewportSize(), QImage::Format_ARGB32);
     QPainter painter(&image);
     page()->mainFrame()->render(&painter);
-
     return image.scaled(size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 }
 
@@ -756,7 +791,7 @@ void BrowserView::addFormsFocusEvent(void)
 
                 "if (tagName == 'input') {"
                     "var inputType = inputList[i].type;"
-                    "if (inputType != 'password' && inputType != 'text')"
+                    "if (inputType != 'password' && inputType != 'text' && inputType != 'search')"
                         "continue;"
                 "}"
 
@@ -787,45 +822,14 @@ void BrowserView::addSelectEvents(void)
     page()->mainFrame()->evaluateJavaScript(scriptSource);
 }
 
-void BrowserView::setIsArticlePage(bool is_article)
-{
-    qDebug("Current page is article:%s", is_article ? "yes" : "no");
-    is_current_page_readable_ = is_article;
-    emit displayReaderButton(is_current_page_readable_);
-}
-
-void BrowserView::askForArticlePage()
-{
-    //QTimer::singleShot(0, this, SLOT(checkIsArticlePage()));
-}
-
-void BrowserView::checkIsArticlePage()
-{
-    QString getTitleSource =
-        "function getTitleOfCurrentArticle(){"
-             "var curTitle = '',"
-             "origTitle = '';"
-             "curTitle = origTitle = document.title;"
-             "return curTitle;"
-         "}";
-    QString scriptSource = getTitleSource +
-        "var article_title = getTitleOfCurrentArticle();"
-        "if(!article_title) {"
-            "__qWebViewWidget.setIsArticlePage(false);"
-        "}"
-        "else{"
-            "__qWebViewWidget.setIsArticlePage(true);"
-        "}";
-    QString code = scriptSource;
-    page()->mainFrame()->evaluateJavaScript(code);
-}
-
 void BrowserView::enterReaderMode(bool is_reader_mode)
 {
     if (is_reader_mode)
     {
-        QString code = readability_;// + "readability.init();";
+        QString code = readability_;
+        emit displayTextOnAddressEdit(QApplication::tr("Switching to Article Mode..."));
         page()->mainFrame()->evaluateJavaScript(code);
+        emit displayTextOnAddressEdit(QApplication::tr("Switching Done"));
     }
     else
     {
@@ -1017,11 +1021,75 @@ QString BrowserView::getHtmlFromMainFrame()
 void BrowserView::onScaleBegin()
 {
     qDebug("Web View begin scaling");
+
+    ScaleGestureDetector* gesture = ScaleGestureDetector::instance();
+    scale_context_.status_ = ScaleGestureContext::START_SCALE;
+    scale_context_.previous_span_ = gesture->getCurrentSpan();
+    scale_context_.previous_zoom_ = zoomFactor();
 }
 
 void BrowserView::onScaleEnd()
 {
     qDebug("Web View end scaling");
+
+    ScaleGestureDetector* gesture = ScaleGestureDetector::instance();
+    const int cur_span = gesture->getCurrentSpan();
+    const qreal zoom_span = static_cast<qreal>(cur_span) / static_cast<qreal>(scale_context_.previous_span_);
+    //qDebug("curSpan = %d, m_curSpan = %d, zoomSpan = %f", cur_span,  scale_context_.previous_span_, zoom_span);
+    zoom(zoom_span, gesture->getFocusX(), gesture->getFocusY());
+    scale_context_.reset();
+}
+
+bool BrowserView::zoom(qreal zoom_span, int focus_x, int focus_y)
+{
+    qreal user_zoom = scale_context_.previous_zoom_;
+    const qreal previous_zoom = user_zoom;
+    user_zoom *= zoom_span;
+
+    if (user_zoom <= 1)
+    {
+        user_zoom = 1.0;
+    }
+    else if (user_zoom > MAX_ZOOM_VALUE)
+    {
+        user_zoom = MAX_ZOOM_VALUE;
+    }
+
+    // Offset of span area
+    QPoint view_position = geometry().topLeft();
+    //qDebug("View Position:%d, %d", view_position.x(), view_position.y());
+
+    int offset_x = focus_x - view_position.x();
+    int offset_y = focus_y - view_position.y();
+    //qDebug("User Zoom:%f, offset_x:%d, offset_y:%d", user_zoom, offset_x, offset_y);
+    
+    qreal zoomed_offset_x = static_cast<qreal>(offset_x) * zoom_span;
+    qreal zoomed_offset_y = static_cast<qreal>(offset_y) * zoom_span;
+    //qDebug("zoomed_offset_x:%f, zoomed_offset_y:%f", zoomed_offset_x, zoomed_offset_y);
+
+    qreal dx = zoomed_offset_x - (geometry().width() >> 1);
+    qreal dy = zoomed_offset_y - (geometry().height() >> 1);
+    //qDebug("dx:%f, dy:%f", dx, dy);
+
+    // Record current offset.
+    QSize size = page()->mainFrame()->contentsSize();
+    QPointF pt = currentOffset();
+    //qDebug("Original scroll position(%f, %f)", pt.x(), pt.y());
+
+    setZoomFactor(user_zoom);
+
+    // Scroll to there again.
+    QSize new_size = page()->mainFrame()->contentsSize();
+    qreal factor_size_x = static_cast<qreal>(new_size.width()) / static_cast<qreal>(size.width());
+    qreal factor_size_y = static_cast<qreal>(new_size.height()) / static_cast<qreal>(size.height());
+    //qDebug("factor_size_x:%f, factor_size_y:%f", factor_size_x, factor_size_y);
+
+    pt.rx() = (pt.x() * factor_size_x) + dx;
+    pt.ry() = (pt.y() * factor_size_y) + dy;
+    //qDebug("Transfered scroll position(%f, %f)", pt.x(), pt.y());
+
+    myScrollTo(pt.toPoint());
+    return true;
 }
 
 void BrowserView::onScaling()
@@ -1029,4 +1097,9 @@ void BrowserView::onScaling()
     qDebug("Web View is scaling");
 }
 
+void BrowserView::clearHistoryData()
+{
+    site_list_.clear();
+    db_.clear();
+}
 }

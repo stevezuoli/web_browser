@@ -3,6 +3,7 @@
 #include <QtGui/qwsdisplay_qws.h>
 #include <QWSPointerCalibrationData>
 #include <qwindowsystem_qws.h>
+#include <unistd.h>
 #endif
 
 #include "KindleTS/kindlets.h"
