@@ -16,3 +16,15 @@ TARGET_LINK_LIBRARIES(evernote
   ${Boost_LIBRARIES}
   ${QT_LIBRARIES}
   ${ADD_LIB})
+
+ADD_EXECUTABLE(test_evernote_export_note test/test_export_note.cpp)
+TARGET_LINK_LIBRARIES(test_evernote_export_note
+ evernote)
+
+ADD_EXECUTABLE(test_evernote_prepare_content test/test_prepare_content.cpp)
+TARGET_LINK_LIBRARIES(test_evernote_prepare_content
+ evernote)
+
+ADD_EXECUTABLE(test_evernote_import_xml test/test_import_xml.cpp)
+TARGET_LINK_LIBRARIES(test_evernote_import_xml
+ evernote)

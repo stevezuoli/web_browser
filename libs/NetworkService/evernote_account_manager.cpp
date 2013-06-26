@@ -34,15 +34,15 @@ public:
 QString EvernoteUrlManager::getHostString(const QString& option)
 {
     QString host = EVERNOTE_HOST_PRODUCT;
-    if (option.startsWith("sandbox"))
+    if (option.startsWith("sandbox.evernote.com"))
     {
         host = EVERNOTE_HOST_SANDBOX;
     }
-    else if (option.startsWith("product"))
+    else if (option.startsWith("www.evernote.com"))
     {
         host = EVERNOTE_HOST_PRODUCT;
     }
-    else if (option.startsWith("yinxiang"))
+    else if (option.startsWith("app.yinxiang.com"))
     {
         host = EVERNOTE_HOST_YINXIANG;
     }
@@ -95,9 +95,9 @@ EvernoteAccountManager::~EvernoteAccountManager()
 
 bool EvernoteAccountManager::isEvernotePath(const QString& path)
 {
-    return (path.compare("evernote", Qt::CaseInsensitive) == 0 ||
-            path.compare("yinxiang", Qt::CaseInsensitive) == 0 ||
-            path.compare("sandbox", Qt::CaseInsensitive) == 0 );
+    return (path.compare("www.evernote.com", Qt::CaseInsensitive) == 0 ||
+            path.compare("app.yinxiang.com", Qt::CaseInsensitive) == 0 ||
+            path.compare("sandbox.evernote.com", Qt::CaseInsensitive) == 0 );
 }
 
 void EvernoteAccountManager::login(const QString& option)
