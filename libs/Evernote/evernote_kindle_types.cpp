@@ -29,7 +29,8 @@ bool EvernoteContent::load(const QString& path)
         return false;
     }
     
-    return true;
+    parseTitleAndAuthor(path);
+    return parse(dom);
 }
 
 bool EvernoteContent::open(const QString& path, QDomDocument& dom)
@@ -56,9 +57,29 @@ bool EvernoteContent::parse(QDomDocument& dom)
     QDomElement root = dom.documentElement();
     
     // Get book id
+    if (!parseBookID(root))
+    {
+        return false;
+    }
     
-    // TODO.
-    return false;
+    // Parse annotations
+    return parseAnnotations(root);
+}
+    
+bool EvernoteContent::parseTitleAndAuthor(const QString& path)
+{
+    // TODO. The title and author is kept in file name
+    // To make an elegant way later
+    QFileInfo file_info(path);
+    QString file_name = file_info.fileName();
+    QString title_author = file_name.split('.').at(0);
+    QStringList book_info = title_author.split('_');
+    title = book_info[0];
+    if (book_info.size() > 1)
+    {
+        author = book_info[1];
+    }
+    return true;
 }
     
 bool EvernoteContent::parseBookID(QDomElement& root_node)
@@ -104,7 +125,132 @@ bool EvernoteContent::parseAnnotations(QDomElement& root_node)
 bool EvernoteContent::parseAnnotation(QDomElement& root_node)
 {
     // TODO. Implement it
+    KindleAnnotationItem item;
+
+    item.parseElementByTagName("Type", root_node);
+    item.parseElementByTagName("DataID", root_node);
+    item.parseElementByTagName("Color", root_node);
+    item.parseElementByTagName("Tag", root_node);
+    item.parseElementByTagName("CreateTime", root_node);
+    item.parseElementByTagName("LastModifyTime", root_node);
+    item.parseElementByTagName("RefContent", root_node);
+    item.parseElementByTagName("Content", root_node);
+    
+    // parse chapter
+    item.parseChapterInfo(root_node);
+    if (item.isValid())
+    {
+        chapters.insert(item.chapter_id);
+        annotations.insert(item.chapter_id, item);
+        return true;
+    }
     return false;
+}
+
+bool KindleAnnotationItem::isValid()
+{
+    return !content.isEmpty();
+}
+
+bool KindleAnnotationItem::KindleAnnotationItem::parseChapterInfo(QDomElement& root_node)
+{
+    QDomNodeList refer_positions = root_node.elementsByTagName("BeginRefPos");
+    if (refer_positions.isEmpty())
+    {
+        return false;
+    }
+    QDomElement refer_position = refer_positions.at(0).toElement();
+    parseElementByTagName("ChapterID", refer_position);
+    parseElementByTagName("ChapterIndex", refer_position);
+    return !chapter_num.isEmpty();
+}
+    
+bool KindleAnnotationItem::parseElementByTagName(const QString& name, QDomElement& root_node)
+{
+    QString* attribute = mutableAttributeByName(name);
+    QDomNodeList type_nodes = root_node.elementsByTagName(name);
+    if (!type_nodes.isEmpty() && attribute != 0)
+    {
+        // use the first one
+        QDomNode type_node = type_nodes.at(0);
+        QDomText type_text = type_node.firstChild().toText();
+        if (!type_text.isNull())
+        {
+            *attribute = type_text.data();
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
+ <ReadingDataItem>
+ <Type>COMMENT</Type>
+ <DataID>B05521606B0F260A5A6ED670078611D4</DataID>
+ <Color></Color>
+ <Tag></Tag>
+ <CreateTime>2013-05-24T10:15:07</CreateTime>
+ <LastModifyTime>2013-05-24T10:15:07</LastModifyTime>
+ <RefContent>daily</RefContent>
+ <BeginRefPos>
+ <ChapterID>cover</ChapterID>
+ <Offset>573</Offset>
+ <ChapterIndex>0</ChapterIndex>
+ <ParaIndex>0</ParaIndex>
+ <AtomIndex>7</AtomIndex>
+ </BeginRefPos>
+ <EndRefPos>
+ <ChapterID>cover</ChapterID>
+ <Offset>578</Offset>
+ <ChapterIndex>0</ChapterIndex>
+ <ParaIndex>0</ParaIndex>
+ <AtomIndex>12</AtomIndex>
+ </EndRefPos>
+ </ReadingDataItem>
+ */
+QString* KindleAnnotationItem::mutableAttributeByName(const QString& name)
+{
+    if (name.compare("Type", Qt::CaseInsensitive) == 0)
+    {
+        return &type;
+    }
+    else if (name.compare("DataID", Qt::CaseInsensitive) == 0)
+    {
+        return &data_id;
+    }
+    else if (name.compare("Color", Qt::CaseInsensitive) == 0)
+    {
+        return &color;
+    }
+    else if (name.compare("Tag", Qt::CaseInsensitive) == 0)
+    {
+        return &tag;
+    }
+    else if (name.compare("CreateTime", Qt::CaseInsensitive) == 0)
+    {
+        return &create_time;
+    }
+    else if (name.compare("LastModifyTime", Qt::CaseInsensitive) == 0)
+    {
+        return &last_modify_time;
+    }
+    else if (name.compare("RefContent", Qt::CaseInsensitive) == 0)
+    {
+        return &content;
+    }
+    else if (name.compare("Content", Qt::CaseInsensitive) == 0)
+    {
+        return &comment;
+    }
+    else if (name.compare("ChapterID", Qt::CaseInsensitive) == 0)
+    {
+        return &chapter_id;
+    }
+    else if (name.compare("ChapterIndex", Qt::CaseInsensitive) == 0)
+    {
+        return &chapter_num;
+    }
+    return 0;
 }
 
 }

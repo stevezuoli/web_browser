@@ -1,14 +1,11 @@
 #include "Evernote/evernote_kindle_types.h"
 
-using namespace std;
-using namespace boost;
-using namespace apache::thrift::transport;
-using namespace apache::thrift::protocol;
-using namespace evernote::edam;
+using namespace evernote_kindle;
 
 int main()
 {
-
-  return 0;
+    EvernoteContent content;
+    content.load("sample.xml");
+    return 0;
 }
 

@@ -20,32 +20,6 @@ using namespace evernote::edam;
 namespace evernote_kindle
 {
 
-/*
-    <ReadingDataItem>
-    <Type>COMMENT</Type>
-    <DataID>B05521606B0F260A5A6ED670078611D4</DataID>
-    <Color></Color>
-    <Tag></Tag>
-    <CreateTime>2013-05-24T10:15:07</CreateTime>
-    <LastModifyTime>2013-05-24T10:15:07</LastModifyTime>
-    <RefContent>daily</RefContent>
-    <BeginRefPos>
-    <ChapterID>cover</ChapterID>
-    <Offset>573</Offset>
-    <ChapterIndex>0</ChapterIndex>
-    <ParaIndex>0</ParaIndex>
-    <AtomIndex>7</AtomIndex>
-    </BeginRefPos>
-    <EndRefPos>
-    <ChapterID>cover</ChapterID>
-    <Offset>578</Offset>
-    <ChapterIndex>0</ChapterIndex>
-    <ParaIndex>0</ParaIndex>
-    <AtomIndex>12</AtomIndex>
-    </EndRefPos>
-    </ReadingDataItem>
-*/
-
 // Single annotation item
 class KindleAnnotationItem
 {
@@ -53,7 +27,13 @@ public:
     KindleAnnotationItem() {}
     ~KindleAnnotationItem() {}
     
+    bool isValid();
     QString formattedDate() const { return create_time; }
+    bool parseElementByTagName(const QString& name, QDomElement& root_node);
+    bool parseChapterInfo(QDomElement& root_node);
+private:
+    QString* mutableAttributeByName(const QString& name);
+    
 public:
     QString type; //COMMENT
     QString data_id; //B05521606B0F260A5A6ED670078611D4
@@ -64,6 +44,7 @@ public:
     QString content;
     QString comment;
     QString chapter_id;
+    QString chapter_num;
 };
 
 // Chapter, Annotations
@@ -84,7 +65,8 @@ private:
     bool parseBookID(QDomElement& root_node);
     bool parseAnnotations(QDomElement& root_node);
     bool parseAnnotation(QDomElement& root_node);
-    
+    bool parseTitleAndAuthor(const QString& path);
+
 public:
     QString title;
     QString book_id;

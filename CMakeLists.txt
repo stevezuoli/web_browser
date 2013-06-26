@@ -69,6 +69,7 @@ SET(QT_PLUGINS_OUTPUT_PATH ${PROJECT_BINARY_DIR}/plugins)
 
 add_subdirectory(system_manager)
 add_subdirectory(web_browser)
+add_subdirectory(evernote_explorer)
 add_subdirectory(third_party)
 add_subdirectory(libs)
 IF(BUILD_FOR_ARM)

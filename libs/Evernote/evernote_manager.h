@@ -38,6 +38,9 @@ private:
 
     QString makeHeader(const QString& book_name, const QString& author);
     
+    // dump for testing
+    void dump(const QString& content);
+    
 private:
     typedef std::vector<evernote::edam::Notebook> Notebooks;
     
