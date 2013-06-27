@@ -100,7 +100,24 @@ bool EvernoteApplication::exportFile(const QString& path)
     {
         return false;
     }
-    return manager_.exportNote(note);
+    if (manager_.exportNote(note))
+    {
+        return removeFile(path);
+    }
+    return false;
+}
+    
+bool EvernoteApplication::removeFile(const QString& path)
+{
+    QFile file(path);
+    return file.remove();
+}
+
+void EvernoteApplication::onError(const QString& error_str)
+{
+    // ignore analyze the string, just exit
+    qApp->exit();
+    ::exit(0);
 }
 
 };

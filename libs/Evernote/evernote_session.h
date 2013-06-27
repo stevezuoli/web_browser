@@ -18,8 +18,9 @@ namespace evernote_kindle
 typedef boost::shared_ptr<UserStoreClient> UserStorePtr;
 typedef boost::shared_ptr<NoteStoreClient> NoteStorePtr;
     
-class EvernoteSession
+class EvernoteSession : public QObject
 {
+    Q_OBJECT
 public:
     EvernoteSession(const QString& host, int port);
     ~EvernoteSession();
@@ -29,11 +30,14 @@ public:
 
     QString token();
     
-    static bool openUserStore(boost::shared_ptr<UserStoreClient>& us_store);
-    static bool closeUserStore(boost::shared_ptr<UserStoreClient>& us_store);
+    bool openUserStore(boost::shared_ptr<UserStoreClient>& us_store);
+    bool closeUserStore(boost::shared_ptr<UserStoreClient>& us_store);
     
-    static bool openNoteStore(boost::shared_ptr<NoteStoreClient>& ns_store);
-    static bool closeNoteStore(boost::shared_ptr<NoteStoreClient>& ns_store);
+    bool openNoteStore(boost::shared_ptr<NoteStoreClient>& ns_store);
+    bool closeNoteStore(boost::shared_ptr<NoteStoreClient>& ns_store);
+
+Q_SIGNALS:
+    void error(const QString& error_str);
 
 private:
     QString retrieveNoteStoreUrl();

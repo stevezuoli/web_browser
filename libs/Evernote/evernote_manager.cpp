@@ -156,6 +156,7 @@ EvernoteManager::~EvernoteManager()
 bool EvernoteManager::createSession(const QString& host, int port)
 {
     session_.reset(new EvernoteSession(host, port));
+    connect(session_.get(), SIGNAL(error(const QString&)), SIGNAL(error(const QString&)));
     return true;
 }
 
@@ -167,7 +168,7 @@ bool EvernoteManager::openSession()
     {
         return false;
     }
-    if (!EvernoteSession::openNoteStore(note_store))
+    if (!session_->openNoteStore(note_store))
     {
         return false;
     }
@@ -184,7 +185,7 @@ bool EvernoteManager::closeSession()
     }
     
     // close note store
-    bool ret = EvernoteSession::closeNoteStore(note_store);
+    bool ret = session_->closeNoteStore(note_store);
     qDebug("Closing Note Store %s!", ret ? "succeeded" : "failed");
     return ret;
 }
@@ -321,12 +322,15 @@ bool EvernoteManager::makeSureNotebookExist(NoteStorePtr note_store, Notebook& d
         }
     } catch(apache::thrift::TException te) {
         qDebug() << "TException:" << te.what() << "|" <<endl;
+        emit error(te.what());
         ret = false;
     } catch(std::exception e) {
         qDebug() << "Error:" <<e.what() << "|" <<endl;
+        emit error(e.what());
         ret = false;
     } catch(...) {
         qDebug() << "Error:unknown error" <<endl;
+        emit error("unknown");
         ret = false;
     }
     return ret;
@@ -357,12 +361,15 @@ bool EvernoteManager::findMetadata(NoteStorePtr note_store,
                                    metadata_result_spec);
     } catch(apache::thrift::TException te) {
         qDebug() << "TException:" << te.what() << "|" <<endl;
+        emit error(te.what());
         ret = false;
     } catch(std::exception e) {
         qDebug() << "Error:" <<e.what() << "|" <<endl;
+        emit error(e.what());
         ret = false;
     } catch(...) {
         qDebug() << "Error:unknown error" <<endl;
+        emit error("unknown");
         ret = false;
     }
     return ret;
@@ -432,12 +439,15 @@ bool EvernoteManager::addOrUpdateNote(NoteStorePtr note_store,
         }
     } catch(apache::thrift::TException te) {
         qDebug() << "TException:" << te.what() << "|" <<endl;
+        emit error(te.what());
         ret = false;
     } catch(std::exception e) {
         qDebug() << "Error:" <<e.what() << "|" <<endl;
+        emit error(e.what());
         ret = false;
     } catch(...) {
         qDebug() << "Error:unknown error" <<endl;
+        emit error("unknown");
         ret = false;
     }
     return ret;

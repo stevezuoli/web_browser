@@ -12,8 +12,9 @@ using namespace evernote::edam;
 namespace evernote_kindle
 {
 
-class EvernoteManager
+class EvernoteManager : public QObject
 {
+    Q_OBJECT
 public:
     EvernoteManager();
     ~EvernoteManager();
@@ -21,6 +22,7 @@ public:
     bool createSession(const QString& host, int port);
     bool openSession();
     bool closeSession();
+
     bool exportNote(const EvernoteContent& note);
     
     // prepare content
@@ -42,6 +44,9 @@ private:
     
     // dump for testing
     void dump(const QString& content);
+
+Q_SIGNALS:
+    void error(const QString& error_str);
     
 private:
     typedef std::vector<evernote::edam::Notebook> Notebooks;

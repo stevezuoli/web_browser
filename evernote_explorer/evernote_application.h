@@ -24,9 +24,13 @@ public Q_SLOTS:
     bool exportAll();
     bool exportFile(const QString& path);
 
+private Q_SLOTS:
+    void onError(const QString& error_str);
+    
 private:
     static QString defaultFolder();
     bool findFiles();
+    bool removeFile(const QString& path);
     
 private:
     typedef QVector<QString> Entries;

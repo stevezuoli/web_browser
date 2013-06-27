@@ -19,6 +19,19 @@ using namespace evernote::edam;
 
 namespace evernote_kindle
 {
+// User info
+class EvernoteUser
+{
+public:
+    EvernoteUser() {}
+    ~EvernoteUser() {}
+    
+public:
+    QString username;
+    QString email;
+    QString name;
+    QString timezone;
+};
 
 // Single annotation item
 class KindleAnnotationItem

@@ -1,9 +1,6 @@
 ENABLE_QT()
 
 # Header files.
-SET(GLOB EVERNOTE_EXPLORER_HDRS
-  *.h)
- 
 FILE(GLOB HDRS *.h)
 QT4_WRAP_CPP(MOC_SRCS ${HDRS})
 

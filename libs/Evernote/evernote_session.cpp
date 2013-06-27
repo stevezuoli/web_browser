@@ -63,11 +63,14 @@ QString EvernoteSession::retrieveNoteStoreUrl()
         us_transport_->open();
         user_store_->getNoteStoreUrl(ns_url, token_->token().toStdString());
     } catch(apache::thrift::TException te) {
-    cerr << "TException:" << te.what() << "|" <<endl;
+        cerr << "TException:" << te.what() << "|" <<endl;
+        emit error(te.what());
     } catch(std::exception e) {
-    cerr << "Error:" <<e.what() << "|" <<endl;
+        cerr << "Error:" <<e.what() << "|" <<endl;
+        emit error(e.what());
     } catch(...) {
-    cerr << "Error:unknown error" <<endl;
+        cerr << "Error:unknown error" <<endl;
+        emit error("unknown");
     }
     us_transport_->close();
     return QString(ns_url.c_str());
@@ -122,12 +125,15 @@ bool EvernoteSession::openUserStore(boost::shared_ptr<UserStoreClient>& us_store
         us_transport->open();
     } catch(apache::thrift::TException te) {
         cerr << "TException:" << te.what()<< "|" <<endl;
+        emit error(te.what());
         return false;
     } catch(std::exception e) {
         cerr << "Error:" << e.what() << "|" <<endl;
+        emit error(e.what());
         return false;
     } catch(...) {
         cerr << "Error:unknown error" <<endl;
+        emit error("unknown");
         return false;
     }
     return true;
@@ -150,12 +156,15 @@ bool EvernoteSession::openNoteStore(boost::shared_ptr<NoteStoreClient>& ns_store
         ns_transport->open();
     } catch(apache::thrift::TException te) {
         cerr << "TException:" << te.what()<< "|" <<endl;
+        emit error(te.what());
         return false;
     } catch(std::exception e) {
         cerr << "Error:" << e.what() << "|" <<endl;
+        emit error(e.what());
         return false;
     } catch(...) {
         cerr << "Error:unknown error" <<endl;
+        emit error("unknown");
         return false;
     }
     return true;
