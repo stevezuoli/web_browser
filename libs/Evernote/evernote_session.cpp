@@ -98,7 +98,11 @@ boost::shared_ptr<NoteStoreClient> EvernoteSession::noteStoreClient()
     qDebug("Note Store Path:%s", qPrintable(note_store_path_));
     
     ssl_socket_factory_.reset(new TSSLSocketFactory());
+    // No local certificate
     //ssl_socket_factory_->loadTrustedCertificates("/etc/ssl/certs/ca-bundle.crt");
+    
+    // No need to authenticate
+    ssl_socket_factory_->authenticate(false);
     
     ssl_socket_ = ssl_socket_factory_->createSocket(note_store_host_.toStdString(), nsport);
     buffered_transport_.reset(new TBufferedTransport(ssl_socket_));
