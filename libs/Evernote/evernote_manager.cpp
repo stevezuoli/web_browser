@@ -168,6 +168,8 @@ bool EvernoteManager::exportNote(const EvernoteContent& note)
     {
         return false;
     }
+    qDebug("Title:%s", qPrintable(title));
+    qDebug("Content:%s", qPrintable(content));
     
     // open note store
     NoteStorePtr note_store = session_->noteStoreClient();
@@ -179,6 +181,7 @@ bool EvernoteManager::exportNote(const EvernoteContent& note)
     {
         return false;
     }
+    qDebug("Open Note Store succeed!");
     
     // note book
     Notebook duokan_book;
@@ -186,6 +189,7 @@ bool EvernoteManager::exportNote(const EvernoteContent& note)
     {
         return false;
     }
+    qDebug("Found duokan note book!");
     
     // find metadata
     NotesMetadataList metadata;
@@ -193,12 +197,15 @@ bool EvernoteManager::exportNote(const EvernoteContent& note)
     {
         return false;
     }
+    qDebug("Found metadata for filtering!");
     
     // send note
     bool ret = addOrUpdateNote(note_store, duokan_book, metadata, title, content);
+    qDebug("Note has been updated");
     
     // close note store
     EvernoteSession::closeNoteStore(note_store);
+    qDebug("Note Store has been closed!");
     return ret;
 }
     

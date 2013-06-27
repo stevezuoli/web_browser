@@ -45,6 +45,7 @@ bool EvernoteApplication::findFiles()
         QString entry_path = info.absoluteFilePath();
         if (entry_path.endsWith(".xml", Qt::CaseInsensitive))
         {
+            qDebug("Found export file:%s", qPrintable(entry_path));
             entries_.push_back(entry_path);
         }
     }
@@ -60,6 +61,7 @@ bool EvernoteApplication::open(const QString& path)
     
     if (dir_.exists())
     {
+        qDebug("Open evernote folder:%s", qPrintable(path));
         findFiles();
     }
 }
