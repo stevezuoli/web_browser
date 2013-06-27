@@ -278,10 +278,12 @@ bool EvernoteManager::makeSureNotebookExist(NoteStorePtr note_store, Notebook& d
     // Find existing notebook
     Notebooks notebooks;
     try {
+        qDebug("List note books... Token:%s", qPrintable(session_->token()));
         note_store->listNotebooks(notebooks, session_->token().toUtf8().constData());
         foreach(const Notebook& book, notebooks)
         {
             QString book_name(book.name.c_str());
+            qDebug("Book Name:%s", qPrintable(book_name));
             if (book_name.compare(duokan_book_name) == 0)
             {
                 duokan_book = book;
