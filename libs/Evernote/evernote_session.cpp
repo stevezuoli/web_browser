@@ -49,7 +49,7 @@ boost::shared_ptr<UserStoreClient> EvernoteSession::userStoreClient()
     user_store_.reset(new UserStoreClient(us_protocol_));
     return user_store_;
 }
-    
+
 QString EvernoteSession::retrieveNoteStoreUrl()
 {
     if (us_transport_ == 0 || user_store_ == 0)

@@ -11,20 +11,27 @@ EvernoteApplication::EvernoteApplication(int &argc, char **argv)
     : QApplication(argc, argv)
 {
     // parse arguments
+    bool opened = false;
     if (argc >= 2)
     {
         QString path = QString::fromLocal8Bit(argv[1]);
-        open(path);
+        opened = open(path);
     }
     else
     {
-        open(defaultFolder());
+        opened = open(defaultFolder());
+    }
+    
+    if (opened)
+    {
+        QString host = DEFAULT_HOST;
+        int port = DEFAULT_USER_STORE_PORT;
+        manager_.createSession(host, port);
     }
 }
 
 EvernoteApplication::~EvernoteApplication(void)
 {
-    
 }
     
 QString EvernoteApplication::defaultFolder()
@@ -62,16 +69,28 @@ bool EvernoteApplication::open(const QString& path)
     if (dir_.exists())
     {
         qDebug("Open evernote folder:%s", qPrintable(path));
-        findFiles();
+        return findFiles();
     }
+    return false;
 }
 
+// Make sure session has been opened before exporting notes
 bool EvernoteApplication::exportAll()
 {
+    if (entries_.isEmpty())
+    {
+        return false;
+    }
+    
+    manager_.openSession();
     foreach (QString path, entries_)
     {
         exportFile(path);
     }
+    
+    // it costs a lot of time to close session, just exit app directly.
+    //manager_.closeSession();
+    return true;
 }
 
 bool EvernoteApplication::exportFile(const QString& path)
@@ -81,10 +100,6 @@ bool EvernoteApplication::exportFile(const QString& path)
     {
         return false;
     }
-    
-    QString host = DEFAULT_HOST;
-    int port = DEFAULT_USER_STORE_PORT;
-    manager_.openSession(host, port);
     return manager_.exportNote(note);
 }
 

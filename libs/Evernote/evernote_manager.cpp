@@ -152,11 +152,41 @@ EvernoteManager::EvernoteManager()
 EvernoteManager::~EvernoteManager()
 {
 }
- 
-bool EvernoteManager::openSession(const QString& host, int port)
+    
+bool EvernoteManager::createSession(const QString& host, int port)
 {
     session_.reset(new EvernoteSession(host, port));
     return true;
+}
+
+bool EvernoteManager::openSession()
+{
+    // open note store
+    NoteStorePtr note_store = session_->noteStoreClient();
+    if (note_store == 0)
+    {
+        return false;
+    }
+    if (!EvernoteSession::openNoteStore(note_store))
+    {
+        return false;
+    }
+    qDebug("Open Note Store succeed!");
+    return true;
+}
+
+bool EvernoteManager::closeSession()
+{
+    NoteStorePtr note_store = session_->noteStoreClient();
+    if (note_store == 0)
+    {
+        return false;
+    }
+    
+    // close note store
+    bool ret = EvernoteSession::closeNoteStore(note_store);
+    qDebug("Closing Note Store %s!", ret ? "succeeded" : "failed");
+    return ret;
 }
 
 bool EvernoteManager::exportNote(const EvernoteContent& note)
@@ -177,11 +207,6 @@ bool EvernoteManager::exportNote(const EvernoteContent& note)
     {
         return false;
     }
-    if (!EvernoteSession::openNoteStore(note_store))
-    {
-        return false;
-    }
-    qDebug("Open Note Store succeed!");
     
     // note book
     Notebook duokan_book;
@@ -202,10 +227,6 @@ bool EvernoteManager::exportNote(const EvernoteContent& note)
     // send note
     bool ret = addOrUpdateNote(note_store, duokan_book, metadata, title, content);
     qDebug("Note has been updated");
-    
-    // close note store
-    EvernoteSession::closeNoteStore(note_store);
-    qDebug("Note Store has been closed!");
     return ret;
 }
     
@@ -377,7 +398,7 @@ bool EvernoteManager::addOrUpdateNote(NoteStorePtr note_store,
     QString submit_content = NOTE_PREFIX + content + NOTE_SUFFIX;
     
     // TEST
-    dump(submit_content);
+    //dump(submit_content);
     
     new_note.content = submit_content.toUtf8().constData();
     

@@ -18,7 +18,9 @@ public:
     EvernoteManager();
     ~EvernoteManager();
     
-    bool openSession(const QString& host, int port);
+    bool createSession(const QString& host, int port);
+    bool openSession();
+    bool closeSession();
     bool exportNote(const EvernoteContent& note);
     
     // prepare content
