@@ -1,7 +1,10 @@
 #include <string>
 #include <QApplication>
 #include "evernote_kindle_types.h"
+#include "Database/evernote_token.h"
+#include "device/fat.h"
 
+using namespace web_database;
 using namespace std;
 using namespace boost;
 using namespace apache::thrift::transport;
@@ -19,6 +22,63 @@ QString replaceInvalidCharacters(QString src)
     result = result.replace("'", "&apos;");
     result = result.replace("\"", "&quot;");
     return result;
+}
+    
+bool EvernoteUser::save()
+{
+    QDomDocument doc("EvernoteUser");
+    QDomElement root = doc.createElement("EvernoteUser");
+    doc.appendChild(root);
+    
+    QDomElement user_name_element = doc.createElement("username");
+    root.appendChild(user_name_element);
+    QDomText user_name = doc.createTextNode(username);
+    user_name_element.appendChild(user_name);
+    
+    QDomElement email_element = doc.createElement("email");
+    root.appendChild(email_element);
+    QDomText e_mail = doc.createTextNode(email);
+    email_element.appendChild(e_mail);
+    
+    QDomElement name_element = doc.createElement("name");
+    root.appendChild(name_element);
+    QDomText name_text = doc.createTextNode(name);
+    name_element.appendChild(name_text);
+    
+    QDomElement timezone_element = doc.createElement("timezone");
+    root.appendChild(timezone_element);
+    QDomText time_zone = doc.createTextNode(timezone);
+    timezone_element.appendChild(time_zone);
+    
+    QString xml = doc.toString();
+    qDebug("EvernoteToken:%s", qPrintable(xml));
+    
+    QString path = EvernoteToken::home();
+    QDir dir(path);
+    if (!dir.exists(EvernoteToken::dirName()))
+    {
+        if (!dir.mkdir(EvernoteToken::dirName()))
+        {
+            return false;
+        }
+    }
+    
+    if (dir.cd(EvernoteToken::dirName()))
+    {
+        // Change folder attribute.
+        changeToHidden(dir.absolutePath().toLocal8Bit().constData());
+        
+        path = dir.filePath("evernote_user.xml");
+        QFile file(path);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QTextStream TextStream(&file);
+            TextStream << xml;
+            file.close();
+            return true;
+        }
+    }
+    return false;
 }
     
 bool EvernoteContent::load(const QString& path)

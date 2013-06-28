@@ -11,6 +11,7 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 ADD_LIBRARY(evernote ${SRCS})
 
 TARGET_LINK_LIBRARIES(evernote
+  device
   database
   evernote_api
   ${THRIFT_LIBRARIES}

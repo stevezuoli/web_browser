@@ -12,6 +12,7 @@ ADD_LIBRARY(database
  ${SRCS})
 
 TARGET_LINK_LIBRARIES(database
+  device
   duokan_base
   ${QT_LIBRARIES}
   ${ADD_LIB})

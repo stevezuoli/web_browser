@@ -26,6 +26,7 @@ public:
     EvernoteUser() {}
     ~EvernoteUser() {}
     
+    bool save();
 public:
     QString username;
     QString email;

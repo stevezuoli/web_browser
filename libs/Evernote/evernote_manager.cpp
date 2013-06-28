@@ -160,7 +160,7 @@ bool EvernoteManager::createSession(const QString& host, int port)
     return true;
 }
 
-bool EvernoteManager::openSession()
+bool EvernoteManager::openNoteSession()
 {
     // open note store
     NoteStorePtr note_store = session_->noteStoreClient();
@@ -176,7 +176,7 @@ bool EvernoteManager::openSession()
     return true;
 }
 
-bool EvernoteManager::closeSession()
+bool EvernoteManager::closeNoteSession()
 {
     NoteStorePtr note_store = session_->noteStoreClient();
     if (note_store == 0)
@@ -188,6 +188,76 @@ bool EvernoteManager::closeSession()
     bool ret = session_->closeNoteStore(note_store);
     qDebug("Closing Note Store %s!", ret ? "succeeded" : "failed");
     return ret;
+}
+    
+bool EvernoteManager::openUserSession()
+{
+    UserStorePtr user_store = session_->userStoreClient();
+    if (user_store == 0)
+    {
+        return false;
+    }
+    
+    // open user store
+    bool ret = session_->openUserStore(user_store);
+    qDebug("Open User Store %s!", ret ? "succeeded" : "failed");
+    return ret;
+}
+
+bool EvernoteManager::closeUserSession()
+{
+    UserStorePtr user_store = session_->userStoreClient();
+    if (user_store == 0)
+    {
+        return false;
+    }
+    
+    // open user store
+    bool ret = session_->closeUserStore(user_store);
+    qDebug("Close User Store %s!", ret ? "succeeded" : "failed");
+    return ret;
+}
+    
+bool EvernoteManager::getUser(EvernoteUser& user)
+{
+    // open note store
+    UserStorePtr user_store = session_->userStoreClient();
+    if (user_store == 0)
+    {
+        return false;
+    }
+    
+    bool ret = false;
+    User edam_user;
+    edam_user.__isset.username = true;
+    edam_user.__isset.name = true;
+    edam_user.__isset.email = true;
+    edam_user.__isset.timezone = true;
+    try {
+        user_store->getUser(edam_user, session_->token().toUtf8().constData());
+    } catch(apache::thrift::TException te) {
+        qDebug() << "TException:" << te.what() << "|" <<endl;
+        emit error(te.what());
+        ret = false;
+    } catch(std::exception e) {
+        qDebug() << "Error:" <<e.what() << "|" <<endl;
+        emit error(e.what());
+        ret = false;
+    } catch(...) {
+        qDebug() << "Error:unknown error" <<endl;
+        emit error("unknown");
+        ret = false;
+    }
+    user.name = edam_user.name.c_str();
+    user.email = edam_user.email.c_str();
+    user.username = edam_user.username.c_str();
+    user.timezone = edam_user.timezone.c_str();
+    qDebug("Name: %s\nEmail: %s\nUser Name: %s\nTime Zone: %s",
+           qPrintable(user.name),
+           qPrintable(user.email),
+           qPrintable(user.username),
+           qPrintable(user.timezone));
+    return true;
 }
 
 bool EvernoteManager::exportNote(const EvernoteContent& note)

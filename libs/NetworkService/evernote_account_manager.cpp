@@ -210,6 +210,7 @@ void EvernoteAccountManager::onAccessTokenReady(QByteArray reply)
     EvernoteToken token(user_option_, reply);
     TokenRing token_ring;
     token_ring.setEvernoteToken(token);
+    token.save();
     emit loginFinished(true);
 }
 

@@ -19,16 +19,19 @@ public:
     EvernoteApplication(int &argc, char **argv);
     virtual ~EvernoteApplication(void);
 
+    static QString defaultFolder();
+
 public Q_SLOTS:
     bool open(const QString& path);
+    bool createSession();
     bool exportAll();
     bool exportFile(const QString& path);
-
+    bool getUser();
+    
 private Q_SLOTS:
     void onError(const QString& error_str);
     
 private:
-    static QString defaultFolder();
     bool findFiles();
     bool removeFile(const QString& path);
     

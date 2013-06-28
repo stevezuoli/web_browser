@@ -20,11 +20,14 @@ public:
     ~EvernoteManager();
     
     bool createSession(const QString& host, int port);
-    bool openSession();
-    bool closeSession();
-
-    bool exportNote(const EvernoteContent& note);
+    bool openNoteSession();
+    bool closeNoteSession();
+    bool openUserSession();
+    bool closeUserSession();
     
+    bool exportNote(const EvernoteContent& note);
+    bool getUser(EvernoteUser& user);
+
     // prepare content
     bool prepareContent(const EvernoteContent& origin_content, QString& title, QString& content);
 private:

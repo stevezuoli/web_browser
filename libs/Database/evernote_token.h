@@ -41,6 +41,10 @@ public:
 
     bool isValid() { return !token_.isEmpty(); }
 
+    bool save();
+    static QString home();
+    static QString dirName();
+    
 private:
     void parse();
 

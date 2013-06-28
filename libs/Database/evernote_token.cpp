@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "NetworkService/ns_utils.h"
+#include "device/fat.h"
 #include "evernote_token.h"
 
 using namespace network_service;
@@ -7,6 +8,9 @@ using namespace network_service;
 namespace web_database
 {
 
+static const QString TOKEN_PATH = "/var/local/";
+static const QString EVERNOTE_DIR = "evernote";
+    
 static QMap<QByteArray, QByteArray> parseUrlFromByteArray(const QByteArray& url_bytes)
 {
     QList<QByteArray> raw_list = url_bytes.split('&');
@@ -126,6 +130,82 @@ bool EvernoteTokenDB::setToken(QSqlDatabase & db, const EvernoteToken& token)
     query.addBindValue(token.expireDate());
     query.addBindValue(token.rawData());
     return query.exec();
+}
+    
+QString EvernoteToken::home()
+{
+#ifdef BUILD_FOR_ARM
+    return TOKEN_PATH;
+#else
+    return QDir::home().path();
+#endif
+}
+
+QString EvernoteToken::dirName()
+{
+    return EVERNOTE_DIR;
+}
+
+bool EvernoteToken::save()
+{
+    QDomDocument doc("EvernoteToken");
+    QDomElement root = doc.createElement("EvernoteToken");
+    doc.appendChild(root);
+    
+    QDomElement user_id_element = doc.createElement("userid");
+    root.appendChild(user_id_element);
+    QDomText user_id = doc.createTextNode(user_id_);
+    user_id_element.appendChild(user_id);
+    
+    QDomElement host_element = doc.createElement("host");
+    root.appendChild(host_element);
+    QDomText host = doc.createTextNode(host_);
+    host_element.appendChild(host);
+    
+    QDomElement token_element = doc.createElement("token");
+    root.appendChild(token_element);
+    QDomText token = doc.createTextNode(token_);
+    token_element.appendChild(token);
+    
+    QDomElement expire_date_element = doc.createElement("expire_date");
+    root.appendChild(expire_date_element);
+    QDomText expire_date = doc.createTextNode(expire_date_);
+    expire_date_element.appendChild(expire_date);
+    
+    QDomElement secret_element = doc.createElement("secret");
+    root.appendChild(secret_element);
+    QDomText secret = doc.createTextNode(secret_);
+    secret_element.appendChild(secret);
+    
+    QString xml = doc.toString();
+    qDebug("EvernoteToken:%s", qPrintable(xml));
+    
+    QString path = EvernoteToken::home();
+    QDir dir(path);
+    if (!dir.exists(EvernoteToken::dirName()))
+    {
+        if (!dir.mkdir(EvernoteToken::dirName()))
+        {
+            return false;
+        }
+    }
+    
+    if (dir.cd(EvernoteToken::dirName()))
+    {
+        // Change folder attribute.
+        changeToHidden(dir.absolutePath().toLocal8Bit().constData());
+        
+        path = dir.filePath("evernote_token.xml");
+        QFile file(path);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QTextStream TextStream(&file);
+            TextStream << xml;
+            file.close();
+            return true;
+        }
+    }
+    return false;
 }
 
 }

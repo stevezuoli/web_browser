@@ -10,28 +10,17 @@ static const int DEFAULT_USER_STORE_PORT = 80;
 EvernoteApplication::EvernoteApplication(int &argc, char **argv)
     : QApplication(argc, argv)
 {
-    // parse arguments
-    bool opened = false;
-    if (argc >= 2)
-    {
-        QString path = QString::fromLocal8Bit(argv[1]);
-        opened = open(path);
-    }
-    else
-    {
-        opened = open(defaultFolder());
-    }
-    
-    if (opened)
-    {
-        QString host = DEFAULT_HOST;
-        int port = DEFAULT_USER_STORE_PORT;
-        manager_.createSession(host, port);
-    }
 }
 
 EvernoteApplication::~EvernoteApplication(void)
 {
+}
+    
+bool EvernoteApplication::createSession()
+{
+    QString host = DEFAULT_HOST;
+    int port = DEFAULT_USER_STORE_PORT;
+    return manager_.createSession(host, port);
 }
     
 QString EvernoteApplication::defaultFolder()
@@ -82,14 +71,14 @@ bool EvernoteApplication::exportAll()
         return false;
     }
     
-    manager_.openSession();
+    manager_.openNoteSession();
     foreach (QString path, entries_)
     {
         exportFile(path);
     }
     
     // it costs a lot of time to close session, just exit app directly.
-    //manager_.closeSession();
+    manager_.closeNoteSession();
     return true;
 }
 
@@ -111,6 +100,19 @@ bool EvernoteApplication::removeFile(const QString& path)
 {
     QFile file(path);
     return file.remove();
+}
+
+bool EvernoteApplication::getUser()
+{
+    // TODO. save to user file
+    manager_.openUserSession();
+    EvernoteUser user;
+    if (manager_.getUser(user))
+    {
+        user.save();
+    }
+    manager_.closeUserSession();
+    return true;
 }
 
 void EvernoteApplication::onError(const QString& error_str)
