@@ -32,7 +32,8 @@ int main()
     QString host = "sandbox.evernote.com";
     int port = 80;
     EvernoteManager note_manager;
-    note_manager.openSession(host, port);
+    note_manager.createSession(host, port);
+    note_manager.openNoteSession();
     note_manager.exportNote(note);
     return 0;
 }

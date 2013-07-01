@@ -2,7 +2,7 @@
 #include <QApplication>
 #include "evernote_kindle_types.h"
 #include "Database/evernote_token.h"
-#include "device/fat.h"
+#include "Device/fat.h"
 
 using namespace web_database;
 using namespace std;
