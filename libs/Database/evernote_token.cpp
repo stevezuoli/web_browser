@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "NetworkService/ns_utils.h"
-#include "device/fat.h"
+#include "Device/fat.h"
 #include "evernote_token.h"
 
 using namespace network_service;
