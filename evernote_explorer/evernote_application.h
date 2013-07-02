@@ -11,7 +11,7 @@
 namespace evernote_kindle
 {
 
-class EvernoteApplication : public QApplication
+class EvernoteApplication : public QObject
 {
     Q_OBJECT;
 

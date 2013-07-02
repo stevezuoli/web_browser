@@ -8,7 +8,7 @@ static const QString DEFAULT_HOST = "sandbox.evernote.com";
 static const int DEFAULT_USER_STORE_PORT = 80;
     
 EvernoteApplication::EvernoteApplication(int &argc, char **argv)
-    : QApplication(argc, argv)
+    //: QApplication(argc, argv)
 {
 }
 
@@ -78,7 +78,8 @@ bool EvernoteApplication::exportAll()
     }
     
     // it costs a lot of time to close session, just exit app directly.
-    manager_.closeNoteSession();
+    //manager_.closeNoteSession();
+    ::exit(0);
     return true;
 }
 
@@ -118,7 +119,7 @@ bool EvernoteApplication::getUser()
 void EvernoteApplication::onError(const QString& error_str)
 {
     // ignore analyze the string, just exit
-    qApp->exit();
+    //qApp->exit();
     ::exit(0);
 }
 
