@@ -1,6 +1,7 @@
 #include "ui/DKToolBar.h"
 #include <QPainter>
 #include <QStyleOption>
+#include <QLayout>
 
 namespace ui
 {
@@ -8,7 +9,6 @@ const QString TOOL_BAR_STYLE = "\
 QToolBar                        \
 {                               \
     background: transparent;    \
-    spacing: 3px;               \
 }";                             
 
 DKToolBar::DKToolBar(const QString& title, QWidget* parent)
@@ -31,6 +31,8 @@ void DKToolBar::InitDKProperty()
 
 void DKToolBar::setDKStyleSheet()
 {
+    setContentsMargins(0, 0, 0, 0);
+    layout()->setContentsMargins(0, 0, 0, 0);
     //setStyleSheet(TOOL_BAR_STYLE);
 }
 

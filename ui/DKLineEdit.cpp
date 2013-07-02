@@ -48,6 +48,7 @@ void DKLineEdit::setDKStyleSheet()
 
 void DKLineEdit::focusInEvent(QFocusEvent* e)
 {
+    selectall_in_mouse_press_ = true;
     emit focusSignal(true);
     QLineEdit::focusInEvent(e);
 }
@@ -56,5 +57,19 @@ void DKLineEdit::focusOutEvent(QFocusEvent* e)
 {
     emit focusSignal(false);
     QLineEdit::focusOutEvent(e);
+    selectall_in_mouse_press_ = false;
+}
+
+void DKLineEdit::mousePressEvent(QMouseEvent* event)
+{
+    if (selectall_in_mouse_press_)
+    {
+        selectall_in_mouse_press_ = false;
+        selectAll();
+    }
+    else
+    {
+        QLineEdit::mousePressEvent(event);
+    }
 }
 }

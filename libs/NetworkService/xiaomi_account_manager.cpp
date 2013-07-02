@@ -28,6 +28,8 @@ static const QString MI_ACCOUNT_SERVICE_LOGIN_URI = "https://account.xiaomi.com/
 static const QString MI_ACCOUNT_SERVICE_LOGIN_AUTH_URI = "https://account.xiaomi.com/pass/serviceLoginAuth";
 static const QString MI_ACCOUNT_REGISTERED_CALLBACK_URI = "http://login.dushu.xiaomi.com/dk_id/api/checkin";
 
+static qreal ZOOM_FACTOR = 1.5;
+
 static char IntToHexChar(int i)
 {
     if (0 <= i && i <= 9)
@@ -190,6 +192,11 @@ QString XiaomiAccountManager::generateXiaomiAccountLoginUrl()
     return DuokanServerConfiguration::xiaomiWebRegisterUrl(); //+ "?followup=" + DuokanServerConfiguration::xiaomiFollowupUrl();
 }
 
+qreal XiaomiAccountManager::getZoomFactor()
+{
+    return ZOOM_FACTOR;
+}
+
 QStringList XiaomiAccountManager::getServiceTokenFromCookies(const QList<QNetworkCookie>& cookies)
 {
     for (int i = cookies.count() - 1; i >= 0; --i)
@@ -251,7 +258,7 @@ void XiaomiAccountManager::onLoadFinished(bool ok)
     {
         first_display = true;
         //emit loginPageLoadFinished(ok);
-        emit pageChanged(tr(""));
+        emit pageChanged(tr("Please Login"));
     }
 }
 
@@ -297,6 +304,10 @@ void XiaomiAccountManager::onUrlChanged(const QUrl& url)
         emit pageChanged(tr("Retrieving User Data..."));
         view_->stop();
         exchangeDuokanToken(url);
+    }
+    else
+    {
+        emit pageChanged(url.toString());
     }
 }
 
@@ -461,10 +472,20 @@ void XiaomiAccountManager::load(const QString& path)
     }
 }
 
-void XiaomiAccountManager::login(const QString& ref_url, bool login_or_register)
+void XiaomiAccountManager::login(const QString& ref_url, const QString& option)
 {
     if (DuokanServerConfiguration::checkOnlineOrTestingUrl(ref_url))
     {
+        bool login_or_register = true;
+        if (option.compare("login", Qt::CaseInsensitive) == 0)
+        {
+            login_or_register = true;
+        }
+        else if (option.compare("register", Qt::CaseInsensitive) == 0)
+        {
+            login_or_register = false;
+        }
+
         QString login_str = generateXiaomiAccountLoginUrl();
         QUrl url = guessUrlFromString(login_str);
 

@@ -2,6 +2,7 @@
 #include "view.h"
 #include "web_application.h"
 #include "common/WindowsMetrics.h"
+#include "common/ImageManager.h"
 #include <QtCore/QEvent>
 #include <QtGui/QApplication>
 #include <QtGui/QCompleter>
@@ -11,6 +12,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QStyle>
 #include <QtGui/QStyleOptionFrameV2>
+#include "common/debug.h"
 using namespace windowsmetrics;
 
 namespace  webbrowser
@@ -56,7 +58,7 @@ ExLineEdit::ExLineEdit(QWidget *parent)
     : QWidget(parent)
     , left_widget_(0)
     , line_edit_(new DKLineEdit(this))
-    , clear_button_(0)
+    //, clear_button_(0)
     , modify_line_edit_text_automatically_(true)
 {
     setFocusPolicy(line_edit_->focusPolicy());
@@ -78,12 +80,21 @@ ExLineEdit::ExLineEdit(QWidget *parent)
     line_edit_->setPalette(clearPalette);
 
     // clearButton
-    clear_button_ = new ClearButton(this);
-    connect(clear_button_, SIGNAL(clicked()),
-            line_edit_, SLOT(clear()));
-    connect(line_edit_, SIGNAL(textChanged(QString)),
-            clear_button_, SLOT(textChanged(QString)));
-    setStyleSheet("border: 1px solid dark");
+    //clear_button_ = new ClearButton(this);
+    //connect(clear_button_, SIGNAL(clicked()),
+            //line_edit_, SLOT(clear()));
+    //connect(line_edit_, SIGNAL(textChanged(QString)),
+            //clear_button_, SLOT(textChanged(QString)));
+
+    //refreshButton
+    refresh_button_ = new QPushButton(this);
+    refresh_button_->setStyleSheet(QString("QPushButton{image: url(%1); border: 0px}").
+            arg(ImageManager::GetImagePath(IMAGE_REFRESH)));
+
+    stop_button_ = new QPushButton(this);
+    stop_button_->setStyleSheet(QString("QPushButton{image: url(%1); border: 0px}").
+            arg(ImageManager::GetImagePath(IMAGE_CLOSE)));
+    setStyleSheet(QString("border: %1px solid dark").arg(GetWindowMetrics(UIPixelValue2Index)));
 }
 
 void ExLineEdit::setLeftWidget(QWidget *widget)
@@ -120,7 +131,12 @@ void ExLineEdit::updateGeometries()
     line_edit_->setGeometry(left_widget_->x() + left_widget_->width() + 2,        1,
                             width - clearButtonWidth - left_widget_->width(), this->height() - 2);
 
-    clear_button_->setGeometry(this->width() - clearButtonWidth, 0,
+    //clear_button_->setGeometry(this->width() - clearButtonWidth, 0,
+                               //clearButtonWidth, this->height());
+
+    refresh_button_->setGeometry(this->width() - clearButtonWidth, 0,
+                               clearButtonWidth, this->height());
+    stop_button_->setGeometry(this->width() - clearButtonWidth, 0,
                                clearButtonWidth, this->height());
 }
 
@@ -176,6 +192,7 @@ void ExLineEdit::keyPressEvent(QKeyEvent *event)
     else
     {
         line_edit_->event(event);
+        event->accept();
     }
 }
 
@@ -259,13 +276,16 @@ UrlLineEdit::UrlLineEdit(QWidget *parent)
     : ExLineEdit(parent)
     , web_view_(0)
     , icon_label_(0)
+    , progress_(0)
 {
     // icon
     icon_label_ = new UrlIconLabel(this);
     icon_label_->resize(GetWindowMetrics(UrlFaviconSizeIndex), GetWindowMetrics(UrlFaviconSizeIndex));
     setLeftWidget(icon_label_);
     default_base_color_ = palette().color(QPalette::Base);
+    updateRightButton(false);
 
+    connect(line_edit_, SIGNAL(textEdited(const QString&)), this, SLOT(onTextEditChanegd(const QString&)));
     webViewIconChanged();
 }
 
@@ -281,7 +301,11 @@ void UrlLineEdit::setWebView(BrowserView *webView)
     connect(webView, SIGNAL(iconChanged()),
         this, SLOT(webViewIconChanged()));
     connect(webView, SIGNAL(progressChangedSignal(const int, const int)),
-        this, SLOT(update()));
+        this, SLOT(webViewProgressChanged(const int, const int)));
+    connect(refresh_button_, SIGNAL(clicked()),
+        webView, SLOT(reload()));
+    connect(stop_button_, SIGNAL(clicked()),
+        this, SLOT(onCloseButtonClicked()));
 }
 
 void UrlLineEdit::webViewUrlChanged(const QUrl &url)
@@ -290,6 +314,7 @@ void UrlLineEdit::webViewUrlChanged(const QUrl &url)
     {
         line_edit_->setText(QString::fromUtf8(url.toEncoded()));
         line_edit_->setCursorPosition(0);
+        updateRightButton(false);
     }
 }
 
@@ -299,17 +324,13 @@ void UrlLineEdit::webViewIconChanged()
     QIcon icon = WebApplication::instance()->icon(url);
     QPixmap pixmap(icon.pixmap(GetWindowMetrics(UrlFaviconSizeIndex), GetWindowMetrics(UrlFaviconSizeIndex)));
     icon_label_->setPixmap(pixmap);
+    updateRightButton(true);
 }
 
-QLinearGradient UrlLineEdit::generateGradient(const QColor &color) const
+void UrlLineEdit::webViewProgressChanged(const int progress, const int total)
 {
-    QLinearGradient gradient(0, 0, 0, height());
-    gradient.setColorAt(0, default_base_color_);
-    gradient.setColorAt(0.15, color.lighter(120));
-    gradient.setColorAt(0.5, color);
-    gradient.setColorAt(0.85, color.lighter(120));
-    gradient.setColorAt(1, default_base_color_);
-    return gradient;
+    progress_ = progress == 100 ? 0 : progress;
+    update();
 }
 
 void UrlLineEdit::focusOutEvent(QFocusEvent *event)
@@ -324,7 +345,7 @@ void UrlLineEdit::paintEvent(QPaintEvent *event)
     QPalette p = palette();
     if (web_view_ && web_view_->url().scheme() == QLatin1String("https")) {
         QColor lightYellow(248, 248, 210);
-        p.setBrush(QPalette::Base, generateGradient(lightYellow));
+        p.setBrush(QPalette::Base, lightYellow);
     } else {
         p.setBrush(QPalette::Base, default_base_color_);
     }
@@ -336,15 +357,30 @@ void UrlLineEdit::paintEvent(QPaintEvent *event)
     initStyleOption(&panel);
     QRect backgroundRect = style()->subElementRect(QStyle::SE_LineEditContents, &panel, this);
     if (web_view_ && !hasFocus()) {
-        int progress = web_view_->getProgress();
         QColor loadingColor = QColor(116, 192, 250);
-        //painter.setBrush(generateGradient(loadingColor));
         painter.setBrush(loadingColor);
         painter.setPen(loadingColor);
-        int mid = backgroundRect.width() / 100.0 * progress;
+        int mid = backgroundRect.width() / 100.0 * progress_;
         QRect progressRect(backgroundRect.x(), backgroundRect.y() + 2, mid, backgroundRect.height() - 4);
         painter.drawRect(progressRect);
     }
+}
     
+void UrlLineEdit::updateRightButton(bool showReload)
+{
+    stop_button_->setVisible(!showReload);
+    refresh_button_->setVisible(showReload);
+}
+
+void UrlLineEdit::onCloseButtonClicked()
+{
+    //line_edit_->clear();
+    web_view_->stop();
+}
+
+void UrlLineEdit::onTextEditChanegd(const QString& text)
+{
+    stop_button_->setVisible(false);
+    refresh_button_->setVisible(false);
 }
 }//webbrowser

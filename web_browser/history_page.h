@@ -2,11 +2,10 @@
 #define WEBBROWSER_HISTORY_PAGE_H_
 
 #include <QWidget>
-//#include <DKPushButton>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QListWidget>
-#include "ui/DKPushButton.h"
+#include "ui/DKButtonGroup.h"
+#include "ui/DKListWidget.h"
 
 using namespace ui;
 namespace webbrowser
@@ -27,19 +26,20 @@ protected:
     virtual void paintEvent(QPaintEvent* event);
 
 Q_SIGNALS:
-    void onHistoryPageQuit(bool);
+    void historyPageQuit(const QString&);
 
 private Q_SLOTS:
     void clearHistoryData(bool);
+    void onItemClicked(QListWidgetItem* item);
+    void onCloseButtonClicked(bool);
 
 private:
     void InitLayout();
     void InitItems();
 
 private:
-    QListWidget history_list_;
-    DKPushButton clear_button_;
-    DKPushButton close_button_;
+    DKListWidget history_list_;
+    DKButtonGroup bottom_buttons_;
     QVBoxLayout main_layout_;
     QHBoxLayout bottom_layout_;
     BrowserView* view_;

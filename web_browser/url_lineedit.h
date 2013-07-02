@@ -3,7 +3,7 @@
 
 #include <QtCore/QUrl>
 #include <QtGui/QWidget>
-#include <QtGui/QAbstractButton>
+#include <QtGui/QPushButton>
 #include <QtGui/QStyleOptionFrame>
 #include "ui/DKLineEdit.h"
 
@@ -57,7 +57,9 @@ protected:
 
     QWidget *left_widget_;
     QLineEdit *line_edit_;
-    ClearButton *clear_button_;
+    //ClearButton *clear_button_;
+    QPushButton *refresh_button_;
+    QPushButton *stop_button_;
     bool modify_line_edit_text_automatically_;
 };
 
@@ -78,13 +80,18 @@ protected:
 private slots:
     void webViewUrlChanged(const QUrl &url);
     void webViewIconChanged();
+    void webViewProgressChanged(const int progress, const int total);
+    void onCloseButtonClicked();
+    void onTextEditChanegd(const QString& text);
 
 private:
-    QLinearGradient generateGradient(const QColor &color) const;
+    void updateRightButton(bool showReload);
+
+private:
     BrowserView *web_view_;
     UrlIconLabel *icon_label_;
     QColor default_base_color_;
-
+    int progress_;
 };
 
 }

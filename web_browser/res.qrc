@@ -4,6 +4,8 @@
     <file>res/menu@kp.png</file>
     <file>res/menu_pressed@kt.png</file>
     <file>res/menu_pressed@kp.png</file>
+    <file>res/menu_disabled@kp.png</file>
+    <file>res/menu_disabled@kt.png</file>
     <file>res/back@kt.png</file>
     <file>res/back@kp.png</file>
     <file>res/back_grey@kt.png</file>
@@ -66,6 +68,16 @@
     <file>res/reader_mode_pressed@kp.png</file>
     <file>res/normal_mode@kt.png</file>
     <file>res/normal_mode@kp.png</file>
+    <file>res/keyboard@kt.png</file>
+    <file>res/keyboard@kp.png</file>
+    <file>res/keyboard_grey@kt.png</file>
+    <file>res/keyboard_grey@kp.png</file>
+    <file>res/keyboard_pressed@kt.png</file>
+    <file>res/keyboard_pressed@kp.png</file>
+    <file>res/refresh@kt.png</file>
+    <file>res/refresh@kp.png</file>
+    <file>res/close@kt.png</file>
+    <file>res/close@kp.png</file>
     <file>res/jquery.min.js</file>
     <file>res/readability.js</file>
     <file>res/load_fail.html</file>

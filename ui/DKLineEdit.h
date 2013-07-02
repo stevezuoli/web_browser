@@ -16,6 +16,7 @@ public:
 protected:
     virtual void focusInEvent(QFocusEvent* e);
     virtual void focusOutEvent(QFocusEvent* e);
+    virtual void mousePressEvent(QMouseEvent* event);
 
 signals:
     void focusSignal(bool);
@@ -23,6 +24,7 @@ signals:
 private:
     void setDKStyleSheet();
     void InitDKProperty();
+    bool selectall_in_mouse_press_;
 };//DKLineEdit
 }
 #endif//__UI_DKLINEEDIT_H__

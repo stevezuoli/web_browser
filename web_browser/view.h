@@ -39,17 +39,22 @@ public:
         return progress_;
     }
 
-    int GetHistoryPageCounts() const;
-    int GetCurrentHistoryPageIndex() const;
-
     QString getHtmlFromMainFrame();
 
-    QVariantList GetSiteList() const
-    {
-        return site_list_;
-    }
+    QVariantList GetSiteList() const { return site_list_; }
     // Clear HistoryData
     void clearHistoryData();
+
+    // Special mode. Not elegant code, needs to be refined later
+    void setSpecialAccountMode(bool is_special_account) { is_special_account_mode_ = is_special_account; }
+    bool isSpecialAccountMode() const
+    {
+        return is_special_account_mode_;
+    }
+
+    void zoom(bool in);
+    bool isMiniZoomConditionReached();
+    bool isMaxiZoomConditionReached();
 
 protected:
     virtual QWebView *createWindow(QWebPage::WebWindowType type);
@@ -80,6 +85,8 @@ Q_SIGNALS:
                           const QString& input_name);
     void inputFormLostFocus(void);
     void keyboardKeyPressed();
+    void scaleBegin();
+    void scaleEnd();
 
     // reader mode
     void enableReaderMode(bool);
@@ -115,13 +122,13 @@ public Q_SLOTS:
     void onScaleBegin();
     void onScaleEnd();
     void onScaling();
+    void changeFontSize(qreal size);
 
 private Q_SLOTS:
     void updateActions();
     void popupMenu();
 
     void changeFontFamily(const QString&);
-    void changeFontSize(qreal size);
     void reloadCurrentUrl();
 
     void onLoadStarted(void);
@@ -165,8 +172,6 @@ private Q_SLOTS:
     void hideObjectElements();
     void hideEmbeddedElements();
     void hideScrollbar();
-
-    void clearHistory();
 
     //void onMicroFocusChanged();
 private:
@@ -232,6 +237,11 @@ private:
     // scaling
     gesture::ScaleGestureContext scale_context_;
 
+    // special account
+    bool is_special_account_mode_;
+    
+    qreal zoom_step_;
+    qreal zoom_max_factor_;
 private:
     friend class HoldAutoSaver;
 };

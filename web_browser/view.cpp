@@ -4,11 +4,12 @@
 #include "Device/device.h"
 #include "view.h"
 #include "web_application.h"
-#include "common/debug.h"
+#include "common/WindowsMetrics.h"
 
 using namespace network_service;
 using namespace gesture;
 using namespace web_database;
+using namespace ui::windowsmetrics;
 
 namespace webbrowser
 {
@@ -17,7 +18,6 @@ static const int PAGE_REPEAT = 20;
 static const int DELTA = 10;
 static const qreal DEFAULT_FONT = 1.0;
 
-static const qreal MAX_ZOOM_VALUE = 2.4;
 static const qreal MIN_ZOOM_SPAN  = 0.3;
 
 BrowserView::BrowserView(QWidget *parent)
@@ -29,6 +29,9 @@ BrowserView::BrowserView(QWidget *parent)
     , page_(new WebPage(this))
     , bookmark_model_(0)
     , hand_tool_enabled_(true)
+    , is_special_account_mode_(false)
+    , zoom_step_(0.1)
+    , zoom_max_factor_(3.0)
 {
     setPage(page_);
 
@@ -177,7 +180,6 @@ void BrowserView::onSavePassword(const QByteArray & data)
 
 void BrowserView::onLoadFinished(bool ok)
 {
-    DebugWB("%d", ok);
     // Restore the screen update type.
     // Ensure we can get a gc update.
     progress_ = 100;
@@ -186,7 +188,11 @@ void BrowserView::onLoadFinished(bool ok)
     // Check if we need to store the thumbnail.
     if (ok)
     {
-        storeUrl();
+        // Do NOT store url on logging in Xiaomi or other accounts.
+        if (!is_special_account_mode_)
+        {
+            storeUrl();
+        }
 
         // Auto complete the form in web
         if (WebApplication::accessManager()->autoComplete())
@@ -215,13 +221,16 @@ void BrowserView::onLoadFinished(bool ok)
         // Failed.
         progress_ = -1;
         reportCurrentProcess();
-        QFile file(":/res/network_error.html");
-        if (file.open(QIODevice::ReadOnly))
+        if (!is_special_account_mode_)
         {
-            QString html = QString(QLatin1String(file.readAll())).
-                arg(tr("Unable to connect to the Internet")).
-                arg(tr("can't display the webpage"));
-            setHtml(html);
+            QFile file(":/res/network_error.html");
+            if (file.open(QIODevice::ReadOnly))
+            {
+                QString html = QString(QLatin1String(file.readAll())).
+                    arg(tr("Unable to connect to the Internet")).
+                    arg(tr("can't display the webpage"));
+                setHtml(html);
+            }
         }
     }
     updateViewportRange();
@@ -429,7 +438,7 @@ void BrowserView::keyPressEvent(QKeyEvent *e)
 
 void BrowserView::keyReleaseEvent(QKeyEvent *ke)
 {
-    DebugWB("%d, %s, %d", ke->key(), qPrintable(ke->text()), int(ke->modifiers()));
+    qDebug() << __FUNCTION__;
     switch (ke->key())
     {
     case Qt::Key_Left:
@@ -461,6 +470,12 @@ void BrowserView::keyReleaseEvent(QKeyEvent *ke)
         break;
     case Qt::Key_D:
         setZoomFactor(zoomFactor() > 2.0f ? zoomFactor() - 1.0f : 1.0f);
+        break;
+    case Qt::Key_Home:
+        if (parentWidget())
+        {
+            QApplication::postEvent(parentWidget(), ke);
+        }
         break;
     default:
         QWebView::keyReleaseEvent(ke);
@@ -506,7 +521,7 @@ void BrowserView::storeUrl()
     for(int i = 0; i < site_list_.size(); ++i)
     {
         WebThumbnail site(site_list_.at(i).toMap());
-        if ((site.url().host() == host && !host.isEmpty()) ||
+        if ((site.url().host() == host && !host.isEmpty()) &&
             (site.url() == url()))
         {
             site_list_.removeAt(i);
@@ -795,7 +810,7 @@ void BrowserView::addFormsFocusEvent(void)
                         "continue;"
                 "}"
 
-                "inputList[i].setAttribute('onfocus', \"__qWebViewWidget.formFocused('\" + formId + \"', '\" + formName + \"', '\" + formAction + \"','\" + tagName + \"','\" + inputId + \"','\" + inputName + \"')\");"
+                "inputList[i].setAttribute('onclick', \"__qWebViewWidget.formFocused('\" + formId + \"', '\" + formName + \"', '\" + formAction + \"','\" + tagName + \"','\" + inputId + \"','\" + inputName + \"')\");"
                 "inputList[i].setAttribute('onblur', '__qWebViewWidget.formLostFocus()');"
             "}"
         "}"
@@ -833,7 +848,8 @@ void BrowserView::enterReaderMode(bool is_reader_mode)
     }
     else
     {
-        reloadCurrentUrl();
+        reload();
+        //reloadCurrentUrl();
     }
 }
 
@@ -858,7 +874,10 @@ static void collectPopupMenus(const QObject *parent,
 
 void BrowserView::selectMouseUp()
 {
-    QTimer::singleShot(0, this, SLOT(handleSelectPopup()));
+    qDebug("Select Mouse Up.");
+    // These deprecated code would cause segment fault.
+    // To reconstruct the list view later
+    //QTimer::singleShot(0, this, SLOT(handleSelectPopup()));
 }
 
 void BrowserView::clearFocusWidgets()
@@ -894,12 +913,19 @@ void BrowserView::handleSelectPopup()
 void BrowserView::selectFocus()
 {
     qDebug("Select Focus");
-    QTimer::singleShot(0, this, SLOT(handleSelectPopup()));
+
+    // These deprecated code would cause segment fault.
+    // To reconstruct the list view later
+    //QTimer::singleShot(0, this, SLOT(handleSelectPopup()));
 }
 
 void BrowserView::selectBlur()
 {
-    clearFocusWidgets();
+    qDebug("Select Blur");
+
+    // These deprecated code would cause segment fault.
+    // To reconstruct the list view later
+    //clearFocusWidgets();
 }
 
 void BrowserView::selectChanged()
@@ -935,11 +961,6 @@ void BrowserView::storeConf(const QUrl & url)
     }
 }
 
-void BrowserView::clearHistory()
-{
-    this->history()->clear();
-}
-
 void BrowserView::displayBookmarks()
 {
 }
@@ -962,16 +983,6 @@ bool BrowserView::deletePassword()
 void BrowserView::clearCookies()
 {
     WebApplication::accessManager()->clearCookies();
-}
-
-int BrowserView::GetHistoryPageCounts() const
-{
-    return history() ? history()->count() : -1;
-}
-
-int BrowserView::GetCurrentHistoryPageIndex() const
-{
-    return history() ? history()->currentItemIndex() : -1;
 }
 
 void BrowserView::onLoadProgress(int progress)
@@ -1021,6 +1032,7 @@ QString BrowserView::getHtmlFromMainFrame()
 void BrowserView::onScaleBegin()
 {
     qDebug("Web View begin scaling");
+    emit scaleBegin();
 
     ScaleGestureDetector* gesture = ScaleGestureDetector::instance();
     scale_context_.status_ = ScaleGestureContext::START_SCALE;
@@ -1038,6 +1050,7 @@ void BrowserView::onScaleEnd()
     //qDebug("curSpan = %d, m_curSpan = %d, zoomSpan = %f", cur_span,  scale_context_.previous_span_, zoom_span);
     zoom(zoom_span, gesture->getFocusX(), gesture->getFocusY());
     scale_context_.reset();
+    emit scaleEnd();
 }
 
 bool BrowserView::zoom(qreal zoom_span, int focus_x, int focus_y)
@@ -1050,9 +1063,9 @@ bool BrowserView::zoom(qreal zoom_span, int focus_x, int focus_y)
     {
         user_zoom = 1.0;
     }
-    else if (user_zoom > MAX_ZOOM_VALUE)
+    else if (user_zoom > zoom_max_factor_)
     {
-        user_zoom = MAX_ZOOM_VALUE;
+        user_zoom = zoom_max_factor_;
     }
 
     // Offset of span area
@@ -1101,5 +1114,34 @@ void BrowserView::clearHistoryData()
 {
     site_list_.clear();
     db_.clear();
+}
+
+void BrowserView::zoom(bool in)
+{
+    if (in)
+    {
+        if (!isMaxiZoomConditionReached())
+        {
+            setZoomFactor(zoomFactor() + zoom_step_);
+        }
+    }
+    else
+    {
+        if (!isMiniZoomConditionReached())
+        {
+            setZoomFactor(zoomFactor() - zoom_step_);
+        }
+    }
+}
+
+bool BrowserView::isMiniZoomConditionReached()
+{
+    QSize pageSize = page()->currentFrame()->contentsSize();
+    return ((pageSize.width() <= GetWindowMetrics(UIScreenWidthIndex)) && (zoomFactor() <= 1.0));
+}
+
+bool BrowserView::isMaxiZoomConditionReached()
+{
+    return zoomFactor() >= zoom_max_factor_;
 }
 }

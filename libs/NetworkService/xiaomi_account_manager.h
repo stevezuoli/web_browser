@@ -20,7 +20,8 @@ public:
     QString generateXiaomiAccountLoginUrl();
 
     // true = login; false = register
-    void login(const QString& ref_url, bool login_or_register = true);
+    void login(const QString& ref_url, const QString& option);
+    qreal getZoomFactor();
 
 Q_SIGNALS:
     //void startLogin();
@@ -29,7 +30,6 @@ Q_SIGNALS:
     //void startExchangeToken();
     void loginPageLoadFinished(bool);
     void loginFinished(bool);
-
     void pageChanged(const QString& message);
 
 private Q_SLOTS:

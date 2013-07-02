@@ -12,13 +12,15 @@ namespace ui
     MACRO_NAME(BACK_PRESSED, "back_pressed@kt.png", "back_pressed@kp.png")      \
     MACRO_NAME(BROWSER, "browser@kt.png", "browser@kp.png") \
     MACRO_NAME(BROWSER_GREY, "browser_grey@kt.png", "browser_grey@kp.png")   \
+    MACRO_NAME(CLOSE, "close@kt.png", "close@kp.png") \
     MACRO_NAME(FORWARD, "forward@kt.png", "forward@kp.png")   \
-    MACRO_NAME(FORWARD_GREY, "forward_grey@kt.png", "forward@kp.png")   \
+    MACRO_NAME(FORWARD_GREY, "forward_grey@kt.png", "forward_grey@kp.png")   \
     MACRO_NAME(FORWARD_PRESSED, "forward_pressed@kt.png", "forward_pressed@kp.png")   \
     MACRO_NAME(HOMEPAGE, "homepage@kt.png", "homepage@kp.png")   \
     MACRO_NAME(HOMEPAGE_PRESSED, "homepage_pressed@kt.png", "homepage_pressed@kp.png")   \
     MACRO_NAME(MENU, "menu@kt.png", "menu@kp.png")   \
     MACRO_NAME(MENU_PRESSED, "menu_pressed@kt.png", "menu_pressed@kp.png")   \
+    MACRO_NAME(MENU_DISABLED, "menu_disabled@kt.png", "menu_disabled@kp.png")   \
     MACRO_NAME(NORMAL_IME_KEY, "ime_key_50@kt.png", "ime_key_64@kp.png")   \
     MACRO_NAME(NORMAL_IME_KEY_PRESSED, "ime_key_50_pressed@kt.png", "ime_key_64_pressed@kp.png")   \
     MACRO_NAME(MID_IME_KEY, "ime_key_79@kt.png", "ime_key_96@kp.png")   \
@@ -40,7 +42,11 @@ namespace ui
     MACRO_NAME(READER_MODE, "reader_mode@kt.png", "reader_mode@kp.png")   \
     MACRO_NAME(NORMAL_MODE, "normal_mode@kt.png", "normal_mode@kp.png")   \
     MACRO_NAME(READER_MODE_DISABLE, "reader_mode_disabled@kt.png", "reader_mode_disabled@kp.png") \
-    MACRO_NAME(READER_MODE_PRESSED, "reader_mode_pressed@kt.png", "reader_mode_pressed@kp.png")
+    MACRO_NAME(READER_MODE_PRESSED, "reader_mode_pressed@kt.png", "reader_mode_pressed@kp.png") \
+    MACRO_NAME(KEYBOARD, "keyboard@kt.png", "keyboard@kp.png") \
+    MACRO_NAME(KEYBOARD_PRESSED, "keyboard_pressed@kt.png", "keyboard_pressed@kp.png") \
+    MACRO_NAME(KEYBOARD_DISABLE, "keyboard_disable@kt.png", "keyboard_disable@kp.png") \
+    MACRO_NAME(REFRESH, "refresh@kt.png", "refresh@kp.png") \
 
 enum ImageIndex
 {

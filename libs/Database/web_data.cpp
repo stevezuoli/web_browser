@@ -242,5 +242,10 @@ QString WebThumbnail::accessTime() const
 
     return "";
 }
+
+bool WebThumbnail::dateTimeGreaterThan(const QVariant& lhs, const QVariant& rhs)
+{
+    return ((const WebThumbnail&)(lhs)).accessDateTime() > ((const WebThumbnail&)(rhs)).accessDateTime();
+}
 }
 

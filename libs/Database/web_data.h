@@ -62,6 +62,8 @@ public:
 
     QString accessDate() const;
     QString accessTime() const;
+
+    static bool dateTimeGreaterThan(const QVariant& lhs, const QVariant& rhs);
 };
 
 struct GreaterByAccessTime

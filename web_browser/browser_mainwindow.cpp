@@ -1,4 +1,5 @@
 #include <QtGui/QtGui>
+#include <QScreen>
 #include "browser_mainwindow.h"
 #include "web_application.h"
 #include "const_strings.h"
@@ -20,11 +21,10 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
 #else
     : QWidget(parent)
 #endif
-    , exit_tool_button_(this)
     , history_back_tool_button_(this)
     , history_forward_tool_button_(this)
-    , reader_mode_button_(this)
     , menu_tool_button_(this)
+    , keyboard_button_(this)
     , address_lineedit_(new UrlLineEdit)
     , navigation_toolbar_(new DKToolBar(tr("Navigation"), this))
     , view_(new BrowserView)
@@ -32,10 +32,9 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     , history_page_(new HistoryPage(view_, this))
     , menu_(this)
     , xiaomi_account_manager_()
-    , evernote_account_manager_()
-    , m_homePageUrl(ConstStrings::HOME_PAGE)
+    , home_page_url_(ConstStrings::HOME_PAGE)
+    , reader_mode_(false)
 {
-    // setAttribute(Qt::WA_DeleteOnClose, true);
 #ifndef Q_WS_QWS
     resize(GetWindowMetrics(UIScreenWidthIndex), GetWindowMetrics(UIScreenHeightIndex));
 #else
@@ -59,7 +58,6 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     connect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
     connect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
     connect(view_, SIGNAL(keyboardKeyPressed(void)), this, SLOT(switchKeyboardVisible(void)));
-
     connect(view_, SIGNAL(inputFormFocused(const QString&, const QString&,
                                             const QString&, const QString&,
                                             const QString&, const QString&)),
@@ -67,11 +65,11 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
                                           const QString&, const QString&,
                                           const QString&, const QString&)));
     connect(view_, SIGNAL(inputFormLostFocus()), this, SLOT(onInputFormLostFocus()));
-    connect(view_, SIGNAL(enableReaderMode(bool)), this, SLOT(onEnableReaderMode(bool)));
     connect(view_, SIGNAL(displayTextOnAddressEdit(const QString&)), this, SLOT(onLineEditTextChanged(const QString&)));
+    connect(view_, SIGNAL(scaleBegin()), this, SLOT(onViewScaleBegin()));
+    connect(view_, SIGNAL(scaleEnd()), this, SLOT(onViewScaleEnd()));
 
-    connect(history_page_, SIGNAL(onHistoryPageQuit(bool)), this, SLOT(hideHistoryPage(bool)));
-    
+    connect(history_page_, SIGNAL(historyPageQuit(const QString&)), this, SLOT(hideHistoryPage(const QString&)));
 #ifdef Q_WS_QWS
     connect(qApp->desktop(), SIGNAL(resized(int)),
             this, SLOT(onScreenSizeChanged(int)), Qt::QueuedConnection);
@@ -84,6 +82,7 @@ BrowserMainWindow::~BrowserMainWindow()
 
 static QUrl guessUrlFromString(const QString &string)
 {
+    DebugWB("\t%s", qPrintable(string));
     QString url_str = string.trimmed();
     QRegExp test(QLatin1String("^[a-zA-Z]+\\:.*"));
 
@@ -150,17 +149,8 @@ void BrowserMainWindow::load(const QString & url_str, const QString & option)
         {
             xiaomi_account_manager_.reset(new XiaomiAccountManager);
             address_lineedit_->setModifyLineEditTextAutomatically(false);
-            setupXiaomiAccountConnection();
-            if (option.compare("login", Qt::CaseInsensitive) == 0)
-                xiaomi_account_manager_->login(url_str, true); // test register
-            else if (option.compare("register", Qt::CaseInsensitive) == 0)
-                xiaomi_account_manager_->login(url_str, false);
-        }
-        else if (EvernoteAccountManager::isEvernotePath(url_str))
-        {
-            evernote_account_manager_.reset(new EvernoteAccountManager());
-            setupEvernoteAccountConnection();
-            evernote_account_manager_->login(url_str);
+            setupXiaomiAccountConnect();
+            xiaomi_account_manager_->login(url_str, option);
         }
         else
         {
@@ -194,27 +184,26 @@ bool BrowserMainWindow::event(QEvent *e)
 void BrowserMainWindow::setupToolBar()
 {
     navigation_toolbar_->setStyleSheet("background: transparent;border: none");
+    navigation_toolbar_->setFixedHeight(GetWindowMetrics(WebBrowserNavigationBarIconHeightIndex));
     navigation_toolbar_->setIconSize(QSize(GetWindowMetrics(WebBrowserNavigationBarIconWidthIndex), GetWindowMetrics(WebBrowserNavigationBarIconHeightIndex)));
     navigation_toolbar_->setFloatable(false);
     navigation_toolbar_->setMovable(false);
     address_lineedit_->setFixedHeight(GetWindowMetrics(WebBrowserAddressEditHeightIndex));
-    navigation_toolbar_->addWidget(&exit_tool_button_);
     navigation_toolbar_->addWidget(&history_back_tool_button_);
     navigation_toolbar_->addWidget(&history_forward_tool_button_);
     navigation_toolbar_->addWidget(address_lineedit_);
-    navigation_toolbar_->addWidget(&reader_mode_button_);
+    navigation_toolbar_->addWidget(&keyboard_button_);
     navigation_toolbar_->addWidget(&menu_tool_button_);
 
-    QString styleSheet("QToolButton::enabled{image: url(%1)}" "QToolButton::pressed{image: url(%2)}" "QToolButton::disabled{image: url(%3)}");
-    //QString styleSheetDisabled("disabled{image: url(%1)}");
-    exit_tool_button_.setStyleSheet(styleSheet.arg(
-                ImageManager::GetImagePath(IMAGE_HOMEPAGE),
-                ImageManager::GetImagePath(IMAGE_HOMEPAGE_PRESSED),
-                ImageManager::GetImagePath(IMAGE_HOMEPAGE)));
+    QString styleSheet("QToolButton::enabled{image: url(%1)}"
+                       "QToolButton::pressed{image: url(%2)}" 
+                       "QToolButton::disabled{image: url(%3)}");
     history_back_tool_button_.setStyleSheet(styleSheet.arg(
                 ImageManager::GetImagePath(IMAGE_BACK), 
                 ImageManager::GetImagePath(IMAGE_BACK_PRESSED),
-                ImageManager::GetImagePath(IMAGE_BACK_GREY)));
+                ImageManager::GetImagePath(IMAGE_BACK_GREY)).
+                append("QToolButton{margin-left:%1px;}").
+                arg(GetWindowMetrics(WebBrowserNavigationBarMarginIndex)));
     history_forward_tool_button_.setStyleSheet(styleSheet.arg(
                 ImageManager::GetImagePath(IMAGE_FORWARD),
                 ImageManager::GetImagePath(IMAGE_FORWARD_PRESSED),
@@ -222,28 +211,22 @@ void BrowserMainWindow::setupToolBar()
     menu_tool_button_.setStyleSheet(styleSheet.arg(
                 ImageManager::GetImagePath(IMAGE_MENU),
                 ImageManager::GetImagePath(IMAGE_MENU_PRESSED),
-                ImageManager::GetImagePath(IMAGE_MENU)));
-    //history_back_tool_button_.setIcon(QIcon(ImageManager::GetImagePath(IMAGE_BACK)));
-    //history_forward_tool_button_.setIcon(QIcon(ImageManager::GetImagePath(IMAGE_FORWARD)));
-    //menu_tool_button_.setIcon(QIcon(ImageManager::GetImagePath(IMAGE_MENU)));
+                ImageManager::GetImagePath(IMAGE_MENU_DISABLED)).
+                append("QToolButton{margin-right:%1px;}").
+                arg(GetWindowMetrics(WebBrowserNavigationBarMarginIndex)));
 
-    QString reader_button_stylesheet("QToolButton::enabled{image: url(%1)}"
-                                     "QToolButton::pressed{image: url(%2)}"
-                                     "QToolButton::checked{image: url(%3)}"
-                                     "QToolButton::disabled{image: url(%4)}");
-    reader_mode_button_.setStyleSheet(reader_button_stylesheet.arg(
-                ImageManager::GetImagePath(IMAGE_READER_MODE),
-                ImageManager::GetImagePath(IMAGE_READER_MODE_PRESSED),
-                ImageManager::GetImagePath(IMAGE_NORMAL_MODE),
-                ImageManager::GetImagePath(IMAGE_READER_MODE_DISABLE)));
-    reader_mode_button_.setCheckable(true);
-    //reader_mode_button_.setEnabled(false);
+    keyboard_button_.setStyleSheet(styleSheet.arg(
+                ImageManager::GetImagePath(IMAGE_KEYBOARD),
+                ImageManager::GetImagePath(IMAGE_KEYBOARD_PRESSED),
+                ImageManager::GetImagePath(IMAGE_KEYBOARD_DISABLE)).
+                append("QToolButton{margin-left:%1px;}").
+                arg(GetWindowMetrics(UIPixelValue8Index)));
 
-    connect(&exit_tool_button_, SIGNAL(clicked()), view_, SLOT(returnToLibrary()));
+    updateBackForwardButtonStatus();
     connect(&history_back_tool_button_, SIGNAL(clicked()), this, SLOT(showBackHistoryPage()));
     connect(&history_forward_tool_button_, SIGNAL(clicked()), this, SLOT(showForwardHistoryPage()));
     connect(&menu_tool_button_, SIGNAL(clicked()), this, SLOT(showMenu()));
-    connect(&reader_mode_button_, SIGNAL(toggled(bool)), this, SLOT(onReaderModeToggled(bool)));
+    connect(&keyboard_button_, SIGNAL(clicked()), this, SLOT(switchKeyboardVisible()));
 
     connect(address_lineedit_->lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
     connect(address_lineedit_->lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(onAddressInputFocus(bool)));
@@ -255,8 +238,15 @@ void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
     switch (ke->key())
     {
     case Qt::Key_Escape:
-        view_->returnToLibrary();
+    case Qt::Key_Home:
+        exitBrowser();
         break;
+    case Qt::Key_Down:
+        if (address_lineedit_->hasFocus())
+        {
+            view_->setFocus();
+            return;
+        }
     default:
         QWidget::keyReleaseEvent(ke);
         break;
@@ -267,18 +257,6 @@ void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
 void BrowserMainWindow::keyPressEvent(QKeyEvent * ke)
 {
     ke->accept();
-
-    switch (ke->key())
-    {
-    case Qt::Key_Down:
-        if (address_lineedit_->hasFocus())
-        {
-            view_->setFocus();
-            return;
-        }
-    default:
-        break;
-    }
 
     QKeyEvent * key_event = new QKeyEvent(ke->type(), ke->key(), ke->modifiers(), ke->text());
     QApplication::postEvent(view_, key_event);
@@ -323,44 +301,84 @@ void BrowserMainWindow::onInputFormFocused(const QString& form_id,
 
 void BrowserMainWindow::showHomePage()
 {
-    load(m_homePageUrl);
+    DebugWB("");
+    showHistoryPage(false);
+    load(home_page_url_);
 }
 
 void BrowserMainWindow::showBackHistoryPage()
 {
+    showHistoryPage(false);
     view_->back();
 }
 
 void BrowserMainWindow::showForwardHistoryPage()
 {
+    showHistoryPage(false);
     view_->forward();
 }
 
 void BrowserMainWindow::showMenu()
 {
+    showSoftKeyboardIME(false);
     QPoint popupPoint = navigation_toolbar_->rect().bottomRight();
-    //popupPoint.rx() -= GetWindowMetrics(WebBrowserMenuWidthIndex);
     popupPoint.rx() -= menu_.sizeHint().width();
     menu_.popup(mapToGlobal(popupPoint));
 }
 
 void BrowserMainWindow::setupMenu()
 {
-    menu_.addAction(tr("DuoKan bookstore"), this, SLOT(showHomePage()));
+    menu_actions[MA_BookStore] = menu_.addAction(tr("DuoKan bookstore"), this, SLOT(showHomePage()));
     menu_.addSeparator();
-    menu_.addAction(tr("Bookmark this page"), this, SLOT(BookmarkThisPage()))->setEnabled(false);
+    //menu_.addAction(tr("Bookmark this page"), this, SLOT(bookmarkThisPage()))->setEnabled(false);
+    //menu_.addSeparator();
+    //menu_.addAction(tr("Bookmark manager"), this, SLOT(showBookmarkPage()))->setEnabled(false);
+    //menu_.addSeparator();
+    menu_actions[MA_History] = menu_.addAction(tr("History"), this, SLOT(showHistoryPage()));
     menu_.addSeparator();
-    menu_.addAction(tr("Bookmark manager"), this, SLOT(showBookmarkPage()))->setEnabled(false);
+    menu_actions[MA_Reader_Mode] = menu_.addAction(tr("Reader Mode"), this, SLOT(onReaderModeToggled()));
     menu_.addSeparator();
-    menu_.addAction(tr("History"), this, SLOT(showHistoryPage()));
+    menu_actions[MA_Zoom_In] = menu_.addAction(tr("ZoomIn"), this, SLOT(zoomIn()));
     menu_.addSeparator();
-    menu_.addAction(tr("Settings"), this, SLOT(showSettingsPage()))->setEnabled(false);
+    menu_actions[MA_Zoom_Out] = menu_.addAction(tr("Zoomtout"), this, SLOT(zoomOut()));
     menu_.addSeparator();
-    menu_.addAction(tr("ScreentShot"), this, SLOT(printScreen()));
+    //menu_.addAction(tr("Settings"), this, SLOT(showSettingsPage()))->setEnabled(false);
+    menu_actions[MA_Exit] = menu_.addAction(tr("Exit"), this, SLOT(exitBrowser()));
+    //menu_.addSeparator();
+    //menu_.addAction(tr("ScreentShot"), this, SLOT(printScreen()));
+}
+
+void BrowserMainWindow::updateMenuStatusInSpecialMode(bool inSpecialMode)
+{
+    for (int i = 0; i < MA_Count; ++i)
+    {
+        if (menu_actions[i])
+        {
+            menu_actions[i]->setVisible(inSpecialMode 
+                    && (i == MA_Exit || i == MA_Zoom_In || i == MA_Zoom_Out));
+        }
+    }
+}
+
+void BrowserMainWindow::updateMenuStatusInHistoryPage(bool inHistoryPage)
+{
+    for (int i = 0; i < MA_Count; ++i)
+    {
+        if (menu_actions[i])
+        {
+            menu_actions[i]->setVisible(!inHistoryPage || (i == MA_Exit || i == MA_BookStore));
+        }
+    }
 }
 
 void BrowserMainWindow::showHistoryPage(bool show)
 {
+    if (history_page_->isVisible() == show)
+    {
+        return;
+    }
+
+    updateMenuStatusInHistoryPage(show);
     if (history_page_)
     {
         history_page_->setVisible(show);
@@ -375,12 +393,15 @@ void BrowserMainWindow::showHistoryPage(bool show)
         }
     }
 }
-void BrowserMainWindow::hideHistoryPage(bool)
+void BrowserMainWindow::hideHistoryPage(const QString& url)
 {
+    DebugWB("");
     showHistoryPage(false);
+    if (!url.isEmpty())
+        load(url);
 }
 
-void BrowserMainWindow::BookmarkThisPage()
+void BrowserMainWindow::bookmarkThisPage()
 {
 }
 
@@ -392,48 +413,30 @@ void BrowserMainWindow::showSettingsPage()
 {
 }
 
-void BrowserMainWindow::onEnableReaderMode(bool enable)
+void BrowserMainWindow::onReaderModeToggled()
 {
-    //if (enable)
-    //{
-    //    if (!reader_mode_button_.isEnabled())
-    //    {
-    //        reader_mode_button_.setEnabled(true);
-    //        navigation_toolbar_->update();
-    //    }
-    //}
-    //else
-    //{
-    //    if (reader_mode_button_.isEnabled())
-    //    {
-    //        reader_mode_button_.setEnabled(false);
-    //        navigation_toolbar_->update();
-    //    }
-    //}
+    reader_mode_ = !reader_mode_;
+    menu_actions[MA_Reader_Mode]->setText(reader_mode_ ? tr("Normal Mode") : tr("Reader Mode"));
+    view_->enterReaderMode(reader_mode_);
 }
 
-void BrowserMainWindow::onReaderModeToggled(bool checked)
+void BrowserMainWindow::updateBackForwardButtonStatus()
 {
-    if (reader_mode_button_.isEnabled())
-        view_->enterReaderMode(checked);
+    history_back_tool_button_.setEnabled(view_->history()->canGoBack());
+    history_forward_tool_button_.setEnabled(view_->history()->canGoForward());
 }
 
 void BrowserMainWindow::onUrlChanged(const QUrl& url)
 {
-    qDebug("BrowserMainWindow::onUrlChanged %s", qPrintable(url.toString()));
-    if (!xiaomi_account_manager_)
-    {
-        int current = view_->GetCurrentHistoryPageIndex();
-        int total = view_->GetHistoryPageCounts();
-        if (current >= 0 && total > 0)
-        {
-            history_back_tool_button_.setEnabled(current > 0);
-            history_forward_tool_button_.setEnabled(current != total -1);
-        }
-    }
+    showHistoryPage(false);
+    //if (!view_->isSpecialAccountMode())
+    //{
+        updateBackForwardButtonStatus();
+    //}
 
     // reset reader mode button
-    reader_mode_button_.setChecked(false);
+    reader_mode_ = false;
+    menu_actions[MA_Reader_Mode]->setText(tr("Reader Mode"));
 }
 
 void BrowserMainWindow::onLinkClicked(const QUrl &new_url)
@@ -443,8 +446,9 @@ void BrowserMainWindow::onLinkClicked(const QUrl &new_url)
 
 void BrowserMainWindow::openUrlInAddress()
 {
+    DebugWB("\t%s", qPrintable(address_lineedit_->lineEdit()->text()));
+    showHistoryPage(false);
     showSoftKeyboardIME(false);
-    view_->setFocus();
     load(address_lineedit_->lineEdit()->text());
 }
 
@@ -466,6 +470,7 @@ void BrowserMainWindow::switchKeyboardVisible()
 {
     if (keyboard_ != 0)
     {
+        keyboard_->attachReceiver(view_);
         keyboard_->setParent(this);
         keyboard_->setVisible(!keyboard_->isVisible());
     }
@@ -490,26 +495,32 @@ void BrowserMainWindow::InitLayout()
     main_layout_.addWidget(view_);
     main_layout_.addWidget(history_page_);
     main_layout_.addWidget(keyboard_);
+    main_layout_.setSpacing(0);
+    main_layout_.setContentsMargins(0, 0, 0, 0);
     setLayout(&main_layout_);
 }
 
 void BrowserMainWindow::onLoadFinished(bool ok)
 {
+    DebugWB("");
+    if (view_->url().toString() == home_page_url_)
+    {
+        view_->history()->clear();
+    }
     view_->setFocus();
     showSoftKeyboardIME(false);
 }
 
-void BrowserMainWindow::setupXiaomiAccountConnection()
+void BrowserMainWindow::setupXiaomiAccountConnect()
 {
+    view_->setZoomFactor(xiaomi_account_manager_->getZoomFactor());
+    view_->setSpecialAccountMode(true);
+    updateMenuStatusInSpecialMode(true);
+    address_lineedit_->setEnabled(false);
+
     connect(xiaomi_account_manager_.get(), SIGNAL(pageChanged(const QString&)), this, SLOT(onXiaomiAccountPageChanged(const QString&)));
     connect(xiaomi_account_manager_.get(), SIGNAL(loginFinished(bool)), this, SLOT(onXiaomiAccountLoadFinished(bool)));
     xiaomi_account_manager_->connectWebView(view_);
-}
-
-void BrowserMainWindow::setupEvernoteAccountConnection()
-{
-    connect(evernote_account_manager_.get(), SIGNAL(loginFinished(bool)), this, SLOT(onEvernoteAccountLoadFinished(bool)));
-    evernote_account_manager_->connectWebView(view_);
 }
 
 void BrowserMainWindow::onXiaomiAccountPageChanged(const QString& message)
@@ -524,11 +535,18 @@ void BrowserMainWindow::onLineEditTextChanged(const QString& message)
 
 void BrowserMainWindow::paintEvent(QPaintEvent *e)
 {
+    QWidget::paintEvent(e);
     QPainter painter(this);
-    int lineTop = navigation_toolbar_->rect().bottom();
+    int lineTop = navigation_toolbar_->rect().bottom() - GetWindowMetrics(NavigationBarLinePixelIndex);
     painter.setBrush(Qt::black);
     painter.drawRect(0, lineTop, GetWindowMetrics(UIScreenWidthIndex), GetWindowMetrics(NavigationBarLinePixelIndex));
-    QWidget::paintEvent(e);
+}
+
+void BrowserMainWindow::exitBrowser()
+{
+    onLineEditTextChanged(tr("Exiting..."));
+    QApplication::processEvents();
+    view_->returnToLibrary();
 }
 
 void BrowserMainWindow::onXiaomiAccountLoadFinished(bool ok)
@@ -536,16 +554,7 @@ void BrowserMainWindow::onXiaomiAccountLoadFinished(bool ok)
     if (ok)
     {
         xiaomi_account_manager_->disconnectWebView();
-        view_->returnToLibrary();
-    }
-}
-
-void BrowserMainWindow::onEvernoteAccountLoadFinished(bool ok)
-{
-    if (ok)
-    {
-        evernote_account_manager_->disconnectWebView();
-        view_->returnToLibrary();
+        exitBrowser();
     }
 }
 
@@ -564,6 +573,7 @@ static QVector<QRgb>& colorTable()
 
 void BrowserMainWindow::printScreen()
 {
+    qDebug() << contentsMargins();
     QDateTime current_time = QDateTime::currentDateTime();
     qint64 current_time_num = current_time.toMSecsSinceEpoch();
 
@@ -577,6 +587,35 @@ void BrowserMainWindow::printScreen()
     QImage covert_image = image.convertToFormat(QImage::Format_Indexed8, colorTable());
     qDebug() << file_name;
     qDebug() << covert_image.save(file_name);
+}
+
+void BrowserMainWindow::zoomIn()
+{
+    view_->zoom(true);
+    updateMenuStatusOnZoomFactorChanged();
+}
+
+void BrowserMainWindow::zoomOut()
+{
+    view_->zoom(false);
+    updateMenuStatusOnZoomFactorChanged();
+}
+
+void BrowserMainWindow::onViewScaleBegin()
+{
+    showSoftKeyboardIME(false);
+    menu_.setVisible(false);
+}
+
+void BrowserMainWindow::onViewScaleEnd()
+{
+    updateMenuStatusOnZoomFactorChanged();
+}
+
+void BrowserMainWindow::updateMenuStatusOnZoomFactorChanged()
+{
+    menu_actions[MA_Zoom_In]->setEnabled(!view_->isMaxiZoomConditionReached());
+    menu_actions[MA_Zoom_Out]->setEnabled(!view_->isMiniZoomConditionReached());
 }
 }
 

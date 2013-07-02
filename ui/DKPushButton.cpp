@@ -30,15 +30,6 @@ QPushButton:checked                     \
     color: white;                       \
     background-color: black;            \
 }                                       \
-QPushButton:focus                       \
-{                                       \
-    padding-left: 0px;                  \
-    padding-top: 0px;                   \
-    color: white;                       \
-    border-width: 0px;                  \
-    border-color: white;                \
-    background-color: black;            \
-}                                       \
 QPushButton:disabled                    \
 {                                       \
     padding-left: 0px;                  \

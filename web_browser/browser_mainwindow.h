@@ -4,7 +4,6 @@
 #include <QtGui/QtGui>
 #include "Base/base.h"
 #include "NetworkService/xiaomi_account_manager.h"
-#include "NetworkService/evernote_account_manager.h"
 
 #include "ui/DKMenu.h"
 #include "ui/DKToolBar.h"
@@ -77,30 +76,35 @@ private Q_SLOTS:
     void switchKeyboardVisible();
     void setHomePageUrl(const QString& url)
     {
-        m_homePageUrl = url;
+        home_page_url_ = url;
     }
 
-    // xiaomi account
     void onXiaomiAccountPageChanged(const QString& message);
     void onXiaomiAccountLoadFinished(bool ok);
 
-    // Evernote account
-    void onEvernoteAccountLoadFinished(bool ok);
-
     // reader mode
-    void onEnableReaderMode(bool enable);
-    void onReaderModeToggled(bool checked);
+    void onReaderModeToggled();
 
     // text displayed on line edit
     void onLineEditTextChanged(const QString& message);
 
     void showHomePage();
     void showHistoryPage(bool show = true);
-    void hideHistoryPage(bool);
-    void BookmarkThisPage();
+    void hideHistoryPage(const QString&);
+    void bookmarkThisPage();
     void showBookmarkPage();
     void showSettingsPage();
     void printScreen();
+
+    // exit
+    void exitBrowser();
+
+    //zoom text
+    void zoomIn();
+    void zoomOut();
+
+    void onViewScaleBegin();
+    void onViewScaleEnd();
 private:
     void loadThumbnails();
     void thumbnailModel(QStandardItemModel & model);
@@ -108,15 +112,28 @@ private:
     void setupMenu();
     void InitLayout();
 
-    void setupXiaomiAccountConnection();
-    void setupEvernoteAccountConnection();
+    void setupXiaomiAccountConnect();
+    void updateBackForwardButtonStatus();
+    void updateMenuStatusInSpecialMode(bool inSpecialMode);
+    void updateMenuStatusInHistoryPage(bool inHistoryPage);
+    void updateMenuStatusOnZoomFactorChanged();
 
 private:
+    enum MenuAction
+    {
+        MA_BookStore,
+        MA_History,
+        MA_Zoom_In,
+        MA_Zoom_Out,
+        MA_Reader_Mode,
+        MA_Exit,
+        MA_Count
+    };
     QToolButton                exit_tool_button_;
     QToolButton                history_back_tool_button_;
     QToolButton                history_forward_tool_button_;
-    QToolButton                reader_mode_button_;
     QToolButton                menu_tool_button_;
+    QToolButton                keyboard_button_;
     
     UrlLineEdit*           address_lineedit_;
     DKToolBar*             navigation_toolbar_;
@@ -126,10 +143,11 @@ private:
     DKMenu                menu_;
     QVBoxLayout            main_layout_;
     QStandardItemModel     model_;
+    QAction*               menu_actions[MA_Count];
 
     shared_ptr<XiaomiAccountManager>  xiaomi_account_manager_;
-    shared_ptr<EvernoteAccountManager> evernote_account_manager_;
-    QString                m_homePageUrl;
+    QString                home_page_url_;
+    bool                   reader_mode_;
 };
 
 };   // namespace webbrowser
