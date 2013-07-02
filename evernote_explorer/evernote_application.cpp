@@ -9,7 +9,12 @@ static const int DEFAULT_USER_STORE_PORT = 80;
     
 EvernoteApplication::EvernoteApplication(int &argc, char **argv)
     //: QApplication(argc, argv)
+    : host_(DEFAULT_HOST)
 {
+    if (argc >= 3)
+    {
+        host_ = QString::fromLocal8Bit(argv[2]);
+    }
 }
 
 EvernoteApplication::~EvernoteApplication(void)
@@ -18,9 +23,8 @@ EvernoteApplication::~EvernoteApplication(void)
     
 bool EvernoteApplication::createSession()
 {
-    QString host = DEFAULT_HOST;
     int port = DEFAULT_USER_STORE_PORT;
-    return manager_.createSession(host, port);
+    return manager_.createSession(host_, port);
 }
     
 QString EvernoteApplication::defaultFolder()

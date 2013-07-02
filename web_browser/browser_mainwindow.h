@@ -4,6 +4,7 @@
 #include <QtGui/QtGui>
 #include "Base/base.h"
 #include "NetworkService/xiaomi_account_manager.h"
+#include "NetworkService/evernote_account_manager.h"
 
 #include "ui/DKMenu.h"
 #include "ui/DKToolBar.h"
@@ -82,6 +83,9 @@ private Q_SLOTS:
     void onXiaomiAccountPageChanged(const QString& message);
     void onXiaomiAccountLoadFinished(bool ok);
 
+    // Evernote account
+    void onEvernoteAccountLoadFinished(bool ok);
+    
     // reader mode
     void onReaderModeToggled();
 
@@ -113,6 +117,8 @@ private:
     void InitLayout();
 
     void setupXiaomiAccountConnect();
+    void setupEvernoteAccountConnection();
+    
     void updateBackForwardButtonStatus();
     void updateMenuStatusInSpecialMode(bool inSpecialMode);
     void updateMenuStatusInHistoryPage(bool inHistoryPage);
@@ -146,6 +152,7 @@ private:
     QAction*               menu_actions[MA_Count];
 
     shared_ptr<XiaomiAccountManager>  xiaomi_account_manager_;
+    shared_ptr<EvernoteAccountManager> evernote_account_manager_;
     QString                home_page_url_;
     bool                   reader_mode_;
 };

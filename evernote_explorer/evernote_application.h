@@ -42,6 +42,7 @@ private:
     QDir dir_;
     Entries entries_;
     EvernoteManager manager_;
+    QString host_;
 };
 
 };  // namespace evernote_kindle

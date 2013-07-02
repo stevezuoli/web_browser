@@ -32,6 +32,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     , history_page_(new HistoryPage(view_, this))
     , menu_(this)
     , xiaomi_account_manager_()
+    , evernote_account_manager_()
     , home_page_url_(ConstStrings::HOME_PAGE)
     , reader_mode_(false)
 {
@@ -151,6 +152,12 @@ void BrowserMainWindow::load(const QString & url_str, const QString & option)
             address_lineedit_->setModifyLineEditTextAutomatically(false);
             setupXiaomiAccountConnect();
             xiaomi_account_manager_->login(url_str, option);
+        }
+        else if (EvernoteAccountManager::isEvernotePath(url_str))
+        {
+            evernote_account_manager_.reset(new EvernoteAccountManager());
+            setupEvernoteAccountConnection();
+            evernote_account_manager_->login(url_str);
         }
         else
         {
@@ -522,6 +529,12 @@ void BrowserMainWindow::setupXiaomiAccountConnect()
     connect(xiaomi_account_manager_.get(), SIGNAL(loginFinished(bool)), this, SLOT(onXiaomiAccountLoadFinished(bool)));
     xiaomi_account_manager_->connectWebView(view_);
 }
+    
+void BrowserMainWindow::setupEvernoteAccountConnection()
+{
+    connect(evernote_account_manager_.get(), SIGNAL(loginFinished(bool)), this, SLOT(onEvernoteAccountLoadFinished(bool)));
+    evernote_account_manager_->connectWebView(view_);
+}
 
 void BrowserMainWindow::onXiaomiAccountPageChanged(const QString& message)
 {
@@ -555,6 +568,15 @@ void BrowserMainWindow::onXiaomiAccountLoadFinished(bool ok)
     {
         xiaomi_account_manager_->disconnectWebView();
         exitBrowser();
+    }
+}
+    
+void BrowserMainWindow::onEvernoteAccountLoadFinished(bool ok)
+{
+    if (ok)
+    {
+        evernote_account_manager_->disconnectWebView();
+        view_->returnToLibrary();
     }
 }
 
