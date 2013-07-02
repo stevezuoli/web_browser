@@ -24,6 +24,7 @@ public:
 Q_SIGNALS:
     void askForAuthorization(QString auth_url);
     void loginFinished(bool);
+    void pageChanged(const QString& message);
 
 private Q_SLOTS:
     void onRequestReady(QByteArray reply);

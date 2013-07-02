@@ -80,7 +80,7 @@ private Q_SLOTS:
         home_page_url_ = url;
     }
 
-    void onXiaomiAccountPageChanged(const QString& message);
+    void onAccountPageChanged(const QString& message);
     void onXiaomiAccountLoadFinished(bool ok);
 
     // Evernote account

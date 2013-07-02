@@ -525,7 +525,7 @@ void BrowserMainWindow::setupXiaomiAccountConnect()
     updateMenuStatusInSpecialMode(true);
     address_lineedit_->setEnabled(false);
 
-    connect(xiaomi_account_manager_.get(), SIGNAL(pageChanged(const QString&)), this, SLOT(onXiaomiAccountPageChanged(const QString&)));
+    connect(xiaomi_account_manager_.get(), SIGNAL(pageChanged(const QString&)), this, SLOT(onAccountPageChanged(const QString&)));
     connect(xiaomi_account_manager_.get(), SIGNAL(loginFinished(bool)), this, SLOT(onXiaomiAccountLoadFinished(bool)));
     xiaomi_account_manager_->connectWebView(view_);
 }
@@ -533,10 +533,11 @@ void BrowserMainWindow::setupXiaomiAccountConnect()
 void BrowserMainWindow::setupEvernoteAccountConnection()
 {
     connect(evernote_account_manager_.get(), SIGNAL(loginFinished(bool)), this, SLOT(onEvernoteAccountLoadFinished(bool)));
+    connect(evernote_account_manager_.get(), SIGNAL(pageChanged(const QString&)), this, SLOT(onAccountPageChanged(const QString&)));
     evernote_account_manager_->connectWebView(view_);
 }
 
-void BrowserMainWindow::onXiaomiAccountPageChanged(const QString& message)
+void BrowserMainWindow::onAccountPageChanged(const QString& message)
 {
     onLineEditTextChanged(message);
 }

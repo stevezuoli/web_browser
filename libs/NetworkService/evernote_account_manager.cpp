@@ -102,6 +102,7 @@ bool EvernoteAccountManager::isEvernotePath(const QString& path)
 
 void EvernoteAccountManager::login(const QString& option)
 {
+    emit pageChanged(tr("Direct to Evernote..."));
     askForRequestToken(option);
 }
 
