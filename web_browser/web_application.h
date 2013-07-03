@@ -45,6 +45,9 @@ private:
     void initTheme();
     void loadExternalFonts();
     void loadSettings();
+    static QString localStoragePath();
+    
+    void customizeBrwoser();
 
 private:
     BrowserMainWindow* main_window_;

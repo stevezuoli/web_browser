@@ -16,6 +16,15 @@ static const int CACHE_MIN_DEAD_CAPACITY = 1024 * 1024;
 static const int CACHE_MAX_DEAD = 3 * 1024 * 1024;
 static const int TOTAL_CAPACITY = 4 * 1024 * 1024;
 
+QString WebApplication::localStoragePath()
+{
+#ifdef BUILD_FOR_ARM
+    return "mnt/us/DK_System/xKindle/web_browser";
+#else
+    return QDir::homePath();
+#endif
+}
+
 WebApplication* WebApplication::instance()
 {
     return static_cast<WebApplication*>(QCoreApplication::instance());
@@ -34,9 +43,7 @@ WebApplication::WebApplication(int &argc, char **argv)
 
     QCoreApplication::setOrganizationName(QLatin1String("Duokan"));
     QCoreApplication::setApplicationName(QLatin1String("Web Browser"));
-
-    QWebSettings::setMaximumPagesInCache(4);
-    QWebSettings::setObjectCacheCapacities(CACHE_MIN_DEAD_CAPACITY, CACHE_MAX_DEAD, TOTAL_CAPACITY);
+    customizeBrwoser();
 
     // parse arguments
     if (argc >= 2)
@@ -49,14 +56,6 @@ WebApplication::WebApplication(int &argc, char **argv)
         additional_option_ = QString::fromLocal8Bit(argv[2]);
     }
 
-    QString dirName = QString(ConstStrings::WEBBROWSER_RES_PATH) + QLatin1String("/.") + QString(ConstStrings::FAVICONS);
-    QDir dir(dirName);
-    if (!dir.exists())
-    {
-        dir.mkpath(dirName);
-    }
-
-    QWebSettings::setIconDatabasePath(dirName);
     //main_window_->attachBookmarkModel(bookmark_model_.get());
     initTheme();
     loadExternalFonts();
@@ -138,6 +137,27 @@ void WebApplication::loadExternalFonts()
     // Before we open the document, make sure the external fonts
     // have been installed. It's necessary as user may use external
     // fonts, but by default, these fonts are not loaded.
+}
+    
+void WebApplication::customizeBrwoser()
+{
+    QWebSettings::setMaximumPagesInCache(4);
+    QWebSettings::setObjectCacheCapacities(CACHE_MIN_DEAD_CAPACITY, CACHE_MAX_DEAD, TOTAL_CAPACITY);
+    QWebSettings::enablePersistentStorage(localStoragePath());
+    
+    QWebSettings* global_settings = QWebSettings::globalSettings();
+    global_settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, true);
+    global_settings->setAttribute(QWebSettings::JavascriptCanCloseWindows, true);
+    global_settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, true);
+    global_settings->setAttribute(QWebSettings::FrameFlatteningEnabled, true);
+    global_settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
+    QString dirName = QString(ConstStrings::WEBBROWSER_RES_PATH) + QLatin1String("/.") + QString(ConstStrings::FAVICONS);
+    QDir dir(dirName);
+    if (!dir.exists())
+    {
+        dir.mkpath(dirName);
+    }
+    QWebSettings::setIconDatabasePath(dirName);
 }
 
 void WebApplication::loadSettings()

@@ -33,6 +33,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     , menu_(this)
     , xiaomi_account_manager_()
     , evernote_account_manager_()
+    , xiaomi_migration_manager_()
     , home_page_url_(ConstStrings::HOME_PAGE)
     , reader_mode_(false)
 {
@@ -158,6 +159,12 @@ void BrowserMainWindow::load(const QString & url_str, const QString & option)
             evernote_account_manager_.reset(new EvernoteAccountManager());
             setupEvernoteAccountConnection();
             evernote_account_manager_->login(url_str);
+        }
+        else if (XiaomiMigrationManager::isXiaomiMigrationPath(url_str))
+        {
+            xiaomi_migration_manager_.reset(new XiaomiMigrationManager(XiaomiMigrationManager::getHostFromPath(url_str)));
+            setupXiaomiMigrationConnection();
+            xiaomi_migration_manager_->start();
         }
         else
         {
@@ -530,6 +537,20 @@ void BrowserMainWindow::setupXiaomiAccountConnect()
     xiaomi_account_manager_->connectWebView(view_);
 }
     
+void BrowserMainWindow::setupXiaomiMigrationConnection()
+{
+    view_->setZoomFactor(xiaomi_migration_manager_->getZoomFactor());
+    view_->setSpecialAccountMode(true);
+    updateMenuStatusInSpecialMode(true);
+    address_lineedit_->setEnabled(false);
+    
+    connect(xiaomi_migration_manager_.get(), SIGNAL(pageChanged(const QString&)), this, SLOT(onAccountPageChanged(const QString&)));
+    connect(xiaomi_migration_manager_.get(), SIGNAL(migrationSucceeded()), this, SLOT(onXiaomiMigrationFinished()));
+    connect(xiaomi_migration_manager_.get(), SIGNAL(migrationCanceled()), this, SLOT(onXiaomiMigrationFinished()));
+    connect(xiaomi_migration_manager_.get(), SIGNAL(migrationFailed()), this, SLOT(onXiaomiMigrationFinished()));
+    xiaomi_migration_manager_->connectWebView(view_);
+}
+    
 void BrowserMainWindow::setupEvernoteAccountConnection()
 {
     connect(evernote_account_manager_.get(), SIGNAL(loginFinished(bool)), this, SLOT(onEvernoteAccountLoadFinished(bool)));
@@ -570,6 +591,12 @@ void BrowserMainWindow::onXiaomiAccountLoadFinished(bool ok)
         xiaomi_account_manager_->disconnectWebView();
         exitBrowser();
     }
+}
+    
+void BrowserMainWindow::onXiaomiMigrationFinished()
+{
+    xiaomi_migration_manager_->disconnectWebView();
+    exitBrowser();
 }
     
 void BrowserMainWindow::onEvernoteAccountLoadFinished(bool ok)

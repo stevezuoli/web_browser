@@ -221,7 +221,12 @@ QList<QNetworkCookie> CookieJar::cookiesForUrl(const QUrl &url) const
         return noCookies;
     }
 
-    return QNetworkCookieJar::cookiesForUrl(url);
+    QList<QNetworkCookie> cookieList = QNetworkCookieJar::cookiesForUrl(url);
+    qDebug("Cookie for URL:%s", qPrintable(url.toString()));
+    foreach(QNetworkCookie cookie, cookieList) {
+        qDebug("Raw Data:%s", qPrintable(cookie.toRawForm()));
+    }
+    return cookieList;
 }
 
 bool CookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl &url)

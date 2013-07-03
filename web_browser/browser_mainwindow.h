@@ -5,6 +5,7 @@
 #include "Base/base.h"
 #include "NetworkService/xiaomi_account_manager.h"
 #include "NetworkService/evernote_account_manager.h"
+#include "NetworkService/xiaomi_migration_manager.h"
 
 #include "ui/DKMenu.h"
 #include "ui/DKToolBar.h"
@@ -82,6 +83,7 @@ private Q_SLOTS:
 
     void onAccountPageChanged(const QString& message);
     void onXiaomiAccountLoadFinished(bool ok);
+    void onXiaomiMigrationFinished();
 
     // Evernote account
     void onEvernoteAccountLoadFinished(bool ok);
@@ -118,6 +120,7 @@ private:
 
     void setupXiaomiAccountConnect();
     void setupEvernoteAccountConnection();
+    void setupXiaomiMigrationConnection();
     
     void updateBackForwardButtonStatus();
     void updateMenuStatusInSpecialMode(bool inSpecialMode);
@@ -153,6 +156,7 @@ private:
 
     shared_ptr<XiaomiAccountManager>  xiaomi_account_manager_;
     shared_ptr<EvernoteAccountManager> evernote_account_manager_;
+    shared_ptr<XiaomiMigrationManager> xiaomi_migration_manager_;
     QString                home_page_url_;
     bool                   reader_mode_;
 };

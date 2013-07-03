@@ -29,6 +29,8 @@ public:
     virtual ~XiaomiMigrationManager();
 
     static bool isXiaomiMigrationPath(const QString& path);
+    static QString getHostFromPath(const QString& path);
+
     void connectWebView(QWebView* view);
     void disconnectWebView();
     bool start();
@@ -48,10 +50,17 @@ private Q_SLOTS:
     void onMigrationSucceeded();
     void onMigrationCanceled();
     void onMigrationFailed();
+
+private:
+    void addCookiesForEntry(const QUrl& url);
+    void saveResult();
     
 private:
     QWebView* view_;
     MigrationServerConfiguration config_;
+    QString mi_user_id_;
+    QString mi_token_;
+    QString expire_;
 };
 
 };

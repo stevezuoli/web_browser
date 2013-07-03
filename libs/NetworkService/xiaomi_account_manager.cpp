@@ -535,68 +535,20 @@ bool XiaomiAccountManager::saveResults(const QVariant& status, const QVariant& t
     {
         token_str = token.toString();
     }
-
-    QDomDocument doc("XiaomiToken");
-    QDomElement root = doc.createElement("XiaomiToken");
-    doc.appendChild(root);
-
-    QDomElement user_id_element = doc.createElement("id");
-    root.appendChild(user_id_element);
-    QDomText user_id = doc.createTextNode(user_id_);
-    user_id_element.appendChild(user_id);
-
-    QDomElement code_element = doc.createElement("code");
-    root.appendChild(code_element);
-    QString code_str = QString("%1").arg(result);
-    QDomText code = doc.createTextNode(code_str);
-    code_element.appendChild(code);
-
-    QDomElement msg_element = doc.createElement("msg");
-    root.appendChild(msg_element);
-    QDomText msg = doc.createTextNode(message);
-    msg_element.appendChild(msg);
-
-    QDomElement token_element = doc.createElement("token");
-    root.appendChild(token_element);
-    QDomText value = doc.createTextNode(token_str);
-    token_element.appendChild(value);
-
+    
     // save token to db
     XiaomiToken token_for_db;
     token_for_db.mutableToken() = token_str;
     token_for_db.mutableUserId() = user_id_;
+    QString code_str = QString("%1").arg(result);
+    token_for_db.mutableCode() = code_str;
+    token_for_db.mutableMessage() = message;
+
     TokenRing token_ring;
     token_ring.setXiaomiToken(token_for_db);
-
-    QString xml = doc.toString();
-    qDebug("XiaomiToken:%s", qPrintable(xml));
-
-    QString path = XiaomiToken::home();
-    QDir dir(path);
-    if (!dir.exists(XiaomiToken::dirName()))
-    {
-        if (!dir.mkdir(XiaomiToken::dirName()))
-        {
-            return false;
-        }
-    }
-
-    if (dir.cd(XiaomiToken::dirName()))
-    {
-        // Change folder attribute.
-        changeToHidden(dir.absolutePath().toLocal8Bit().constData());
-
-        path = dir.filePath("token.xml");
-        QFile file(path);
-        if (file.open(QIODevice::WriteOnly | QIODevice::Text)) 
-        {
-            QTextStream TextStream(&file);
-            TextStream << xml;
-            file.close();
-            return true;
-        }
-    }
-    return false;
+    
+    // save to file
+    return token_for_db.saveToFile();
 }
 
 }

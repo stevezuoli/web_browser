@@ -14,16 +14,15 @@ using namespace web_database;
 namespace network_service
 {
 
-static const QString XIAOMI_HOST = "http://login.dushu.xiaomi.com";
+static const QString DUOKAN_HOST = "http://book.duokan.com";
 static const QString SANDBOX_HOST = "http://dkmars";
 
-static const QString MIGRATION_START_URI = "/dk_id/v0/migrate/kindle/start";
-static const QString MIGRATION_OK_URI = "/dk_id/v0/migrate/kindle/ok";
-static const QString MIGRATION_FAIL_URI = "/dk_id/v0/migrate/kindle/fail";
-static const QString MIGRATION_CANCEL_URI = "/dk_id/v0/migrate/kindle/cancel";
+static const QString MIGRATION_START_URI = "/dk_id/migrate/kindle/start";
+static const QString MIGRATION_OK_URI = "/dk_id/migrate/kindle/success";
+static const QString MIGRATION_FAIL_URI = "/dk_id/migrate/kindle/fail";
+static const QString MIGRATION_CANCEL_URI = "/dk_id/migrate/kindle/cancel";
 
 static const qreal MIGRATION_ZOOM = 1.0;
-    
 
 QString MigrationServerConfiguration::migrationServerStart()
 {
@@ -58,6 +57,16 @@ XiaomiMigrationManager::~XiaomiMigrationManager()
 bool XiaomiMigrationManager::isXiaomiMigrationPath(const QString& path)
 {
     return path.endsWith(MIGRATION_START_URI);
+}
+    
+QString XiaomiMigrationManager::getHostFromPath(const QString& path)
+{
+    int idx = path.indexOf(MIGRATION_START_URI);
+    if (idx > 0)
+    {
+        return path.left(idx);
+    }
+    return QString();
 }
 
 void XiaomiMigrationManager::connectWebView(QWebView* view)
@@ -105,37 +114,28 @@ bool XiaomiMigrationManager::start()
 {
     QString start_uri = config_.migrationServerStart();
     QUrl url = guessUrlFromString(start_uri);
-
-    // prepare POST content
-    QByteArray post_data;
-    /* TODO.
-    post_data.append("uid")
-    .append("=")
-    .append(UrlEncode(user_id_.toStdString().c_str()))
-    .append("&");
-    
-    post_data.append("deviceid")
-    .append("=")
-    .append(DeviceInfo::GetDeviceID().c_str())
-    .append("&");
-    
-    post_data.append("appid")
-    .append("=")
-    .append(UrlEncode("KindleUser"))
-    .append("&");
-    
-    post_data.append("format")
-    .append("=")
-    .append(UrlEncode("json"));
-    */ 
-    
-    QNetworkRequest request(url);
-    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-    request.setHeader(QNetworkRequest::ContentLengthHeader, post_data.size());
-    
-    qDebug("\nPost Data:%s\n", post_data.constData());
-    view_->load(request, QNetworkAccessManager::PostOperation, post_data);
+    addCookiesForEntry(url);
+    view_->load(url);
     return true;
+}
+    
+void XiaomiMigrationManager::addCookiesForEntry(const QUrl& url)
+{
+    CookieJar* xiaomi_cookie_jar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
+    QList<QNetworkCookie> cookies = xiaomi_cookie_jar->cookiesForUrl(url);
+    
+    // add new cookies for app id and device id
+    QByteArray app_id_name("app_id");
+    QByteArray kindle_user("KindleUser");
+    QNetworkCookie app_id_cookie(app_id_name, kindle_user);
+    
+    QByteArray device_id_name("device_id");
+    QByteArray device_id(DeviceInfo::GetDeviceID().c_str());
+    QNetworkCookie device_id_cookie(device_id_name, device_id);
+    
+    cookies.push_back(app_id_cookie);
+    cookies.push_back(device_id_cookie);
+    xiaomi_cookie_jar->setCookiesFromUrl(cookies, url);
 }
 
 void XiaomiMigrationManager::onLoadStarted()
@@ -152,17 +152,17 @@ void XiaomiMigrationManager::onLoadFinished(bool ok)
 void XiaomiMigrationManager::onUrlChanged(const QUrl& url)
 {
     QString my_url = url.toEncoded();
-    if (my_url.startsWith(config_.migrationServerOK()))
+    if (my_url.contains(config_.migrationServerOK()))
     {
         emit pageChanged(tr("Migration Succeeded"));
         emit migrationSucceeded();
     }
-    else if (my_url.startsWith(config_.migrationServerFail()))
+    else if (my_url.contains(config_.migrationServerFail()))
     {
         emit pageChanged(tr("Migration Failed"));
         emit migrationFailed();
     }
-    else if (my_url.startsWith(config_.migrationServerCancel()))
+    else if (my_url.contains(config_.migrationServerCancel()))
     {
         emit pageChanged(tr("Migration Canceled"));
         emit migrationCanceled();
@@ -185,6 +185,11 @@ void XiaomiMigrationManager::onMigrationCanceled()
 void XiaomiMigrationManager::onMigrationFailed()
 {
     
+}
+
+
+void XiaomiMigrationManager::saveResult()
+{
 }
 
 }
