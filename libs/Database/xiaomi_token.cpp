@@ -69,7 +69,43 @@ bool XiaomiToken::saveToFile()
 
 bool XiaomiMigration::saveToFile()
 {
+    QDomDocument doc("XiaomiMigration");
+    QDomElement root = doc.createElement("XiaomiMigration");
+    doc.appendChild(root);
     
+    appendXmlTextNode("mi_id", mi_id_, doc, root);
+    appendXmlTextNode("mi_device_id", mi_device_id_, doc, root);
+    appendXmlTextNode("message", message_, doc, root);
+    appendXmlTextNode("token", token_, doc, root);
+    
+    QString xml = doc.toString();
+    qDebug("XiaomiMigration:%s", qPrintable(xml));
+    
+    QString path = miTokenHome();
+    QDir dir(path);
+    if (!dir.exists(miTokenDir()))
+    {
+        if (!dir.mkdir(miTokenDir()))
+        {
+            return false;
+        }
+    }
+    
+    if (dir.cd(miTokenDir()))
+    {
+        // Change folder attribute.
+        changeToHidden(dir.absolutePath().toLocal8Bit().constData());
+        path = dir.filePath("migration.xml");
+        QFile file(path);
+        if (file.open(QIODevice::WriteOnly | QIODevice::Text))
+        {
+            QTextStream TextStream(&file);
+            TextStream << xml;
+            file.close();
+            return true;
+        }
+    }
+    return false;
 }
 
 XiaomiTokenDB::XiaomiTokenDB()

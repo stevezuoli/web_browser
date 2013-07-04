@@ -2,6 +2,10 @@
 #define XIAOMI_MIGRATION_MANAGER_H_
 
 #include <QtWebKit/QtWebKit>
+#include "Database/xiaomi_token.h"
+#include "Database/token_ring.h"
+
+using namespace web_database;
 
 namespace network_service
 {
@@ -54,13 +58,12 @@ private Q_SLOTS:
 private:
     void addCookiesForEntry(const QUrl& url);
     void saveResult();
+    bool loadDataFromCookies(const QUrl& url);
     
 private:
     QWebView* view_;
     MigrationServerConfiguration config_;
-    QString mi_user_id_;
-    QString mi_token_;
-    QString expire_;
+    XiaomiMigration migration_result_;
 };
 
 };

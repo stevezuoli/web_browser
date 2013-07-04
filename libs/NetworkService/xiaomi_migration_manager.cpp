@@ -4,8 +4,6 @@
 
 #include "Device/DeviceInfo.h"
 #include "Device/fat.h"
-#include "Database/xiaomi_token.h"
-#include "Database/token_ring.h"
 
 #define TEST_SERVER
 
@@ -22,6 +20,7 @@ static const QString MIGRATION_OK_URI = "/dk_id/migrate/kindle/success";
 static const QString MIGRATION_FAIL_URI = "/dk_id/migrate/kindle/fail";
 static const QString MIGRATION_CANCEL_URI = "/dk_id/migrate/kindle/cancel";
 
+static const QString MIGRATION_COOKIE_CHECKPOINT = "/dk_id/migrate";
 static const qreal MIGRATION_ZOOM = 1.0;
 
 QString MigrationServerConfiguration::migrationServerStart()
@@ -48,6 +47,9 @@ XiaomiMigrationManager::XiaomiMigrationManager(const QString& host)
     : view_(0)
     , config_(host)
 {
+    connect(this, SIGNAL(migrationSucceeded()), SLOT(onMigrationSucceeded()));
+    connect(this, SIGNAL(migrationCanceled()), SLOT(onMigrationCanceled()));
+    connect(this, SIGNAL(migrationFailed()), SLOT(onMigrationFailed()));
 }
 
 XiaomiMigrationManager::~XiaomiMigrationManager()
@@ -137,6 +139,29 @@ void XiaomiMigrationManager::addCookiesForEntry(const QUrl& url)
     cookies.push_back(device_id_cookie);
     xiaomi_cookie_jar->setCookiesFromUrl(cookies, url);
 }
+    
+bool XiaomiMigrationManager::loadDataFromCookies(const QUrl& url)
+{
+    CookieJar* xiaomi_cookie_jar = dynamic_cast<CookieJar*>(getAccessManagerInstance()->cookieJar());
+    QList<QNetworkCookie> cookies = xiaomi_cookie_jar->cookiesForUrl(url);
+    
+    foreach(QNetworkCookie cookie, cookies)
+    {
+        if (cookie.name() == "mi_token")
+        {
+            migration_result_.mutableToken() = QString::fromLocal8Bit(cookie.value().data());
+        }
+        else if (cookie.name() == "mi_device_id")
+        {
+            migration_result_.mutableDeviceId() = QString::fromLocal8Bit(cookie.value().data());
+        }
+        else if (cookie.name() == "mi_user_id")
+        {
+            migration_result_.mutableMiId() = QString::fromLocal8Bit(cookie.value().data());
+        }
+    }
+    return true;
+}
 
 void XiaomiMigrationManager::onLoadStarted()
 {
@@ -154,18 +179,28 @@ void XiaomiMigrationManager::onUrlChanged(const QUrl& url)
     QString my_url = url.toEncoded();
     if (my_url.contains(config_.migrationServerOK()))
     {
+        loadDataFromCookies(url);
+        migration_result_.mutableMessage() = "succeed";
         emit pageChanged(tr("Migration Succeeded"));
         emit migrationSucceeded();
     }
     else if (my_url.contains(config_.migrationServerFail()))
     {
+        loadDataFromCookies(url);
+        migration_result_.mutableMessage() = "failed";
         emit pageChanged(tr("Migration Failed"));
         emit migrationFailed();
     }
     else if (my_url.contains(config_.migrationServerCancel()))
     {
+        loadDataFromCookies(url);
+        migration_result_.mutableMessage() = "canceled";
         emit pageChanged(tr("Migration Canceled"));
         emit migrationCanceled();
+    }
+    else if (my_url.endsWith(MIGRATION_COOKIE_CHECKPOINT))
+    {
+        loadDataFromCookies(url);
     }
     else
     {
@@ -175,21 +210,22 @@ void XiaomiMigrationManager::onUrlChanged(const QUrl& url)
 
 void XiaomiMigrationManager::onMigrationSucceeded()
 {
+    saveResult();
 }
 
 void XiaomiMigrationManager::onMigrationCanceled()
 {
-    
+    saveResult();
 }
 
 void XiaomiMigrationManager::onMigrationFailed()
 {
-    
+    saveResult();
 }
-
 
 void XiaomiMigrationManager::saveResult()
 {
+    migration_result_.saveToFile();
 }
 
 }
