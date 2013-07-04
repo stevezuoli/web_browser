@@ -9,7 +9,7 @@ using namespace network_service;
 namespace web_database
 {
 
-static const QString TOKEN_PATH = "/var/local/";
+static const QString TOKEN_PATH = "/var/local";
 static const QString XIAOMI_DIR = "xiaomi";
 
 static QString miTokenHome()
@@ -106,6 +106,13 @@ bool XiaomiMigration::saveToFile()
         }
     }
     return false;
+}
+
+void XiaomiMigration::removeFile()
+{
+    QString path = miTokenHome() + "/" + miTokenDir() + "/" + "migration.xml";
+    QFile redundant_file(path);
+    redundant_file.remove();
 }
 
 XiaomiTokenDB::XiaomiTokenDB()

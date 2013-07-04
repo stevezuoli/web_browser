@@ -118,6 +118,7 @@ qreal XiaomiMigrationManager::getZoomFactor()
 
 bool XiaomiMigrationManager::start()
 {
+    XiaomiMigration::removeFile();
     QString start_uri = config_.migrationServerStart();
     QUrl url = guessUrlFromString(start_uri);
     addCookiesForEntry(url);

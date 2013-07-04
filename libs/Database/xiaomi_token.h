@@ -57,6 +57,7 @@ public:
     QString& mutableMessage() { return message_; }
 
     bool saveToFile();
+    static void removeFile();
 
 private:
     QString duokan_id_;
