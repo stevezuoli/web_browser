@@ -23,6 +23,10 @@ static const QString MIGRATION_CANCEL_URI = "/dk_id/migrate/kindle/cancel";
 static const QString MIGRATION_COOKIE_CHECKPOINT = "/dk_id/migrate";
 static const qreal MIGRATION_ZOOM = 1.0;
 
+static const QString MIGRATION_MSG_SUCCEED = "succeed";
+static const QString MIGRATION_MSG_CANCELED = "canceled";
+static const QString MIGRATION_MSG_FAILED = "failed";
+
 QString MigrationServerConfiguration::migrationServerStart()
 {
     return host_ + MIGRATION_START_URI;
@@ -180,21 +184,21 @@ void XiaomiMigrationManager::onUrlChanged(const QUrl& url)
     if (my_url.contains(config_.migrationServerOK()))
     {
         loadDataFromCookies(url);
-        migration_result_.mutableMessage() = "succeed";
+        migration_result_.mutableMessage() = MIGRATION_MSG_SUCCEED;
         emit pageChanged(tr("Migration Succeeded"));
         emit migrationSucceeded();
     }
     else if (my_url.contains(config_.migrationServerFail()))
     {
         loadDataFromCookies(url);
-        migration_result_.mutableMessage() = "failed";
+        migration_result_.mutableMessage() = MIGRATION_MSG_FAILED;
         emit pageChanged(tr("Migration Failed"));
         emit migrationFailed();
     }
     else if (my_url.contains(config_.migrationServerCancel()))
     {
         loadDataFromCookies(url);
-        migration_result_.mutableMessage() = "canceled";
+        migration_result_.mutableMessage() = MIGRATION_MSG_CANCELED;
         emit pageChanged(tr("Migration Canceled"));
         emit migrationCanceled();
     }
@@ -226,6 +230,15 @@ void XiaomiMigrationManager::onMigrationFailed()
 void XiaomiMigrationManager::saveResult()
 {
     migration_result_.saveToFile();
+    if (migration_result_.message() == MIGRATION_MSG_SUCCEED)
+    {
+        XiaomiToken mi_token;
+        mi_token.mutableToken() = migration_result_.token();
+        mi_token.mutableMessage() = migration_result_.message();
+        mi_token.mutableUserId() = migration_result_.miId();
+        mi_token.mutableCode() = QString("%1").arg(0);
+        mi_token.saveToFile();
+    }
 }
 
 }
