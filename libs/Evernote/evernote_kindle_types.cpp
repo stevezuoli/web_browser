@@ -23,7 +23,7 @@ QString replaceInvalidCharacters(QString src)
     result = result.replace("\"", "&quot;");
     return result;
 }
-    
+
 bool EvernoteUser::save()
 {
     QDomDocument doc("EvernoteUser");
@@ -197,6 +197,11 @@ bool EvernoteContent::parseAnnotation(QDomElement& root_node)
     item.parseElementByTagName("Content", root_node);
     item.parseElementByTagName("ChapterTitle", root_node);
     
+    if (!item.create_time.isEmpty())
+    {
+        item.create_time.replace('T', ' ');
+    }
+
     // parse chapter
     item.parseChapterInfo(root_node);
     if (item.isValid())

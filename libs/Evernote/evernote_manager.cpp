@@ -56,7 +56,12 @@ static const QString READING_SHARED_AUTHOR =
 /**
  * <string name="reading__shared__chapter_num">Chapter %1</string>
  */
-static const QString READING_SHARED_CHAPTER = "Chapter %1";
+static const QString READING_SHARED_CHAPTER =
+    "<div style=\"font-size:14pt; text-align:center; margin-top:0.5em; margin-bottom:0.3em;\">"
+    "<div style=\"position:relative; z-index:-1; top:0.7em; height:2px; max-height:2px; border-top:1px dotted gray; border-bottom:1px dotted gray;\">&nbsp;"
+    "</div>"
+    "<span style=\"font-weight:bold; background-color:white; position:relative;\">&nbsp;%1</span>"
+    "</div>";
     
 /**
  *     <string name="reading__shared__comment">

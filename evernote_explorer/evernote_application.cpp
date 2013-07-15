@@ -42,7 +42,7 @@ bool EvernoteApplication::findFiles()
     QFileInfoList list = dir_.entryInfoList(filters);
     foreach (QFileInfo info, list)
     {
-        QString entry_path = info.absoluteFilePath();
+        QString entry_path = QString::fromLocal8Bit(info.absoluteFilePath().toLocal8Bit().constData());
         if (entry_path.endsWith(".xml", Qt::CaseInsensitive))
         {
             qDebug("Found export file:%s", qPrintable(entry_path));
