@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QTextStream>
 #include "evernote_application.h"
-#include "common\languages.h"
+#include "common/languages.h"
 
 using namespace evernote_kindle;
 using namespace ui;
@@ -44,7 +44,7 @@ void customMessageHandler(QtMsgType type, const char *msg)
 int main(int argc, char * argv[])
 {
     EvernoteApplication app(argc, argv);
-    ui::loadTranslator(QLocale::system().name());
+    //ui::loadTranslator(QLocale::system().name());
 
 #if 0
     qInstallMsgHandler(customMessageHandler);

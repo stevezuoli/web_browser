@@ -12,6 +12,7 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 ADD_EXECUTABLE(evernote_explorer ${SRCS})
 TARGET_LINK_LIBRARIES(evernote_explorer
    evernote
+   common
    ${QT_LIBRARIES}
    ${ADD_LIB}
 )

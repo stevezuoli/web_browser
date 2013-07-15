@@ -348,17 +348,19 @@ bool EvernoteManager::prepareContent(const EvernoteContent& origin_content,
             QString note_text = item.content;
             QString note_comment = item.comment;
             
+            QString comment_prefix = QString::fromLocal8Bit("注: ");
             QString annotation_content = QString(READING_SHARED_COMMENT)
             .arg(border ? READING_SHARED_COMMENT_SPLIT : "")
             .arg(color)
             .arg(date)
             .arg(replaceInvalidCharacters(note_text))
-            .arg(note_comment.isEmpty() ? "" : QString(READING_SHARED_NOTE).arg(tr("Comment: ")).arg(replaceInvalidCharacters(note_comment)));
+            .arg(note_comment.isEmpty() ? "" : QString(READING_SHARED_NOTE).arg(comment_prefix).arg(replaceInvalidCharacters(note_comment)));
             content_str += annotation_content;
         }
     }
     
-    QString foot = QString(READING_SHARED_FOOT).arg(tr("Duokan Notes From Duokan for Kindle")).arg(origin_content.book_id);
+    QString foot_prefix = QString::fromLocal8Bit("多看笔记 来自多看阅读 for Kindle");
+    QString foot = QString(READING_SHARED_FOOT).arg(foot_prefix).arg(origin_content.book_id);
     content_str += foot;
     
     // return value
@@ -381,8 +383,9 @@ QString EvernoteManager::makeHeader(const QString& book_name, const QString& aut
 bool EvernoteManager::makeSureNotebookExist(NoteStorePtr note_store, Notebook& duokan_book)
 {
     // NOTE: note store should be opened before calling these functions
-    QString duokan_book_name = QApplication::tr("Duokan Notebook");
+    //QString duokan_book_name = QApplication::tr("Duokan Notebook");
 
+    QString duokan_book_name = QString::fromLocal8Bit("多看笔记");
     bool ret = true;
     // Find existing notebook
     Notebooks notebooks;
@@ -391,7 +394,7 @@ bool EvernoteManager::makeSureNotebookExist(NoteStorePtr note_store, Notebook& d
         note_store->listNotebooks(notebooks, session_->token().toUtf8().constData());
         foreach(const Notebook& book, notebooks)
         {
-            QString book_name(book.name.c_str());
+            QString book_name = QString::fromLocal8Bit(book.name.c_str());
             qDebug("Book Name:%s", qPrintable(book_name));
             if (book_name.compare(duokan_book_name) == 0)
             {
