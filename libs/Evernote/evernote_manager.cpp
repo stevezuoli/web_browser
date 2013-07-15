@@ -120,8 +120,8 @@ static const QString READING_SHARED_COMMENT_SPLIT =
 static const QString READING_SHARED_NOTE =
     //" <![CDATA["
     "<div style=\"font-size:11pt; margin-top:0.2em;\">"
-    "<span style=\"font-weight:bold;\">Comment: </span>"
-    "<span style=\"color:#888888\">%1</span>"
+    "<span style=\"font-weight:bold;\">%1</span>"
+    "<span style=\"color:#888888\">%2</span>"
     "</div>";
     //"]]>";
 
@@ -142,11 +142,11 @@ static const QString READING_SHARED_FOOT =
     //"<![CDATA["
     "<div style=\"margin-top:2em; margin-bottom:1em\">"
     "<hr style=\"height:2px; border:0; background-color:#ddd;\"/>"
-    "<span style=\"font-size:10pt; color:gray;\">Duokan Notes From Duokan for Kindle</span>"
+    "<span style=\"font-size:10pt; color:gray;\">%1</span>"
     "</div>"
     "</div>"
     "</div>"
-    "<div style=\"width:90%%; max-width:600px;text-align:right;margin-top:-37px;margin-right:auto;margin-left:auto;color:#EEEEEE;font-size:10px\">duokanbookid:%1</div>";
+    "<div style=\"width:90%%; max-width:600px;text-align:right;margin-top:-37px;margin-right:auto;margin-left:auto;color:#EEEEEE;font-size:10px\">duokanbookid:%2</div>";
     //"]]>";
 
 EvernoteManager::EvernoteManager()
@@ -353,12 +353,12 @@ bool EvernoteManager::prepareContent(const EvernoteContent& origin_content,
             .arg(color)
             .arg(date)
             .arg(replaceInvalidCharacters(note_text))
-            .arg(note_comment.isEmpty() ? "" : QString(READING_SHARED_NOTE).arg(replaceInvalidCharacters(note_comment)));
+            .arg(note_comment.isEmpty() ? "" : QString(READING_SHARED_NOTE).arg(tr("Comment: ")).arg(replaceInvalidCharacters(note_comment)));
             content_str += annotation_content;
         }
     }
     
-    QString foot = QString(READING_SHARED_FOOT).arg(origin_content.book_id);
+    QString foot = QString(READING_SHARED_FOOT).arg(tr("Duokan Notes From Duokan for Kindle")).arg(origin_content.book_id);
     content_str += foot;
     
     // return value

@@ -80,4 +80,5 @@ add_subdirectory(drivers/KindleFiveWay)
 add_subdirectory(drivers/KindleKeyboard)
 add_subdirectory(ui)
 add_subdirectory(common)
+add_subdirectory(ime)
 
