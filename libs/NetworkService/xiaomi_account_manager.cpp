@@ -1,11 +1,11 @@
 #include "xiaomi_account_manager.h"
 #include "access_manager.h"
 #include "cookie_jar.h"
+#include "ns_utils.h"
 
 #include "Device/DeviceInfo.h"
 #include "Device/fat.h"
 #include "AES/aes.h"
-#include "Database/xiaomi_token.h"
 #include "Database/token_ring.h"
 
 #define TEST_SERVER
@@ -29,78 +29,6 @@ static const QString MI_ACCOUNT_SERVICE_LOGIN_AUTH_URI = "https://account.xiaomi
 static const QString MI_ACCOUNT_REGISTERED_CALLBACK_URI = "http://login.dushu.xiaomi.com/dk_id/api/checkin";
 
 static qreal ZOOM_FACTOR = 1.5;
-
-static char IntToHexChar(int i)
-{
-    if (0 <= i && i <= 9)
-    {
-        return i + '0';
-    }
-    else if (i < 16)
-    {
-        return i - 10 + 'A';
-    }
-    else
-    {
-        return 0;
-    }
-}
-
-QString UrlEncode(const char* s)
-{
-    if (NULL == s)
-    {
-        return "";
-    }
-    const unsigned char* us = (const unsigned char*)s;
-    QString result;
-    while (unsigned int c = *us++)
-    {
-        if (isalnum(c))
-        {
-            result.push_back(c);
-        }
-        else if (' ' == c)
-        {
-            result.push_back('+');
-        }
-        else
-        {
-            result.push_back('%');
-            result.push_back(IntToHexChar(c / 16));
-            result.push_back(IntToHexChar(c % 16));
-        }
-    }
-    return result;
-}
-
-std::string UrlEncodeForStdString(const char* s)
-{
-    if (NULL == s)
-    {
-        return "";
-    }
-    const unsigned char* us = (const unsigned char*)s;
-    std::string result;
-    while (unsigned int c = *us++)
-    {
-        if (isalnum(c))
-        {
-            result.push_back(c);
-        }
-        else if (' ' == c)
-        {
-            result.push_back('+');
-        }
-        else
-        {
-            result.push_back('%');
-            result.push_back(IntToHexChar(c / 16));
-            result.push_back(IntToHexChar(c % 16));
-        }
-    }
-    return result;
-}
 
 class DuokanServerConfiguration
 {
@@ -537,18 +465,17 @@ bool XiaomiAccountManager::saveResults(const QVariant& status, const QVariant& t
     }
     
     // save token to db
-    XiaomiToken token_for_db;
-    token_for_db.mutableToken() = token_str;
-    token_for_db.mutableUserId() = user_id_;
+    token_.mutableToken() = token_str;
+    token_.mutableUserId() = user_id_;
     QString code_str = QString("%1").arg(result);
-    token_for_db.mutableCode() = code_str;
-    token_for_db.mutableMessage() = message;
+    token_.mutableCode() = code_str;
+    token_.mutableMessage() = message;
 
     TokenRing token_ring;
-    token_ring.setXiaomiToken(token_for_db);
+    token_ring.setXiaomiToken(token_);
     
     // save to file
-    return token_for_db.saveToFile();
+    return token_.saveToFile();
 }
 
 }

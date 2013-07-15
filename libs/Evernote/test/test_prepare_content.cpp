@@ -31,13 +31,16 @@ int main()
 
     QString title;
     QString content;
+    QString header;
     EvernoteManager note_manager;
-    note_manager.prepareContent(note, title, content);
+    note_manager.prepareContent(note, title, header, content);
     
     QFile file("test.html");
     if (file.open(QIODevice::WriteOnly))
     {
-        file.write(content.toStdString().c_str());
+        QString output = header.toLocal8Bit().constData();
+        output = output + content.toUtf8().constData();
+        file.write(output.toUtf8().constData());
     }
     file.close();
     return 0;

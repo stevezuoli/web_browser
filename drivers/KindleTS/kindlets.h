@@ -102,6 +102,7 @@ private:
     bool input_captured;
     int  current_slot_id;
     int  current_pointer_count;
+    int  last_action_masked;
     bool isKT;
 
     QVector<input_data> event_stack_;

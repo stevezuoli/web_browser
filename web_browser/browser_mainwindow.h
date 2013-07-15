@@ -96,7 +96,7 @@ private Q_SLOTS:
 
     void showHomePage();
     void showHistoryPage(bool show = true);
-    void hideHistoryPage(const QString&);
+    void hideHistoryPage(const QUrl&);
     void bookmarkThisPage();
     void showBookmarkPage();
     void showSettingsPage();

@@ -234,7 +234,7 @@ bool EvernoteManager::getUser(EvernoteUser& user)
     edam_user.__isset.email = true;
     edam_user.__isset.timezone = true;
     try {
-        user_store->getUser(edam_user, session_->token().toUtf8().constData());
+        user_store->getUser(edam_user, session_->token().toLocal8Bit().constData());
     } catch(apache::thrift::TException te) {
         qDebug() << "TException:" << te.what() << "|" <<endl;
         emit error(te.what());
@@ -264,8 +264,9 @@ bool EvernoteManager::exportNote(const EvernoteContent& note)
 {
     // prepare content
     QString title;
+    QString header;
     QString content;
-    if (!prepareContent(note, title, content))
+    if (!prepareContent(note, title, header, content))
     {
         return false;
     }
@@ -296,27 +297,38 @@ bool EvernoteManager::exportNote(const EvernoteContent& note)
     qDebug("Found metadata for filtering!");
     
     // send note
-    bool ret = addOrUpdateNote(note_store, duokan_book, metadata, title, content);
+    bool ret = addOrUpdateNote(note_store, duokan_book, metadata, title, header, content);
     qDebug("Note has been updated");
     return ret;
 }
     
-bool EvernoteManager::prepareContent(const EvernoteContent& origin_content, QString& title, QString& content)
+bool EvernoteManager::prepareContent(const EvernoteContent& origin_content,
+                                     QString& title,
+                                     QString& header,
+                                     QString& content)
 {
     // header
-    QString content_str = makeHeader(origin_content.title, origin_content.author);
+    header = makeHeader(origin_content.title, origin_content.author);
     
     // make each annotation
+    QString content_str;
     bool border = false;
     foreach(const QString& chapter, origin_content.chapters)
     {
-        QString chapter_title = QString(READING_SHARED_CHAPTER).arg(chapter);
-        content_str += chapter_title;
-        
         // draw border for each chapter
         border = true;
         QList<KindleAnnotationItem> annotations_in_chapter = origin_content.annotations.values(chapter);
         int count = 0;
+
+        if (!annotations_in_chapter.empty())
+        {
+            if (!annotations_in_chapter[0].chapter_title.isEmpty())
+            {
+                QString chapter_title = QString(READING_SHARED_CHAPTER).arg(annotations_in_chapter[0].chapter_title);
+                content_str += chapter_title;
+            }
+            qStableSort(annotations_in_chapter);
+        }
         foreach(const KindleAnnotationItem& item, annotations_in_chapter)
         {
             count++;
@@ -386,9 +398,9 @@ bool EvernoteManager::makeSureNotebookExist(NoteStorePtr note_store, Notebook& d
         if (duokan_book.name.empty())
         {
             Notebook new_book;
-            new_book.name = duokan_book_name.toUtf8().constData();
+            new_book.name = duokan_book_name.toLocal8Bit().constData();
             new_book.__isset.name = true;
-            note_store->createNotebook(duokan_book, session_->token().toUtf8().constData(), new_book);
+            note_store->createNotebook(duokan_book, session_->token().toLocal8Bit().constData(), new_book);
         }
     } catch(apache::thrift::TException te) {
         qDebug() << "TException:" << te.what() << "|" <<endl;
@@ -419,7 +431,8 @@ bool EvernoteManager::findMetadata(NoteStorePtr note_store,
     QString words_str = QString("duokanbookid:%1").arg(book_id);
     filter.words = words_str.toUtf8().constData();
     filter.__isset.words = true;
-    
+    qDebug("Filter words:%s", words_str.toUtf8().constData());
+
     NotesMetadataResultSpec metadata_result_spec;
     bool ret = true;
     try {
@@ -449,6 +462,7 @@ bool EvernoteManager::addOrUpdateNote(NoteStorePtr note_store,
                                    const Notebook& duokan_book,
                                    const NotesMetadataList& note_metadata,
                                    QString title,
+                                   const QString& header,
                                    const QString& content)
 {
     QString duokan_book_tag = QApplication::tr("Duokan Reading Notes");
@@ -459,7 +473,7 @@ bool EvernoteManager::addOrUpdateNote(NoteStorePtr note_store,
     new_note.__isset.notebookGuid = true;
     
     // tag names
-    new_note.tagNames.push_back(duokan_book_tag.toUtf8().constData());
+    new_note.tagNames.push_back(duokan_book_tag.toLocal8Bit().constData());
     new_note.__isset.tagNames = true;
     
     // title
@@ -468,16 +482,20 @@ bool EvernoteManager::addOrUpdateNote(NoteStorePtr note_store,
     {
         valid_title = valid_title.left(255);
     }
-    new_note.title = valid_title.toUtf8().constData();
+    new_note.title = valid_title.toLocal8Bit().constData();
     new_note.__isset.title = true;
     
     // content
-    QString submit_content = NOTE_PREFIX + content + NOTE_SUFFIX;
+    //QString submit_content = NOTE_PREFIX + content + NOTE_SUFFIX;
     
     // TEST
     //dump(submit_content);
     
-    new_note.content = submit_content.toUtf8().constData();
+    //new_note.content = submit_content.toUtf8().constData();
+    new_note.content.append(NOTE_PREFIX.toUtf8().constData())
+                    .append(header.toLocal8Bit().constData())
+                    .append(content.toUtf8().constData())
+                    .append(NOTE_SUFFIX.toUtf8().constData());
     
     // TEST
     //new_note.content = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><!DOCTYPE en-note SYSTEM \"http://xml.evernote.com/pub/enml2.dtd\"><en-note><span>this is a  another hello test to evernote api.</span> </en-note>";
@@ -493,7 +511,7 @@ bool EvernoteManager::addOrUpdateNote(NoteStorePtr note_store,
             // not found existing note for the same book,
             // create a new note
             note_store->createNote(ret_note,
-                                   session_->token().toUtf8().constData(),
+                                   session_->token().toLocal8Bit().constData(),
                                    new_note);
             qDebug("Creating new note...");
         }
@@ -503,7 +521,7 @@ bool EvernoteManager::addOrUpdateNote(NoteStorePtr note_store,
             new_note.guid = note_metadata.notes[0].guid;
             new_note.__isset.guid = true;
             note_store->updateNote(ret_note,
-                                   session_->token().toUtf8().constData(),
+                                   session_->token().toLocal8Bit().constData(),
                                    new_note);
             qDebug("Update note...");
         }

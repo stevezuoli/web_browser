@@ -29,7 +29,7 @@ public:
     bool getUser(EvernoteUser& user);
 
     // prepare content
-    bool prepareContent(const EvernoteContent& origin_content, QString& title, QString& content);
+    bool prepareContent(const EvernoteContent& origin_content, QString& title, QString& header, QString& content);
 private:
     // make sure note store is opened before calling these functions
     bool makeSureNotebookExist(NoteStorePtr note_store, Notebook& duokan_book);
@@ -41,6 +41,7 @@ private:
                         const Notebook& duokan_book,
                         const NotesMetadataList& note_metadata,
                         QString title,
+                        const QString& header,
                         const QString& content);
 
     QString makeHeader(const QString& book_name, const QString& author);

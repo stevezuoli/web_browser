@@ -30,7 +30,7 @@ BrowserView::BrowserView(QWidget *parent)
     , bookmark_model_(0)
     , hand_tool_enabled_(true)
     , is_special_account_mode_(false)
-    , zoom_step_(0.1)
+    , zoom_step_(0.3)
     , zoom_max_factor_(3.0)
 {
     setPage(page_);
@@ -847,8 +847,10 @@ void BrowserView::enterReaderMode(bool is_reader_mode)
     {
         QString code = readability_;
         emit displayTextOnAddressEdit(QApplication::tr("Switching to Article Mode..."));
+        QApplication::processEvents();
         page()->mainFrame()->evaluateJavaScript(code);
         emit displayTextOnAddressEdit(QApplication::tr("Switching Done"));
+        addFormsFocusEvent();
     }
     else
     {
@@ -1062,10 +1064,15 @@ bool BrowserView::zoom(qreal zoom_span, int focus_x, int focus_y)
     qreal user_zoom = scale_context_.previous_zoom_;
     const qreal previous_zoom = user_zoom;
     user_zoom *= zoom_span;
+    QSize pageSize = page()->currentFrame()->contentsSize();
 
-    if (user_zoom <= 1)
+    qDebug("Zoom: span:%f, userZoom:%f, pageWidth:%d, windowWidth:%d", zoom_span, user_zoom, pageSize.width(), GetWindowMetrics(UIScreenWidthIndex));
+    if (zoomFactor() <= 1.0 && pageSize.width() * zoom_span < GetWindowMetrics(UIScreenWidthIndex))
     {
-        user_zoom = 1.0;
+        if (pageSize.width() >= GetWindowMetrics(UIScreenWidthIndex))
+            user_zoom = zoomFactor() * static_cast<qreal>(GetWindowMetrics(UIScreenWidthIndex)) / static_cast<qreal>(pageSize.width());
+        else
+            user_zoom = zoomFactor() * 1.0;
     }
     else if (user_zoom > zoom_max_factor_)
     {

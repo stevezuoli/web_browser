@@ -9,6 +9,7 @@
 #include "KindleTS/kindlets.h"
 #include "KindleFiveWay/kindlefiveway.h"
 #include "KindleKeyboard/kindlekeyboard.h"
+#include "QKindleFb/qkindlefb.h"
 #include "Device/device.h"
 #include "Gesture/scale_gesture_detector.h"
 #include <iostream>
@@ -136,6 +137,30 @@ void SystemManager::enterKeypadMode()
     }
 #endif
     kindle_fiveway_->setKeypadMode(true);
+}
+
+void SystemManager::setFullUpdateEvery(int n)
+{
+#ifdef BUILD_FOR_ARM
+    QKindleFb* kindle_fb = dynamic_cast<QKindleFb*>(QScreen::instance());
+    kindle_fb->setFullUpdateEvery(n);
+#endif
+}
+
+void SystemManager::forceFullUpdate(bool fullScreen)
+{
+#ifdef BUILD_FOR_ARM
+    QKindleFb* kindle_fb = dynamic_cast<QKindleFb*>(QScreen::instance());
+    kindle_fb->forceFullUpdate(fullScreen);
+#endif
+}
+
+void SystemManager::setFastUpdate(bool fast)
+{
+#ifdef BUILD_FOR_ARM
+    QKindleFb* kindle_fb = dynamic_cast<QKindleFb*>(QScreen::instance());
+    kindle_fb->setFastUpdate(fast);
+#endif
 }
 
 

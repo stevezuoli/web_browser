@@ -25,6 +25,7 @@ private:
     QString host_;
 };
 
+class XiaomiAccountManager;
 class XiaomiMigrationManager : public QObject
 {
     Q_OBJECT
@@ -37,7 +38,7 @@ public:
 
     void connectWebView(QWebView* view);
     void disconnectWebView();
-    bool start();
+    bool start(const QString& duokan_account_id);
     qreal getZoomFactor();
 
 Q_SIGNALS:
@@ -55,15 +56,20 @@ private Q_SLOTS:
     void onMigrationCanceled();
     void onMigrationFailed();
 
+    void onXiaomiExchangeFinished(bool ok);
+
 private:
     void addCookiesForEntry(const QUrl& url);
     void saveResult();
     bool loadDataFromCookies(const QUrl& url);
-    
+    void exchangeXiaomiToken();
+
 private:
     QWebView* view_;
+    shared_ptr<XiaomiAccountManager> account_manager_;
     MigrationServerConfiguration config_;
     XiaomiMigration migration_result_;
+    QString duokan_account_id_;
 };
 
 };

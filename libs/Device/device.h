@@ -79,9 +79,14 @@ public:
     static void enableInput(bool enable);
     static void setFullScreenUpdateEvery(int n);
     static void forceFullScreenUpdate(bool fullScreen = false);
+
+    static bool isTouch510();
+    static int  getTouchVersion();
+
 private:
     static const Properties PROPS[];
     static MODEL m_model;
+    static int version;
 
     Device();
     Device(Device const&);

@@ -30,6 +30,8 @@
 
 #define ORIENTATION(x, y)       (((y) > (x)) ? EINK_ORIENT_PORTRAIT : EINK_ORIENT_LANDSCAPE)
 
+typedef __u8 u8;
+
 struct raw_image_t
 {
     int xres,		// image's width, in pixels

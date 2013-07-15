@@ -43,6 +43,7 @@
 #define QKINDLEFB_H
 
 #include <QScreen>
+#include <QtCore/QtCore>
 #include "Device/device.h"
 
 struct fb_cmap;
@@ -58,7 +59,10 @@ QT_MODULE(Gui)
 
 class QKindleFbPrivate;
 
-class Q_GUI_EXPORT QKindleFb : public QScreen
+class Q_GUI_EXPORT QKindleFb
+#ifdef BUILD_FOR_ARM
+    : public QScreen
+#endif
 {
 public:
     explicit QKindleFb(int display_id);
@@ -88,6 +92,7 @@ public:
 
     virtual void setFullUpdateEvery(int n) ;
     virtual void forceFullUpdate(bool fullScreen = false);
+    virtual void setFastUpdate(bool fast = false);
 
 protected:
     bool canaccel;
@@ -100,15 +105,22 @@ private:
     void blit12To4(const QImage &image, const QPoint &topLeft, const QRegion &region);
     void blit16To4(const QImage &image, const QPoint &topLeft, const QRegion &region);
     void blit32To4(const QImage &image, const QPoint &topLeft, const QRegion &region);
+
+#ifdef BUILD_FOR_ARM
     void createPalette(fb_cmap &cmap, fb_var_screeninfo &vinfo, fb_fix_screeninfo &finfo);
     void setPixelFormat(struct fb_var_screeninfo);
-
+#endif
     QKindleFbPrivate *d_ptr;
 
+private:
     bool isKindle4 ;
     bool isKindle5 ;
-    bool isKindleTouch ;
-    bool flashingUpdates ;
+    bool isKindleTouch;
+    bool isKindleTouch510;
+    bool isKindle3;
+
+    bool flashingUpdates;
+    bool fastUpdates;
     bool isDirty ;
     QRect dirtyRect ;
 

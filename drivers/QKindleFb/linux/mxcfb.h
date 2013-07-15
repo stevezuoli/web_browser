@@ -109,7 +109,8 @@ struct mxcfb_alt_buffer_data {
 	struct mxcfb_rect alt_update_region;	/* region within buffer to update */
 };
 
-struct mxcfb_update_data {
+// kindle >= 5.1.0 , has new members: hist_bw_waveform_mode, hist_gray_waveform_mode
+struct mxcfb_update_data_v510 {
 	struct mxcfb_rect update_region;
 	__u32 waveform_mode;
 	__u32 update_mode;
@@ -119,6 +120,17 @@ struct mxcfb_update_data {
 	int temp;
 	uint flags;
 	struct mxcfb_alt_buffer_data alt_buffer_data;
+};
+
+// kindle touch 5.0.0 - 5.0.4
+typedef struct mxcfb_update_data{ 
+    struct mxcfb_rect update_region;     
+    __u32 waveform_mode; // 0x0002 = WAVEFORM_MODE_GC16 
+    __u32 update_mode; // 0x0000 = UPDATE_MODE_PARTIAL 
+    __u32 update_marker; // 0x002a 
+    int temp; // 0x1001 = TEMP_USE_PAPYRUS 
+    __u32 flags; // 0x0000 
+    struct mxcfb_alt_buffer_data alt_buffer_data; // must not used when flags is 0
 };
 
 /*
@@ -165,6 +177,7 @@ struct mxcfb_waveform_modes {
 #define MXCFB_SET_RESUME		_IOW('F', 0x35, __u32)
 #define MXCFB_CLEAR_UPDATE_QUEUE	_IOW('F', 0x36, __u32)
 #define MXCFB_WAIT_FOR_UPDATE_SUBMISSION	_IOW('F', 0x37, __u32)
+#define MXCFB_SEND_UPDATE_V510		_IOW('F', 0x2E, struct mxcfb_update_data_v510)
 
 #ifdef __KERNEL__
 

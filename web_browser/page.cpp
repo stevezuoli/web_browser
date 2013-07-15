@@ -153,11 +153,12 @@ void WebPage::handleUnsupportedContent(QNetworkReply *reply)
 
 QString WebPage::userAgentForUrl ( const QUrl & url ) const
 {
-    static QString agent;
-    if (agent.isEmpty())
+    QString url_str = url.toEncoded();
+    QString agent = QString("Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
+    //agent = QString("Mozilla/5.0+(QtEmbedded;+U;+Linux;+ru-RU;+ID=%1;+V=%2;+SID=%3)+AppleWebKit/527+(KHTML,+like+Gecko,+Safari/419.3)+GALAXY+web_browser");
+    //agent = agent.arg(QUuid::createUuid().toString()).arg("1.0").arg("101010101111111");
+    if (url_str.contains("baidu.com"))
     {
-        //agent = QString("Mozilla/5.0+(QtEmbedded;+U;+Linux;+ru-RU;+ID=%1;+V=%2;+SID=%3)+AppleWebKit/527+(KHTML,+like+Gecko,+Safari/419.3)+GALAXY+web_browser");
-        //agent = agent.arg(QUuid::createUuid().toString()).arg("1.0").arg("101010101111111");
         agent = QString("Opera/12.02 (Android 4.1; Linux; Opera Mobi/ADR-1111101157; U; en-US) Presto/2.9.201 Version/12.02");
     }
     return agent;

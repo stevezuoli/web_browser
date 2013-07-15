@@ -222,10 +222,6 @@ QList<QNetworkCookie> CookieJar::cookiesForUrl(const QUrl &url) const
     }
 
     QList<QNetworkCookie> cookieList = QNetworkCookieJar::cookiesForUrl(url);
-    qDebug("Cookie for URL:%s", qPrintable(url.toString()));
-    foreach(QNetworkCookie cookie, cookieList) {
-        qDebug("Raw Data:%s", qPrintable(cookie.toRawForm()));
-    }
     return cookieList;
 }
 
@@ -240,6 +236,11 @@ bool CookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const
     if (globalSettings->testAttribute(QWebSettings::PrivateBrowsingEnabled))
     {
         return false;
+    }
+
+    qDebug("\n\nSet Cookies for URL:%s", qPrintable(url.toString()));
+    foreach(QNetworkCookie dump_cookie, cookieList) {
+        qDebug("Raw Data:%s", qPrintable(dump_cookie.toRawForm()));
     }
 
     QString host = url.host();

@@ -100,18 +100,19 @@ void KindleFiveWay::setKeypadMode(bool keypadMode)
         qDebug("Screen cursor is not ready yet");
         return;
     }
+    _button = 0;
 
     if (_keypadMode)
     {
         qDebug("Hide Mouse");
-        QScreenCursor::instance()->hide();
         QWSServer::setCursorVisible(false);
+        QScreenCursor::instance()->hide();
     }
     else
     {
         qDebug("Show Mouse");
-        QScreenCursor::instance()->show();
         QWSServer::setCursorVisible(true);
+        QScreenCursor::instance()->show();
         mouseChanged(pos(), 0, 0);
     }
 #endif
@@ -127,133 +128,143 @@ void KindleFiveWay::activity(int)
     input_event_t in;
 
     read(_fd, &in, sizeof(input_event_t));
+    //record the mode in last activity
+    static bool lastKeyPadMode = _keypadMode;
 
     if (_debug)
-        qDebug("FiveWay: type %d, code %d, value %d", in.type, in.code, in.value);
+        qDebug("FiveWay: type %d, code %d, value %d, keypadMode: %d, button: %d", in.type, in.code, in.value, _keypadMode, _button);
 
-    if (in.type == 1)
+    //if the mode changes,ignore this event once.deal with the event pairs in the same mode.
+    if (_keypadMode == lastKeyPadMode)
     {
-        QPoint p = pos();
-
-        switch(in.code)
+        if (in.type == 1)
         {
-        default:
-            break;
-        case KDX_KEY_5WPRESS:
-        case K3_KEY_5WPRESS:
-            // button press
-            if (_keypadMode)
-            {
-                QWSServer::sendKeyEvent('\n', Qt::Key_Select, Qt::NoModifier, in.value != 0, in.value == 2);
-            }
-            else
-            {
-                if (in.value)
-                    _button = !_button;
-            }
-            break;
-        case KDX_KEY_LARROW:
-            // left
-            if (_keypadMode)
-            {
-                QWSServer::sendKeyEvent(0, Qt::Key_Left, Qt::NoModifier, in.value != 0, in.value == 2);
-            }
-            else if (in.value == 0)
-            {
-                _left = 0;
-            }
-            else if (in.value == 1)
-            {
-                _left = 1;
-                p.setX(p.x() - 5);
-            }
-            else
-            {
-                if (_left < 6)
-                    _left++;
+            QPoint p = pos();
 
-                p.setX(p.x() - 5 * _left);
-            }
-            break;
-        case KDX_KEY_RARROW:
-            // right
-            if (_keypadMode)
+            switch(in.code)
             {
-                QWSServer::sendKeyEvent(0, Qt::Key_Right, Qt::NoModifier, in.value != 0, in.value == 2);
-            }
-            else if (in.value == 0)
-            {
-                _right = 0;
-            }
-            else if (in.value == 1)
-            {
-                _right = 1;
-                p.setX(p.x() + 5);
-            }
-            else
-            {
-                if (_right < 6)
-                    _right++;
+                default:
+                    break;
+                case KDX_KEY_5WPRESS:
+                case K3_KEY_5WPRESS:
+                    // button press
+                    if (_keypadMode)
+                    {
+                        QWSServer::sendKeyEvent('\n', Qt::Key_Select, Qt::NoModifier, in.value != 0, in.value == 2);
+                    }
+                    else
+                    {
+                        //if (in.value)
+                        _button = !_button;
+                    }
+                    break;
+                case KDX_KEY_LARROW:
+                    // left
+                    if (_keypadMode)
+                    {
+                        QWSServer::sendKeyEvent(0, Qt::Key_Left, Qt::NoModifier, in.value != 0, in.value == 2);
+                    }
+                    else if (in.value == 0)
+                    {
+                        _left = 0;
+                    }
+                    else if (in.value == 1)
+                    {
+                        _left = 1;
+                        p.setX(p.x() - 5);
+                    }
+                    else
+                    {
+                        if (_left < 6)
+                            _left++;
 
-                p.setX(p.x() + 5 * _right);
-            }
-            break;
-        case KDX_KEY_UPARROW:
-        case K3_KEY_UPARROW:
-            // up
-            if (_keypadMode)
-            {
-                QWSServer::sendKeyEvent(0, Qt::Key_Up, Qt::NoModifier, in.value != 0, in.value == 2);
-            }
-            else if (in.value == 0)
-            {
-                _up = 0;
-            }
-            else if (in.value == 1)
-            {
-                _up = 1;
-                p.setY(p.y() - 5);
-            }
-            else
-            {
-                if (_up < 6)
-                    _up++;
+                        p.setX(p.x() - 5 * _left);
+                    }
+                    break;
+                case KDX_KEY_RARROW:
+                    // right
+                    if (_keypadMode)
+                    {
+                        QWSServer::sendKeyEvent(0, Qt::Key_Right, Qt::NoModifier, in.value != 0, in.value == 2);
+                    }
+                    else if (in.value == 0)
+                    {
+                        _right = 0;
+                    }
+                    else if (in.value == 1)
+                    {
+                        _right = 1;
+                        p.setX(p.x() + 5);
+                    }
+                    else
+                    {
+                        if (_right < 6)
+                            _right++;
 
-                p.setY(p.y() - 5 * _up);
-            }
-            break;
-        case KDX_KEY_DNARROW:
-        case K3_KEY_DNARROW:
-            // down
-            if (_keypadMode)
-            {
-                QWSServer::sendKeyEvent(0, Qt::Key_Down, Qt::NoModifier, in.value != 0, in.value == 2);
-            }
-            else if (in.value == 0)
-            {
-                _down = 0;
-            }
-            else if (in.value == 1)
-            {
-                _down = 1;
-                p.setY(p.y() + 5);
-            }
-            else
-            {
-                if (_down < 6)
-                    _down++;
+                        p.setX(p.x() + 5 * _right);
+                    }
+                    break;
+                case KDX_KEY_UPARROW:
+                case K3_KEY_UPARROW:
+                    // up
+                    if (_keypadMode)
+                    {
+                        QWSServer::sendKeyEvent(0, Qt::Key_Up, Qt::NoModifier, in.value != 0, in.value == 2);
+                    }
+                    else if (in.value == 0)
+                    {
+                        _up = 0;
+                    }
+                    else if (in.value == 1)
+                    {
+                        _up = 1;
+                        p.setY(p.y() - 5);
+                    }
+                    else
+                    {
+                        if (_up < 6)
+                            _up++;
 
-                p.setY(p.y() + 5 * _down);
+                        p.setY(p.y() - 5 * _up);
+                    }
+                    break;
+                case KDX_KEY_DNARROW:
+                case K3_KEY_DNARROW:
+                    // down
+                    if (_keypadMode)
+                    {
+                        QWSServer::sendKeyEvent(0, Qt::Key_Down, Qt::NoModifier, in.value != 0, in.value == 2);
+                    }
+                    else if (in.value == 0)
+                    {
+                        _down = 0;
+                    }
+                    else if (in.value == 1)
+                    {
+                        _down = 1;
+                        p.setY(p.y() + 5);
+                    }
+                    else
+                    {
+                        if (_down < 6)
+                            _down++;
+
+                        p.setY(p.y() + 5 * _down);
+                    }
+                    break;
             }
-            break;
+
+            limitToScreen(p);
+
+            if (!_keypadMode)
+            {
+                mouseChanged(p, _button ? Qt::LeftButton : 0, 0);
+            }
         }
 
-        limitToScreen(p);
-
-        if (!_keypadMode)
-            mouseChanged(p, _button ? Qt::LeftButton : 0, 0);
     }
 
+    lastKeyPadMode = _keypadMode;
     _sn->setEnabled(true);
 #endif
 }

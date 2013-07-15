@@ -45,6 +45,13 @@ public:
     QString formattedDate() const { return create_time; }
     bool parseElementByTagName(const QString& name, QDomElement& root_node);
     bool parseChapterInfo(QDomElement& root_node);
+
+    bool operator== (const KindleAnnotationItem & other) const;
+    bool operator> ( const KindleAnnotationItem & other ) const;
+    bool operator< ( const KindleAnnotationItem & other ) const;
+    bool operator<= ( const KindleAnnotationItem & other ) const;
+    bool operator>= ( const KindleAnnotationItem & other ) const;
+
 private:
     QString* mutableAttributeByName(const QString& name);
     
@@ -57,13 +64,17 @@ public:
     QString last_modify_time;
     QString content;
     QString comment;
+    QString chapter_title;
     QString chapter_id;
     QString chapter_num;
+    QString para_index;
+    QString atom_index;
+    QString offset;
 };
 
 // Chapter, Annotations
 typedef QMultiHash<QString, KindleAnnotationItem> Annotations;
-typedef QSet<QString> Chapters;
+typedef QList<QString> Chapters;
 class EvernoteContent
 {
 public:

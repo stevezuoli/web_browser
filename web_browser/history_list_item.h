@@ -17,7 +17,7 @@ class HistoryListItem : public QWidget
 public:
     HistoryListItem(const WebThumbnail& webThumbnail, QListWidget* parent = 0);
     HistoryListItem(const QString& date, QListWidget* parent = 0);
-    QString getUrl() const;
+    const QUrl& getUrl() const { return url_; }
     bool isDateItem() const;
     void setLinePixel(int pixel)
     {
@@ -34,6 +34,7 @@ private:
     QVBoxLayout* main_layout_;
     QString date_;
     int line_pixel_;
+    QUrl url_;
 };//HistoryListItem
 }//webbrowser
 #endif//WEBBROWSER_HISTORY_LIST_ITEM_H_

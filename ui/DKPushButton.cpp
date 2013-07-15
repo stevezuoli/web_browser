@@ -3,9 +3,11 @@
 #include "common/WindowsMetrics.h"
 #include "Device/device.h"
 #include <QDebug>
+#include "System/inc/system_manager.h"
 
 namespace ui
 {
+using namespace windowsmetrics;
 static const QString PUSH_BUTTON_STYLE = "                          \
 QPushButton                             \
 {                                       \
@@ -30,6 +32,13 @@ QPushButton:checked                     \
     color: white;                       \
     background-color: black;            \
 }                                       \
+QPushButton:focus                     \
+{                                       \
+    padding-left: 0px;                  \
+    padding-top: 0px;                   \
+    color: white;                       \
+    background-color: black;            \
+}                                       \
 QPushButton:disabled                    \
 {                                       \
     padding-left: 0px;                  \
@@ -42,12 +51,14 @@ QPushButton:disabled                    \
 DKPushButton::DKPushButton(QWidget* parent)
     : QPushButton(parent)
     , pressed_(false)
+    , shape_type_(ST_Normal)
 {
     InitDKProperty();
 }
 
 DKPushButton::DKPushButton(const QString& text, QWidget* parent)
     : QPushButton(parent)
+    , shape_type_(ST_Normal)
 {
     setText(text);
     InitDKProperty();
@@ -66,39 +77,110 @@ void DKPushButton::InitDKProperty()
 
 void DKPushButton::setBackGroundImagePaths(const QString& focusInPath, const QString& focusOutPath)
 {
+    if (!focusInPath.isEmpty() || !focusOutPath.isEmpty())
+    {
+        shape_type_ = ST_Image;
+    }
     m_focusInBackgroundImage.load(focusInPath);
     m_focusOutBackgroundImage.load(focusOutPath);
+    
+    /*
+     *qDebug() << "depth: " << m_focusInBackgroundImage.depth();
+     *qDebug() << "format: " << m_focusInBackgroundImage.format();
+     *qDebug() << "bitPlaneCount: " << m_focusInBackgroundImage.bitPlaneCount();
+     *const uchar* data = m_focusInBackgroundImage.bits();
+     *for (int i = 0; i < m_focusInBackgroundImage.byteCount(); ++i)
+     *{
+     *    printf("%x ", *(data + i));
+     *}
+     *printf("\n");
+     */
+}
+
+void DKPushButton::setDisableBackGroundImagePath(const QString& disablePath)
+{
+    if (!disablePath.isEmpty())
+    {
+        shape_type_ = ST_Image;
+    }
+
+    m_disableBackgroundImage.load(disablePath);
 }
 
 void DKPushButton::paintEvent(QPaintEvent* e)
 {
-    if (!m_focusInBackgroundImage.isNull() && !m_focusOutBackgroundImage.isNull())
+    //const int leftPixel = 2;
+    //const int rightPixel = 2;
+    //const int bottomPixel = 4;
+    //const int margin = 10;
+    //static QRect leftRect(0, margin, leftPixel, height() - (margin << 1));
+    //static QRect rightRect(width() - rightPixel, margin, rightPixel, height() - (margin << 1));
+    //static QRect bottomRect(margin, height() - bottomPixel, width() - (margin << 1), bottomPixel);
+    if (shape_type_ == ST_Image)
     {
         QPainter painter(this);
         QFont btnFont = font();
         btnFont.setBold(true);
         btnFont.setPixelSize(ui::windowsmetrics::GetWindowFontSize(ui::windowsmetrics::DKPushButtonIndex));
         setFont(btnFont);
+        QImage drawingImage;
+        if (isEnabled())
+        {
+            if (pressed_)
+            {
+                drawingImage = m_focusInBackgroundImage.isNull() ? drawingImage : m_focusInBackgroundImage;
+                painter.setPen(Qt::white);
+            }
+            else
+            {
+                drawingImage = m_focusOutBackgroundImage.isNull() ? drawingImage : m_focusOutBackgroundImage;
+                painter.setPen(Qt::black);
+            }
+        }
+        else
+        {
+            drawingImage = m_disableBackgroundImage.isNull() ? drawingImage : m_disableBackgroundImage;
+            painter.setPen(Qt::gray);
+        }
+        if (!drawingImage.isNull())
+        {
+            painter.drawImage(rect(), drawingImage);
+        }
+        painter.drawText(rect(), Qt::AlignCenter, text());
+    }
+    else if (shape_type_ == ST_Shadow)
+    {
+        QPainter painter(this);
+        QFont btnFont = font();
+        btnFont.setBold(true);
+        btnFont.setPixelSize(ui::windowsmetrics::GetWindowFontSize(ui::windowsmetrics::DKPushButtonIndex));
+        setFont(btnFont);
+        qreal radius = 10.0;
+        QRect bgRect = rect().adjusted(0, 0, -GetWindowMetrics(DKButtonBorderPixelIndex), -GetWindowMetrics(DKButtonBorderPixelIndex));
+        //QRect bgRect = rect().adjusted(0, 0, -GetWindowMetrics(DKButtonBorderHorPixelIndex), -GetWindowMetrics(DKButtonBorderBottomPixelIndex));
         if (pressed_)
         {
-            if (!m_focusInBackgroundImage.isNull())
-            {
-                painter.drawPixmap(rect(), m_focusInBackgroundImage);
-            }
+            painter.setBrush(Qt::black);
+            painter.drawRoundedRect(bgRect, radius, radius);
             painter.setPen(Qt::white);
             painter.drawText(rect(), Qt::AlignCenter, text());
         }
         else
         {
-            if (!m_focusOutBackgroundImage.isNull())
-            {
-                painter.drawPixmap(rect(), m_focusOutBackgroundImage);
-            }
+            painter.fillRect(rect(), Qt::white);
             painter.setPen(Qt::black);
+            QPen btnPen = painter.pen();
+            btnPen.setWidth(GetWindowMetrics(DKButtonBorderPixelIndex));
+            painter.setPen(btnPen);
+            painter.drawRoundedRect(bgRect, radius, radius);
             painter.drawText(rect(), Qt::AlignCenter, text());
+            //painter.setBrush(Qt::black);
+            //painter.drawRect(leftRect);
+            //painter.drawRect(rightRect);
+            //painter.drawRect(bottomRect);
         }
     }
-    else
+    else if (shape_type_ == ST_Normal)
     {
         QPushButton::paintEvent(e);
     }
@@ -114,5 +196,14 @@ void DKPushButton::mouseReleaseEvent(QMouseEvent* e)
 {
     pressed_ = false;
     QPushButton::mouseReleaseEvent(e);
+}
+
+void DKPushButton::setShapeType(ShapeType shapeType)
+{
+    shape_type_ = shapeType;
+    if (shape_type_ != ST_Normal)
+    {
+        setStyleSheet("");
+    }
 }
 }//ui

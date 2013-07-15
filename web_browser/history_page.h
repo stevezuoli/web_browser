@@ -26,7 +26,7 @@ protected:
     virtual void paintEvent(QPaintEvent* event);
 
 Q_SIGNALS:
-    void historyPageQuit(const QString&);
+    void historyPageQuit(const QUrl&);
 
 private Q_SLOTS:
     void clearHistoryData(bool);

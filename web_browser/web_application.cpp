@@ -4,6 +4,7 @@
 #include "const_strings.h"
 #include "common/ImageManager.h"
 #include "common/WindowsMetrics.h"
+#include "System/inc/system_manager.h"
 
 using namespace network_service;
 using namespace ui;
@@ -15,6 +16,7 @@ namespace webbrowser
 static const int CACHE_MIN_DEAD_CAPACITY = 1024 * 1024;
 static const int CACHE_MAX_DEAD = 3 * 1024 * 1024;
 static const int TOTAL_CAPACITY = 4 * 1024 * 1024;
+static const int FULL_UPDATE_EVERY = 5;
 
 QString WebApplication::localStoragePath()
 {
@@ -33,6 +35,9 @@ WebApplication* WebApplication::instance()
 WebApplication::WebApplication(int &argc, char **argv)
     : QApplication(argc, argv)
 {
+    // configure system manager
+    SystemManager::instance()->setFullUpdateEvery(FULL_UPDATE_EVERY);
+
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTranslator* translator = new QTranslator();
     translator->load(":/res/WebBrowser_Chn");

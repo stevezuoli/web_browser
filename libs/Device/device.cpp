@@ -16,7 +16,8 @@ const Device::Properties Device::PROPS[] = {
 };
 
 Device::Model Device::m_model = UNKNOWN;
-
+int Device::version = 0;
+    
 Device::Device()
 {
 #ifdef i386
@@ -81,6 +82,8 @@ Device::Device()
             qDebug("Unknown model: %X", sn);
         }
     }
+
+
     myProcess->close();
 }
 
@@ -146,3 +149,64 @@ void Device::forceFullScreenUpdate(bool fullScreen)
     if (pscreen) pscreen->forceFullUpdate(fullScreen);
 #endif
 }
+
+int Device::getTouchVersion()
+{
+    if(Device::version != 0)
+		return Device::version;
+
+	Device::version = 500;
+	FILE *fp = fopen("/etc/version.txt","r");
+	if(!fp)
+	{
+		return Device::version;
+	}
+
+	const char *yoshi = "yoshi-";
+	char *find;
+	char buff[128] = {0};
+
+	fread(buff,1,sizeof(buff) - 1,fp);
+	fclose(fp);
+	find = strstr(buff, yoshi);
+	if(find == NULL)
+		return Device::version;
+	
+	int iversion = atoi(find + strlen(yoshi));
+
+	if (iversion >= 180429) 
+	{
+		Device::version = 532;
+	}
+	else if (iversion >= 167953) 
+	{
+		Device::version = 512;
+	}
+	else if (iversion >= 156819) 
+	{
+		Device::version = 511;
+	}
+	else if (iversion >= 155776) 
+	{
+		Device::version = 510;
+	}
+	else if (iversion >= 149604) 
+	{
+		Device::version = 504;
+	}
+	else if (iversion >= 137371) 
+	{
+		Device::version = 501;
+	}
+	else if (iversion >= 137028) 
+	{
+		Device::version = 500;
+	}	
+	return Device::version;
+}
+
+bool Device::isTouch510()
+{
+    return (getTouchVersion() >= 510);
+}
+

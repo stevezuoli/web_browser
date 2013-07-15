@@ -32,6 +32,7 @@ namespace ui
     MACRO_NAME(IME_KEY_LANG_CN, "ime_key_lang_cn@kt.png", "ime_key_lang_cn@kp.png")   \
     MACRO_NAME(IME_KEY_LANG_CN_PRESSED, "ime_key_lang_cn_pressed@kt.png", "ime_key_lang_cn_pressed@kp.png")   \
     MACRO_NAME(IME_KEY_LANG_EN, "ime_key_lang_en@kt.png", "ime_key_lang_en@kp.png")   \
+    MACRO_NAME(IME_KEY_LANG_EN_DISABLE, "ime_key_lang_en_disable@kt.png", "ime_key_lang_en_disable@kp.png")   \
     MACRO_NAME(IME_KEY_LANG_EN_PRESSED, "ime_key_lang_en_pressed@kt.png", "ime_key_lang_en_pressed@kp.png")   \
     MACRO_NAME(IME_KEY_SPACE, "ime_key_space@kt.png", "ime_key_space@kp.png")   \
     MACRO_NAME(IME_KEY_SPACE_PRESSED, "ime_key_space_pressed@kt.png", "ime_key_space_pressed@kp.png")   \

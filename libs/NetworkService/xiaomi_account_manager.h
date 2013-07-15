@@ -2,7 +2,9 @@
 #define XIAOMI_ACCOUNT_MANAGER_H_
 
 #include <QtWebKit/QtWebKit>
+#include "Database/xiaomi_token.h"
 
+using namespace web_database;
 namespace network_service
 {
 
@@ -22,6 +24,8 @@ public:
     // true = login; false = register
     void login(const QString& ref_url, const QString& option);
     qreal getZoomFactor();
+    bool exchangeDuokanToken(const QUrl& url);
+    XiaomiToken& xiaomiToken() { return token_; }
 
 Q_SIGNALS:
     //void startLogin();
@@ -49,7 +53,6 @@ private:
     void connectNetworkReply(QNetworkReply* reply);
     QStringList getServiceTokenFromCookies(const QList<QNetworkCookie>& cookies);
     QString getUserIdFromCookies(const QList<QNetworkCookie>& cookies);
-    bool exchangeDuokanToken(const QUrl& url);
     
     bool parseAndSave(const QByteArray& data);
     bool saveResults(const QVariant& status, const QVariant& token);
@@ -59,6 +62,7 @@ private:
     QNetworkReply *reply_;
     QString service_token_;
     QString user_id_;
+    XiaomiToken token_;
 };
 
 };

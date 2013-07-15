@@ -195,12 +195,16 @@ bool EvernoteContent::parseAnnotation(QDomElement& root_node)
     item.parseElementByTagName("LastModifyTime", root_node);
     item.parseElementByTagName("RefContent", root_node);
     item.parseElementByTagName("Content", root_node);
+    item.parseElementByTagName("ChapterTitle", root_node);
     
     // parse chapter
     item.parseChapterInfo(root_node);
     if (item.isValid())
     {
-        chapters.insert(item.chapter_id);
+        if (chapters.indexOf(item.chapter_id) < 0)
+        {
+            chapters.push_back(item.chapter_id);
+        }
         annotations.insert(item.chapter_id, item);
         return true;
     }
@@ -222,6 +226,9 @@ bool KindleAnnotationItem::KindleAnnotationItem::parseChapterInfo(QDomElement& r
     QDomElement refer_position = refer_positions.at(0).toElement();
     parseElementByTagName("ChapterID", refer_position);
     parseElementByTagName("ChapterIndex", refer_position);
+    parseElementByTagName("ParaIndex", refer_position);
+    parseElementByTagName("AtomIndex", refer_position);
+    parseElementByTagName("Offset", refer_position);
     return !chapter_num.isEmpty();
 }
     
@@ -306,11 +313,73 @@ QString* KindleAnnotationItem::mutableAttributeByName(const QString& name)
     {
         return &chapter_id;
     }
+    else if (name.compare("ChapterTitle", Qt::CaseInsensitive) == 0)
+    {
+        return &chapter_title;
+    }
     else if (name.compare("ChapterIndex", Qt::CaseInsensitive) == 0)
     {
         return &chapter_num;
     }
+    else if (name.compare("ParaIndex", Qt::CaseInsensitive) == 0)
+    {
+        return &para_index;
+    }
+    else if (name.compare("AtomIndex", Qt::CaseInsensitive) == 0)
+    {
+        return &atom_index;
+    }
+    else if (name.compare("Offset", Qt::CaseInsensitive) == 0)
+    {
+        return &offset;
+    }
     return 0;
+}
+
+bool KindleAnnotationItem::operator== (const KindleAnnotationItem & other) const
+{
+    int this_para_index = para_index.toInt();
+    int this_atom_index = atom_index.toInt();
+    int this_offset     = offset.toInt();
+    int other_para_index = other.para_index.toInt();
+    int other_atom_index = other.atom_index.toInt();
+    int other_offset     = offset.toInt();
+
+    return this_para_index == other_para_index &&
+           this_atom_index == other_atom_index &&
+           this_offset     == other_offset;
+}
+
+bool KindleAnnotationItem::operator> ( const KindleAnnotationItem & other ) const
+{
+    int this_para_index = para_index.toInt();
+    int this_atom_index = atom_index.toInt();
+    int this_offset     = offset.toInt();
+    int other_para_index = other.para_index.toInt();
+    int other_atom_index = other.atom_index.toInt();
+    int other_offset     = offset.toInt();
+
+    if (this_para_index > other_para_index) return true;
+    else if (this_para_index == other_para_index && this_atom_index > other_atom_index) return true;
+    else if (this_para_index == other_para_index &&
+             this_atom_index == other_atom_index &&
+             this_offset     >  other_offset) return true;
+    return false;
+}
+
+bool KindleAnnotationItem::operator< ( const KindleAnnotationItem & other ) const
+{
+    return !(*this > other) && !(*this == other);
+}
+
+bool KindleAnnotationItem::operator<= ( const KindleAnnotationItem & other ) const
+{
+    return (*this < other) || (*this == other);
+}
+
+bool KindleAnnotationItem::operator>= ( const KindleAnnotationItem & other ) const
+{
+    return (*this > other) || (*this == other);
 }
 
 }

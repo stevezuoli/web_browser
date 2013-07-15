@@ -82,4 +82,128 @@ QUrl guessUrlFromString(const QString &string)
     return url;
 }
 
+static char IntToHexChar(int i)
+{
+    if (0 <= i && i <= 9)
+    {
+        return i + '0';
+    }
+    else if (i < 16)
+    {
+        return i - 10 + 'A';
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+static int HexCharToInt(char c)
+{
+    if ('0' <= c && c <= '9')
+    {
+        return c - '0';
+    }
+    else if ('a' <= c && c <= 'f')
+    {
+        return 10 + c - 'a';
+    }
+    else if ('A' <= c && c <= 'F')
+    {
+        return 10 + c - 'A';
+    }
+    return -1;
+}
+
+QString UrlEncode(const char* s)
+{
+    if (NULL == s)
+    {
+        return "";
+    }
+    const unsigned char* us = (const unsigned char*)s;
+    QString result;
+    while (unsigned int c = *us++)
+    {
+        if (isalnum(c))
+        {
+            result.push_back(c);
+        }
+        else if (' ' == c)
+        {
+            result.push_back('+');
+        }
+        else
+        {
+            result.push_back('%');
+            result.push_back(IntToHexChar(c / 16));
+            result.push_back(IntToHexChar(c % 16));
+        }
+    }
+    return result;
+}
+
+QString UrlDecode(const char* s)
+{
+    if (NULL == s)
+    {
+        return "";
+    }
+    const char* sEnd = s + strlen(s);
+    QString result;
+    while (s != sEnd)
+    {
+        if ('+' == *s)
+        {
+            result.push_back(' ');
+            ++s;
+        }
+        else if ('%' == *s && s + 2 <= sEnd)
+        {
+            int v1 = HexCharToInt(*(s+1));
+            int v2 = HexCharToInt(*(s+2));
+            if (v1 < 0 || v2 < 0)
+            {
+                return result;
+            }
+            result.push_back(16 * v1 + v2);
+            s += 3;
+        }
+        else
+        {
+            result.push_back(*s);
+            ++s;
+        }
+    }
+    return result;
+}
+
+std::string UrlEncodeForStdString(const char* s)
+{
+    if (NULL == s)
+    {
+        return "";
+    }
+    const unsigned char* us = (const unsigned char*)s;
+    std::string result;
+    while (unsigned int c = *us++)
+    {
+        if (isalnum(c))
+        {
+            result.push_back(c);
+        }
+        else if (' ' == c)
+        {
+            result.push_back('+');
+        }
+        else
+        {
+            result.push_back('%');
+            result.push_back(IntToHexChar(c / 16));
+            result.push_back(IntToHexChar(c % 16));
+        }
+    }
+    return result;
+}
+
 }

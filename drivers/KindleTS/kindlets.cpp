@@ -12,7 +12,8 @@ KindleTS::KindleTS(const QString & driver, const QString & device)
 #endif
   input_captured(false),
   current_slot_id(0),
-  current_pointer_count(0)
+  current_pointer_count(0),
+  last_action_masked(TouchEvent::ACTION_MASK)
 {
     _debug = device.contains("debug", Qt::CaseInsensitive);
 
@@ -127,35 +128,49 @@ void KindleTS::activity(int)
 
     TouchEvent* te = readTouchEvent(_fd);
 
-    bool is_up = te != 0 ? (te->actionMasked() == TouchEvent::ACTION_UP) : false;
-    if (is_up)
+    if (te != 0)
     {
-        qDebug("Clear pointer count");
-        current_pointer_count = 0;
+        if (te->actionMasked() == TouchEvent::ACTION_UP ||
+            te->actionMasked() == TouchEvent::ACTION_POINTER_UP)
+        {
+            qDebug("Clear pointer count");
+            current_pointer_count = 0;
+            current_slot_id = 0;
+        }
     }
 
     if (te != 0 && te->pointerCount() >= 2)
     {
         qDebug("Emit multi-touch event, pos1(%d, %d), pos2(%d, %d), action:%d", te->x(0), te->y(0), te->x(1), te->y(1), te->action());
-        emit touchEvent(te);
-        delete te;
-        _sn->setEnabled(true);
-        return;   
+        emit touchEvent(te); 
     }
-
-    if (te == 0 //EV_KEY
-        || te->pointerCount() < 2)
+    else if (te == 0 || //EV_KEY
+             te->pointerCount() < 2)
     {
-        // send single mouse event from event stack
-        for (int i = 0; i < event_stack_.size(); i++)
+        if (last_action_masked == TouchEvent::ACTION_POINTER_UP)
         {
-            readSingleTouchEvent(event_stack_[i]);
+            qDebug("Ignore Single Pointer Up Event...");
         }
-        qDebug("Send Single Event-------------------");
+        else
+        {
+            // send single mouse event from event stack
+            for (int i = 0; i < event_stack_.size(); i++)
+            {
+                readSingleTouchEvent(event_stack_[i]);
+            }
+            qDebug("Send Single Event-------------------");
+        }
     }
 
     if (te != 0)
+    {
+        last_action_masked = te->actionMasked();
         delete te;
+    }
+    else
+    {
+        last_action_masked = TouchEvent::ACTION_MASK;
+    }
     _sn->setEnabled(true);
 #endif
 }

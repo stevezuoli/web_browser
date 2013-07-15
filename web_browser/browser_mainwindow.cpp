@@ -71,7 +71,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     connect(view_, SIGNAL(scaleBegin()), this, SLOT(onViewScaleBegin()));
     connect(view_, SIGNAL(scaleEnd()), this, SLOT(onViewScaleEnd()));
 
-    connect(history_page_, SIGNAL(historyPageQuit(const QString&)), this, SLOT(hideHistoryPage(const QString&)));
+    connect(history_page_, SIGNAL(historyPageQuit(const QUrl&)), this, SLOT(hideHistoryPage(const QUrl&)));
 #ifdef Q_WS_QWS
     connect(qApp->desktop(), SIGNAL(resized(int)),
             this, SLOT(onScreenSizeChanged(int)), Qt::QueuedConnection);
@@ -164,7 +164,7 @@ void BrowserMainWindow::load(const QString & url_str, const QString & option)
         {
             xiaomi_migration_manager_.reset(new XiaomiMigrationManager(XiaomiMigrationManager::getHostFromPath(url_str)));
             setupXiaomiMigrationConnection();
-            xiaomi_migration_manager_->start();
+            xiaomi_migration_manager_->start(option);
         }
         else
         {
@@ -407,12 +407,14 @@ void BrowserMainWindow::showHistoryPage(bool show)
         }
     }
 }
-void BrowserMainWindow::hideHistoryPage(const QString& url)
+void BrowserMainWindow::hideHistoryPage(const QUrl& url)
 {
     DebugWB("");
     showHistoryPage(false);
     if (!url.isEmpty())
-        load(url);
+    {
+        view_->load(url);
+    }
 }
 
 void BrowserMainWindow::bookmarkThisPage()

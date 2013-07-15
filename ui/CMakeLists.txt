@@ -15,5 +15,6 @@ ADD_LIBRARY(ui ${SRCS})
 TARGET_LINK_LIBRARIES(ui
     common
     device
+	system
     ${QT_LIBRARIES}
     ${ADD_LIB})

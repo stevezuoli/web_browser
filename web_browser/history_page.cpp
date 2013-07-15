@@ -68,7 +68,6 @@ void HistoryPage::InitItems()
     qSort(varList.begin(), varList.end(), WebThumbnail::dateTimeGreaterThan);
     QString lastDate;// = ((const WebThumbnail&)(varList.at(0).toMap())).accessDate();
     int w = GetWindowMetrics(HistoryItemLabelWidthIndex);
-    //int w = GetWindowMetrics(UIScreenWidthIndex) - (GetWindowMetrics(UIHorizonMarginIndex) << 1);
     for(int i = 0; i < varList.size(); ++i)
     {
         QString thisDate = ((const WebThumbnail&)(varList.at(i).toMap())).accessDate();
@@ -117,6 +116,7 @@ void HistoryPage::onItemClicked(QListWidgetItem* item)
 
 void HistoryPage::onCloseButtonClicked(bool)
 {
-    emit historyPageQuit("");
+    QUrl empty;
+    emit historyPageQuit(empty);
 }
 }

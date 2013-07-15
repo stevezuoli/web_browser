@@ -233,13 +233,7 @@ string DeviceInfo::GetDeviceID()
     }
 #endif
     string _dID = string("D");
-
-#ifdef KINDLE_FOR_TOUCH	   		
-    _dID += "008" ; //for Kindle;
-#else
-    _dID += "008" ; //for Kindle;
-#endif
-
+    _dID += "008" ; //for Kindle Touch
     _dID += GetSerialNo();
     return _dID;
 }

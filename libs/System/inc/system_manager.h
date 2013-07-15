@@ -23,6 +23,10 @@ public:
     void enterMouseMode();
     void enterKeypadMode();
 
+    void setFullUpdateEvery(int n) ;
+    void forceFullUpdate(bool fullScreen = false);
+    void setFastUpdate(bool fast = true);
+
 public Q_SLOTS:
     //void snapshot(const QString &path);
     //bool setGrayScale(int colors);

@@ -77,6 +77,7 @@ bool XiaomiMigration::saveToFile()
     appendXmlTextNode("mi_device_id", mi_device_id_, doc, root);
     appendXmlTextNode("message", message_, doc, root);
     appendXmlTextNode("token", token_, doc, root);
+    appendXmlTextNode("migrated_duokan_id", duokan_id_, doc, root);
     
     QString xml = doc.toString();
     qDebug("XiaomiMigration:%s", qPrintable(xml));

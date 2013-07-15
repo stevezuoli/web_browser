@@ -33,6 +33,9 @@ namespace windowsmetrics
     MACRO_NAME(MenuSeparatorPadding, 20, 24)\
     MACRO_NAME(MessageBoxButtonSpace, 10, 12)\
     MACRO_NAME(ListWidgetSingleStepPixel, 30, 38)\
+    MACRO_NAME(DKButtonBorderPixel, 1, 1)\
+    MACRO_NAME(DKButtonBorderHorPixel, 2, 3)\
+    MACRO_NAME(DKButtonBorderBottomPixel, 4, 6)\
 
 enum WindowMetricsIndex
 {

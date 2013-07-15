@@ -13,6 +13,7 @@ HistoryListItem::HistoryListItem(const WebThumbnail& webThumbnail, QListWidget* 
 {
     title_label_->setText(webThumbnail.title());
     url_label_->setText(webThumbnail.url().toString());
+    url_ = webThumbnail.url();
 
     main_layout_ = new QVBoxLayout(this);
     main_layout_->setSpacing(0);
@@ -34,16 +35,6 @@ HistoryListItem::HistoryListItem(const QString& date, QListWidget* parent)
 {
 }
 
-QString HistoryListItem::getUrl() const
-{
-    if (url_label_)
-    {
-        return url_label_->text();
-    }
-
-    return "";
-}
-
 bool HistoryListItem::isDateItem() const
 {
     return !date_.isEmpty();
@@ -53,6 +44,7 @@ void HistoryListItem::paintEvent(QPaintEvent* event)
 {
     if (!date_.isNull())
     {
+        qDebug() << "HistoryPage::paintEvent\t" << date_ << "\thasFocus: " << hasFocus();
         QPainter painter(this);
         QFont textFont = font();
         textFont.setPixelSize(GetWindowFontSize(HistoryDateIndex));
@@ -63,7 +55,10 @@ void HistoryListItem::paintEvent(QPaintEvent* event)
             painter.drawLine(0, 0, width(), line_pixel_ - 1);
         }
     }
-    QWidget::paintEvent(event);
+    else
+    {
+        QWidget::paintEvent(event);
+    }
 }
 
 void HistoryListItem::elideTextWithWidth(int w)

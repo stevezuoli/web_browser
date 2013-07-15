@@ -69,9 +69,10 @@ QStringList QScreenLinuxFbPlugin::keys() const
 
 QScreen* QScreenLinuxFbPlugin::create(const QString& driver, int displayId)
 {
+#ifdef BUILD_FOR_ARM
     if (driver.toLower() == QLatin1String("qkindlefb"))
         return new QKindleFb(displayId);
-
+#endif
     return 0;
 }
 

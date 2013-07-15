@@ -38,6 +38,8 @@
     <file>res/ime_key_lang_cn_pressed@kt.png</file>
     <file>res/ime_key_lang_en@kp.png</file>
     <file>res/ime_key_lang_en@kt.png</file>
+    <file>res/ime_key_lang_en_disable@kp.png</file>
+    <file>res/ime_key_lang_en_disable@kt.png</file>
     <file>res/ime_key_lang_en_pressed@kp.png</file>
     <file>res/ime_key_lang_en_pressed@kt.png</file>
     <file>res/ime_key_space@kp.png</file>
@@ -78,6 +80,8 @@
     <file>res/refresh@kp.png</file>
     <file>res/close@kt.png</file>
     <file>res/close@kp.png</file>
+    <file>res/finger.png</file>
+    <file>res/cursor.png</file>
     <file>res/jquery.min.js</file>
     <file>res/readability.js</file>
     <file>res/load_fail.html</file>
