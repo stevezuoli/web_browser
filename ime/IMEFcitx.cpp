@@ -30,7 +30,7 @@ typedef enum _tag_ImeState
     IME_STATE_UNKNOWN           = 4
 }ImeState;
 
-extern char g_szAppPath[];
+char g_szAppPath[1024];
 
 #define IME_DATA_PATH "res/py/"
 

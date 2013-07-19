@@ -17,7 +17,8 @@ namespace network_service
 
 static const QString BOOK_HOST = "http://book.duokan.com";
 static const QString LOGIN_HOST = "http://login.dushu.xiaomi.com";
-static const QString TEST_HOST = "http://dkmars";
+//static const QString TEST_HOST = "http://dkmars";
+static const QString TEST_HOST = "http://api.in.duokan.com";
 
 static const QString XIAOMI_CHECKIN = "/dk_id/api/checkin";
 static const QString XIAOMI_EXCHANGE = "/dk_id/api/exchange";

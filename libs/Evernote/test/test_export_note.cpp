@@ -22,11 +22,11 @@ int main()
     EvernoteContent note;
     note.book_id = "u65g18c77fbccf78bfd2240f1g48b148";
     note.author = "Steve Zuo";
-    note.chapters.insert(chapter1);
-    note.chapters.insert(chapter2);
+    note.chapters[1] = chapter1;
+    note.chapters[2] = chapter2;
     
-    note.annotations.insert(chapter1, item1);
-    note.annotations.insert(chapter2, item2);
+    note.annotations.insert(1, item1);
+    note.annotations.insert(2, item2);
     note.title = "Test Book";
     
     QString host = "sandbox.evernote.com";

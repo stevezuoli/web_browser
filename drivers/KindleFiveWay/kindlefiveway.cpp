@@ -105,15 +105,15 @@ void KindleFiveWay::setKeypadMode(bool keypadMode)
     if (_keypadMode)
     {
         qDebug("Hide Mouse");
-        QWSServer::setCursorVisible(false);
-        QScreenCursor::instance()->hide();
+        //QWSServer::setCursorVisible(false);
+        //QScreenCursor::instance()->hide();
     }
     else
     {
         qDebug("Show Mouse");
-        QWSServer::setCursorVisible(true);
-        QScreenCursor::instance()->show();
-        mouseChanged(pos(), 0, 0);
+        //QWSServer::setCursorVisible(true);
+        //QScreenCursor::instance()->show();
+        //mouseChanged(pos(), 0, 0);
     }
 #endif
 }
@@ -131,8 +131,8 @@ void KindleFiveWay::activity(int)
     //record the mode in last activity
     static bool lastKeyPadMode = _keypadMode;
 
-    if (_debug)
-        qDebug("FiveWay: type %d, code %d, value %d, keypadMode: %d, button: %d", in.type, in.code, in.value, _keypadMode, _button);
+    //if (_debug)
+    //    qDebug("FiveWay: type %d, code %d, value %d, keypadMode: %d, button: %d", in.type, in.code, in.value, _keypadMode, _button);
 
     //if the mode changes,ignore this event once.deal with the event pairs in the same mode.
     if (_keypadMode == lastKeyPadMode)
@@ -258,6 +258,7 @@ void KindleFiveWay::activity(int)
 
             if (!_keypadMode)
             {
+                //qDebug("Mouse Changed, Button:%d", _button);
                 mouseChanged(p, _button ? Qt::LeftButton : 0, 0);
             }
         }

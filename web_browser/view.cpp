@@ -5,6 +5,7 @@
 #include "view.h"
 #include "web_application.h"
 #include "common/WindowsMetrics.h"
+#include "common/debug.h"
 
 using namespace network_service;
 using namespace gesture;
@@ -19,6 +20,7 @@ static const int DELTA = 10;
 static const qreal DEFAULT_FONT = 1.0;
 
 static const qreal MIN_ZOOM_SPAN  = 0.3;
+static const int scroll_page_response_distance = 50;
 
 BrowserView::BrowserView(QWidget *parent)
     : QWebView(parent)
@@ -32,6 +34,7 @@ BrowserView::BrowserView(QWidget *parent)
     , is_special_account_mode_(false)
     , zoom_step_(0.3)
     , zoom_max_factor_(3.0)
+    , cursor_navigator_(this)
 {
     setPage(page_);
 
@@ -43,6 +46,7 @@ BrowserView::BrowserView(QWidget *parent)
     connect(this, SIGNAL(loadStarted(void)), this, SLOT(onLoadStarted(void)));
     connect(this, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
     connect(this, SIGNAL(loadProgress(int)), this, SLOT(onLoadProgress(int)));
+    connect(this, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
     connect(page(), SIGNAL(repaintRequested(const QRect &)), this, SLOT(onRepaintRequested(const QRect&)));
     connect(page(), SIGNAL(loadingUrl(const QUrl&)), this, SIGNAL(urlChanged(const QUrl &)));
     connect(page(), SIGNAL(downloadRequested(const QNetworkRequest &)), this,
@@ -88,7 +92,11 @@ BrowserView::BrowserView(QWidget *parent)
     }
 
     db_.load(site_list_);
+    mouse_last_pos_ = QCursor::pos();
     //setTextSizeMultiplier(DEFAULT_FONT);
+
+    scroll_timer_.setInterval(500);
+    connect(&scroll_timer_, SIGNAL(timeout()), this, SLOT(onScrollPage()));
 }
 
 BrowserView::~BrowserView()
@@ -99,6 +107,7 @@ BrowserView::~BrowserView()
 /// The url will not be updated.
 void BrowserView::myLoad(const QUrl & url)
 {
+    DebugWB("");
     current_url_ = url;
     load(url);
 }
@@ -137,6 +146,11 @@ void BrowserView::hideScrollbar()
     QString code = "$('body').css('overflow', 'hidden')";
     page()->mainFrame()->evaluateJavaScript(code);
     
+}
+
+void BrowserView::onUrlChanged(const QUrl & url)
+{
+    focused_input_id_.clear();
 }
 
 void BrowserView::onLoadStarted(void)
@@ -234,10 +248,6 @@ void BrowserView::onLoadFinished(bool ok)
         }
     }
     updateViewportRange();
-
-    //qDebug() << page()->currentFrame()->documentElement().toOuterXml();
-    //collect the form elements in current page
-    form_elements_ = page()->currentFrame()->documentElement().findAll("input[type=text],input[type=password], textarea");
 }
 
 bool BrowserView::needConfigNetwork()
@@ -375,8 +385,11 @@ void BrowserView::mouseMoveEvent(QMouseEvent *me)
     }
     else
     {
-        me->accept();
+        scrollPageOnMouseMove(me);
     }
+
+    cursor_navigator_.updateCursor();
+    me->accept();
 }
 
 void BrowserView::mouseReleaseEvent(QMouseEvent*me)
@@ -415,73 +428,85 @@ void BrowserView::mouseReleaseEvent(QMouseEvent*me)
     }
 }
 
+void BrowserView::onScrollPage()
+{
+    if (!last_scroll_pos_.isNull() && should_scroll_page_)
+    {
+        //qDebug("Act move Screen to (%d, %d)", last_scroll_pos_.x(), last_scroll_pos_.y());
+        page()->currentFrame()->setScrollPosition(last_scroll_pos_);
+        QCursor::setPos(mouse_last_pos_);
+    }
+    last_scroll_pos_ = QPoint();
+    should_scroll_page_ = false;
+}
+
 void BrowserView::keyPressEvent(QKeyEvent *e)
 {
-    // We only handle key release event, so ignore some keys.
-    switch (e->key())
+    //We only handle key release event, so ignore some keys.
+    if (e->key() == Qt::Key_Select)
+        //|| e->key() == Qt::Key_Return)
     {
-    case Qt::Key_Down:
-    case Qt::Key_Up:
-        break;
-    case Qt::Key_AltGr:
-        if (isformFocused())
+        if (!cursor_navigator_.findCursorElementRect().isNull())
         {
-            emit keyboardKeyPressed();
+            qDebug("Emit fake mouse press event");
+            cursor_navigator_.postMousePressEvent();
+            e->accept();
+            return;
         }
-        break;
-    default:
-        QWebView::keyPressEvent(e);
-        break;
     }
-    e->accept();
+    QWebView::keyPressEvent(e);
 }
 
 void BrowserView::keyReleaseEvent(QKeyEvent *ke)
 {
-    qDebug() << __FUNCTION__;
+    if (ke->key() == Qt::Key_Select)
+    {
+        //qDebug("BrowserView gets Key_Select RELEASED event");
+    }
+
     switch (ke->key())
     {
     case Qt::Key_Left:
-        myScroll(0, -PAGE_REPEAT);
-        break;
     case Qt::Key_Right:
-        myScroll(0, PAGE_REPEAT);
-        break;
-    case Qt::Key_PageDown:
-        myScroll(0, rect().height() - PAGE_REPEAT);
-        break;
     case Qt::Key_Down:
-        focusNextPrevChild(true);
+    case Qt::Key_Up:
+        if (!cursor_navigator_.moveCursor(ke->key()))
+        {
+            scrollScreenByKey(ke->key());
+        }
         break;
     case Qt::Key_PageUp:
         myScroll(0, -rect().height() + PAGE_REPEAT);
         break;
-    case Qt::Key_Up:
-        focusNextPrevChild(false);
+    case Qt::Key_PageDown:
+        myScroll(0, rect().height() - PAGE_REPEAT);
         break;
-    case Qt::Key_C:
-        clearCookies();
+    case Qt::Key_AltGr:
+        emit keyboardKeyPressed();
         break;
-    case Qt::Key_R:
-        enterReaderMode(true);
-        break;
-    case Qt::Key_Z:
-        setZoomFactor(zoomFactor() + 1.0f);
-        break;
-    case Qt::Key_D:
-        setZoomFactor(zoomFactor() > 2.0f ? zoomFactor() - 1.0f : 1.0f);
-        break;
-    case Qt::Key_Home:
-        if (parentWidget())
+    case Qt::Key_Select:
+    //case Qt::Key_Return:
+        if (!cursor_navigator_.findCursorElementRect().isNull())
         {
-            QApplication::postEvent(parentWidget(), ke);
+            qDebug("Emit fake mouse release event");
+            cursor_navigator_.postMouseReleaseEvent();
         }
         break;
+    case Qt::Key_Home:
+    case Qt::Key_Menu:
+    case Qt::Key_Escape:
+        ///*if (parentWidget())
+        //{
+        //    QKeyEvent* forward = new QKeyEvent(*ke);
+        //    QApplication::postEvent(parentWidget(), forward);
+        //}*/
+        ke->ignore();
+        return;
     default:
         QWebView::keyReleaseEvent(ke);
         break;
     }
-    ke->ignore();
+    ke->accept();
 }
 
 void BrowserView::contextMenuEvent(QContextMenuEvent * event)
@@ -681,6 +706,26 @@ void BrowserView::myScrollTo(const QPoint &pt)
     updateViewportRange();
 }
 
+void BrowserView::scrollScreenByKey(int key)
+{
+    switch (key)
+    {
+    case Qt::Key_Up:
+        myScroll(0, -(rect().height() >> 1));
+        break;
+    case Qt::Key_Down:
+        myScroll(0, (rect().height() >> 1));
+        break;
+    case Qt::Key_Left:
+        myScroll(-(rect().width() >> 1), 0);
+        break;
+    case Qt::Key_Right:
+        myScroll((rect().width() >> 1), 0);
+        break;
+    }
+    cursor_navigator_.moveCursorToCenter(key);
+}
+
 QPointF BrowserView::currentOffset() const
 {
     return page()->currentFrame()->scrollPosition();
@@ -777,12 +822,19 @@ void BrowserView::formFocused (const QString& form_id,
                                const QString& input_id,
                                const QString& input_name)
 {
+    focused_input_id_ = input_id;
     hand_tool_enabled_ = false;
     emit inputFormFocused(form_id, form_name, form_action, input_type, input_id, input_name);
 }
 
+bool BrowserView::isWebInputFocused()
+{
+    return !focused_input_id_.isEmpty();
+}
+
 void BrowserView::formLostFocus(void)
 {
+    focused_input_id_.clear();
     hand_tool_enabled_ = true;
     emit inputFormLostFocus();
 }
@@ -947,9 +999,30 @@ bool BrowserView::eventFilter(QObject *obj, QEvent *e)
 
 void BrowserView::focusOutEvent(QFocusEvent * e)
 {
-    qDebug("Focus Out Event");
-    emit focusOut();
+    DebugWB("");
+    emit mouseModeEnterd(false);
     QWebView::focusOutEvent(e);
+}
+
+void BrowserView::focusInEvent(QFocusEvent* event)
+{
+    DebugWB("");
+    emit mouseModeEnterd(true);
+    QWebView::focusInEvent(event);
+}
+
+void BrowserView::hideEvent(QHideEvent* event)
+{
+    DebugWB("");
+    emit mouseModeEnterd(false);
+    QWebView::hideEvent(event);
+}
+
+void BrowserView::showEvent(QShowEvent* event)
+{
+    DebugWB("");
+    emit mouseModeEnterd(true);
+    QWebView::showEvent(event);
 }
 
 void BrowserView::storeConf(const QUrl & url)
@@ -1064,15 +1137,10 @@ bool BrowserView::zoom(qreal zoom_span, int focus_x, int focus_y)
     qreal user_zoom = scale_context_.previous_zoom_;
     const qreal previous_zoom = user_zoom;
     user_zoom *= zoom_span;
-    QSize pageSize = page()->currentFrame()->contentsSize();
 
-    qDebug("Zoom: span:%f, userZoom:%f, pageWidth:%d, windowWidth:%d", zoom_span, user_zoom, pageSize.width(), GetWindowMetrics(UIScreenWidthIndex));
-    if (zoomFactor() <= 1.0 && pageSize.width() * zoom_span < GetWindowMetrics(UIScreenWidthIndex))
+    if (user_zoom <= 1)
     {
-        if (pageSize.width() >= GetWindowMetrics(UIScreenWidthIndex))
-            user_zoom = zoomFactor() * static_cast<qreal>(GetWindowMetrics(UIScreenWidthIndex)) / static_cast<qreal>(pageSize.width());
-        else
-            user_zoom = zoomFactor() * 1.0;
+        user_zoom = 1.0;
     }
     else if (user_zoom > zoom_max_factor_)
     {
@@ -1118,7 +1186,7 @@ bool BrowserView::zoom(qreal zoom_span, int focus_x, int focus_y)
 
 void BrowserView::onScaling()
 {
-    qDebug("Web View is scaling");
+    //qDebug("Web View is scaling");
 }
 
 void BrowserView::clearHistoryData()
@@ -1129,6 +1197,7 @@ void BrowserView::clearHistoryData()
 
 void BrowserView::zoom(bool in)
 {
+    DebugWB("%f", zoomFactor());
     if (in)
     {
         if (!isMaxiZoomConditionReached())
@@ -1148,11 +1217,93 @@ void BrowserView::zoom(bool in)
 bool BrowserView::isMiniZoomConditionReached()
 {
     QSize pageSize = page()->currentFrame()->contentsSize();
+    DebugWB("%d, %f", pageSize.width(), zoomFactor());
     return ((pageSize.width() <= GetWindowMetrics(UIScreenWidthIndex)) && (zoomFactor() <= 1.0));
 }
 
 bool BrowserView::isMaxiZoomConditionReached()
 {
     return zoomFactor() >= zoom_max_factor_;
+}
+
+int BrowserView::isInScrollRepsonseArea(QPoint p)
+{
+    for (int i = 0; i < scroll_page_areas_.size(); ++i)
+    {
+        if (scroll_page_areas_[i].contains(p))
+            return i;
+    }
+
+    return -1;
+}
+
+bool BrowserView::scrollPageOnMouseMove(QMouseEvent* e)
+{
+    //DebugWB("mouse: (%d, %d), (%d, %d)", mouse_last_pos_.x(), mouse_last_pos_.y(), e->globalPos().x(), e->globalPos().y());
+    if (scroll_page_areas_.empty())
+    {
+        scroll_page_areas_.push_back(QRect(x(), y(), width(), scroll_page_response_distance));
+        scroll_page_areas_.push_back(QRect(x(), y(), scroll_page_response_distance, height()));
+        scroll_page_areas_.push_back(QRect(x(), y() + height() - scroll_page_response_distance, width(), scroll_page_response_distance));
+        scroll_page_areas_.push_back(QRect(x() + width() - scroll_page_response_distance, y(), scroll_page_response_distance, height()));
+    }
+    if (e)
+    {
+        if (last_scroll_pos_.isNull())
+        {
+            last_scroll_pos_ = page()->currentFrame()->scrollPosition();
+        }
+        QSize pageSize = page()->currentFrame()->contentsSize();
+        QPoint mouseDeltaPos = e->globalPos() - mouse_last_pos_;
+        //qDebug() << last_scroll_pos_ << "\t" << pageSize << "\t" << size();
+
+        //up
+        if (scroll_page_areas_[0].contains(mouse_last_pos_) 
+         && scroll_page_areas_[0].contains(e->globalPos())
+         && mouseDeltaPos.y() < 0)
+        {
+            should_scroll_page_ = last_scroll_pos_.y() > 0 || should_scroll_page_; 
+        }
+        //DebugWB("shouldScrollPage: %d", shouldScrollPage);
+        //left
+        if (scroll_page_areas_[1].contains(mouse_last_pos_) 
+         && scroll_page_areas_[1].contains(e->globalPos())
+         && mouseDeltaPos.x() < 0)
+        {
+            should_scroll_page_ = last_scroll_pos_.x() > 0 || should_scroll_page_;
+        }
+        //DebugWB("shouldScrollPage: %d", shouldScrollPage);
+        //down
+        if (scroll_page_areas_[2].contains(mouse_last_pos_) 
+         && scroll_page_areas_[2].contains(e->globalPos())
+         && mouseDeltaPos.y() > 0)
+        {
+            should_scroll_page_ = (last_scroll_pos_.y() + size().height()) < pageSize.height() || should_scroll_page_;
+        }
+        //DebugWB("shouldScrollPage: %d", shouldScrollPage);
+        //right
+        if (scroll_page_areas_[3].contains(mouse_last_pos_) 
+         && scroll_page_areas_[3].contains(e->globalPos())
+         && mouseDeltaPos.x() > 0)
+        {
+            should_scroll_page_ = (last_scroll_pos_.x() + size().width()) < pageSize.width() || should_scroll_page_;
+        }
+        //DebugWB("shouldScrollPage: %d", shouldScrollPage);
+        if (should_scroll_page_)
+        {
+            last_scroll_pos_ = last_scroll_pos_ + mouseDeltaPos;
+            //qDebug("Move Screen to (%d, %d)", last_scroll_pos_.x(), last_scroll_pos_.y());
+            scroll_timer_.start();
+            //page()->currentFrame()->setScrollPosition(scrollPos + mouseDeltaPos);
+            //QCursor::setPos(mouse_last_pos_);
+        }
+        else
+        {
+            mouse_last_pos_ = e->globalPos();
+        }
+        return true;
+    }
+    
+    return false;
 }
 }

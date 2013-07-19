@@ -1,5 +1,6 @@
 #include <QtGui>
 #include <QString>
+#include <QScreenCursor>
 #include "web_application.h"
 #include "System/inc/system_manager.h"
 #include "Device/device.h"
@@ -8,6 +9,14 @@ using namespace webbrowser;
 
 int main(int argc, char * argv[])
 {
+#ifdef BUILD_FOR_ARM
+    if (QScreenCursor::instance())
+    {
+        QScreenCursor::instance()->hide();
+    }
+    QWSServer::setCursorVisible(false);
+#endif
+
     Device::instance();
 #ifndef Q_WS_QWS
 #ifndef WIN32
@@ -47,6 +56,15 @@ int main(int argc, char * argv[])
 #endif
 #endif
     Q_INIT_RESOURCE(res);
+    
+#ifdef BUILD_FOR_ARM
+    if (QScreenCursor::instance())
+    {
+        QScreenCursor::instance()->set(QImage(":/res/cursor.png"), 0, 0);
+        QScreenCursor::instance()->show();
+        QWSServer::setCursorVisible(true);
+    }
+#endif
 
     WebApplication app(argc, argv);
     //WebApplicationAdaptor adaptor(&app);

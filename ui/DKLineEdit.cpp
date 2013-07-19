@@ -72,4 +72,18 @@ void DKLineEdit::mousePressEvent(QMouseEvent* event)
         QLineEdit::mousePressEvent(event);
     }
 }
+
+void DKLineEdit::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_AltGr)
+    {
+        emit focusSignal(true);
+        event->accept();
+        return;
+    }
+    else
+    {
+        QLineEdit::keyPressEvent(event);
+    }
+}
 }

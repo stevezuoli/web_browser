@@ -1,6 +1,7 @@
 #include "ui/DKPushButton.h"    
 #include <QPainter>
 #include "common/WindowsMetrics.h"
+#include "common/debug.h"
 #include "Device/device.h"
 #include <QDebug>
 #include "System/inc/system_manager.h"
@@ -75,6 +76,11 @@ void DKPushButton::InitDKProperty()
     setDKStyleSheet();
 }
 
+void DKPushButton::setFontSize(int fontsize)
+{
+    setStyleSheet(PUSH_BUTTON_STYLE.arg(fontsize));
+}
+
 void DKPushButton::setBackGroundImagePaths(const QString& focusInPath, const QString& focusOutPath)
 {
     if (!focusInPath.isEmpty() || !focusOutPath.isEmpty())
@@ -83,18 +89,6 @@ void DKPushButton::setBackGroundImagePaths(const QString& focusInPath, const QSt
     }
     m_focusInBackgroundImage.load(focusInPath);
     m_focusOutBackgroundImage.load(focusOutPath);
-    
-    /*
-     *qDebug() << "depth: " << m_focusInBackgroundImage.depth();
-     *qDebug() << "format: " << m_focusInBackgroundImage.format();
-     *qDebug() << "bitPlaneCount: " << m_focusInBackgroundImage.bitPlaneCount();
-     *const uchar* data = m_focusInBackgroundImage.bits();
-     *for (int i = 0; i < m_focusInBackgroundImage.byteCount(); ++i)
-     *{
-     *    printf("%x ", *(data + i));
-     *}
-     *printf("\n");
-     */
 }
 
 void DKPushButton::setDisableBackGroundImagePath(const QString& disablePath)
@@ -109,13 +103,6 @@ void DKPushButton::setDisableBackGroundImagePath(const QString& disablePath)
 
 void DKPushButton::paintEvent(QPaintEvent* e)
 {
-    //const int leftPixel = 2;
-    //const int rightPixel = 2;
-    //const int bottomPixel = 4;
-    //const int margin = 10;
-    //static QRect leftRect(0, margin, leftPixel, height() - (margin << 1));
-    //static QRect rightRect(width() - rightPixel, margin, rightPixel, height() - (margin << 1));
-    //static QRect bottomRect(margin, height() - bottomPixel, width() - (margin << 1), bottomPixel);
     if (shape_type_ == ST_Image)
     {
         QPainter painter(this);
@@ -144,7 +131,9 @@ void DKPushButton::paintEvent(QPaintEvent* e)
         }
         if (!drawingImage.isNull())
         {
-            painter.drawImage(rect(), drawingImage);
+            QRect targetRect = drawingImage.rect();
+            targetRect.moveCenter(rect().center());
+            painter.drawImage(targetRect, drawingImage);
         }
         painter.drawText(rect(), Qt::AlignCenter, text());
     }
@@ -182,18 +171,21 @@ void DKPushButton::paintEvent(QPaintEvent* e)
     }
     else if (shape_type_ == ST_Normal)
     {
+        //DebugWB("%x, %d, %d, %d", this, hasFocus(), isChecked(), isDown());
         QPushButton::paintEvent(e);
     }
 }
 
 void DKPushButton::mousePressEvent(QMouseEvent* e)
 {
+    //DebugWB("%x", this);
     pressed_ = true;
     QPushButton::mousePressEvent(e);
 }
 
 void DKPushButton::mouseReleaseEvent(QMouseEvent* e)
 {
+    //DebugWB("%x", this);
     pressed_ = false;
     QPushButton::mouseReleaseEvent(e);
 }

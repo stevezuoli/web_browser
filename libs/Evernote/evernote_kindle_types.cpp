@@ -206,11 +206,12 @@ bool EvernoteContent::parseAnnotation(QDomElement& root_node)
     item.parseChapterInfo(root_node);
     if (item.isValid())
     {
-        if (chapters.indexOf(item.chapter_id) < 0)
+        int chapter_index = item.chapter_num.toInt();
+        if (chapters.find(chapter_index) == chapters.end())
         {
-            chapters.push_back(item.chapter_id);
+            chapters[chapter_index] = item.chapter_id;
         }
-        annotations.insert(item.chapter_id, item);
+        annotations.insert(chapter_index, item);
         return true;
     }
     return false;

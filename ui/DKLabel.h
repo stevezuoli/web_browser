@@ -13,6 +13,7 @@ public:
     DKLabel(const QString& text, QWidget* parent = 0);
 
     void setFontSize(int fontSize);
+    void setFontColor(const char* color);
 
 private:
     void setDKStyleSheet();

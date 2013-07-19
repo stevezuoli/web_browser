@@ -139,6 +139,20 @@ void SystemManager::enterKeypadMode()
     kindle_fiveway_->setKeypadMode(true);
 }
 
+bool SystemManager::isKeypadMode()
+{
+#ifdef BUILD_FOR_ARM
+    QWSMouseHandler* mouse_handler = QWSServer::mouseHandler();
+    if (mouse_handler != kindle_fiveway_)
+    {
+        // NOTE: this function should only effect on non-touch version
+        qDebug("isKeypadMode can only effect on non-touch version");
+        return false;
+    }
+#endif
+    return kindle_fiveway_->isKeypadMode();
+}
+
 void SystemManager::setFullUpdateEvery(int n)
 {
 #ifdef BUILD_FOR_ARM

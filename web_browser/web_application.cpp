@@ -1,3 +1,4 @@
+#include <QScreenCursor>
 #include "web_application.h"
 #include "browser_mainwindow.h"
 #include "bookmark_model.h"
@@ -37,11 +38,13 @@ WebApplication::WebApplication(int &argc, char **argv)
 {
     // configure system manager
     SystemManager::instance()->setFullUpdateEvery(FULL_UPDATE_EVERY);
+    SystemManager::instance()->enterKeypadMode();
 
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTranslator* translator = new QTranslator();
     translator->load(":/res/WebBrowser_Chn");
     installTranslator(translator);
+    //QApplication::setOverrideCursor(QCursor(QPixmap(":/res/cursor.png")));
 
     main_window_ = new BrowserMainWindow();
     bookmark_model_ = new BookmarkModel();

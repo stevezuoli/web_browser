@@ -22,6 +22,7 @@ public:
     void resumeTouch();
     void enterMouseMode();
     void enterKeypadMode();
+    bool isKeypadMode();
 
     void setFullUpdateEvery(int n) ;
     void forceFullUpdate(bool fullScreen = false);

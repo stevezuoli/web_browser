@@ -48,6 +48,8 @@ namespace ui
     MACRO_NAME(KEYBOARD_PRESSED, "keyboard_pressed@kt.png", "keyboard_pressed@kp.png") \
     MACRO_NAME(KEYBOARD_DISABLE, "keyboard_disable@kt.png", "keyboard_disable@kp.png") \
     MACRO_NAME(REFRESH, "refresh@kt.png", "refresh@kp.png") \
+    MACRO_NAME(LEFT_ARROW, "left_arrow@kt.png", "left_arrow@kp.png") \
+    MACRO_NAME(RIGHT_ARROW, "right_arrow@kt.png", "right_arrow@kp.png") \
 
 enum ImageIndex
 {

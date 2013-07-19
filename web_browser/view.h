@@ -6,6 +6,7 @@
 #include "Database/web_data.h"
 #include "page.h"
 #include "bookmark_model.h"
+#include "cursor_navigator.h"
 #include "Gesture/scale_gesture_detector.h"
 
 using namespace web_database;
@@ -56,6 +57,9 @@ public:
     bool isMiniZoomConditionReached();
     bool isMaxiZoomConditionReached();
 
+    // input has focus or not
+    bool isWebInputFocused();
+
 protected:
     virtual QWebView *createWindow(QWebPage::WebWindowType type);
     virtual void mousePressEvent (QMouseEvent * );
@@ -68,14 +72,16 @@ protected:
     virtual void closeEvent(QCloseEvent * event);
     virtual bool eventFilter(QObject *obj, QEvent *event);
     virtual void focusOutEvent(QFocusEvent * event);
+    virtual void focusInEvent(QFocusEvent* event);
+    virtual void hideEvent(QHideEvent* event);
+    virtual void showEvent(QShowEvent* event);
     //virtual bool focusNextPrevChild(bool next);
 
 Q_SIGNALS:
     void requestOTA(const QUrl & url);
-    void focusOut();
     void progressChangedSignal(const int, const int);
     void viewportUpdated(const int, const int, const int);
-    //void showHome();
+    void mouseModeEnterd(bool); 
 
     void inputFormFocused(const QString& form_id,
                           const QString& form_name,
@@ -134,6 +140,7 @@ private Q_SLOTS:
     void onLoadStarted(void);
     void onLoadProgress(int);
     void onLoadFinished(bool);
+    void onUrlChanged(const QUrl & url);
     void onRepaintRequested(const QRect&);
 
     void onSelectionChanged();
@@ -165,6 +172,7 @@ private Q_SLOTS:
     void updateViewportRange();
     QPointF currentOffset() const;
     void accurateScroll(int dx, int dy);
+    void scrollScreenByKey(int key);
 
     void populateJavaScriptWindowObject (void);
     void hideGif();
@@ -174,12 +182,17 @@ private Q_SLOTS:
     void hideScrollbar();
 
     //void onMicroFocusChanged();
+    void onScrollPage();
+
 private:
     void addFormsFocusEvent(void);
     void addSelectEvents(void);
     void storeConf(const QUrl & url);
     bool needConfigNetwork();
     void clearFocusWidgets();
+
+    bool scrollPageOnMouseMove(QMouseEvent* e);
+    int isInScrollRepsonseArea(QPoint p);
 
     // Bookmarks
     void displayBookmarks();
@@ -242,6 +255,20 @@ private:
     
     qreal zoom_step_;
     qreal zoom_max_factor_;
+
+    //scroll page when mouse moved in these areas
+    QList<QRect> scroll_page_areas_;
+    QPoint mouse_last_pos_;
+    QPoint last_scroll_pos_;
+    bool should_scroll_page_;
+    QTimer scroll_timer_;
+
+    // focused widgets
+    QString focused_input_id_;
+
+    // cursor
+    CursorNavigator cursor_navigator_;
+
 private:
     friend class HoldAutoSaver;
 };

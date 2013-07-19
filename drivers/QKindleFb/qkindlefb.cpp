@@ -622,11 +622,11 @@ bool QKindleFb::initDevice()
         qt_screencursor = new QKindleCursor(d_ptr->fd, data, dw, dh) ;
 #else
         QScreenCursor::initSoftwareCursor();
-        if (QScreenCursor::instance())
-        {
-        QWSServer::setCursorVisible(false);
-            QScreenCursor::instance()->hide();
-        }
+        //if (QScreenCursor::instance())
+        //{
+        //    QWSServer::setCursorVisible(false);
+        //    QScreenCursor::instance()->hide();
+        //}
 #endif
     }
 #endif
@@ -811,7 +811,7 @@ void QKindleFb::exposeRegion(QRegion region, int changing)
             if (fastUpdates && canFastUpdate(dirtyRect, dw, dh))
             {
                 qDebug("Fast update:%d, %d", dirtyRect.width(), dirtyRect.height());
-                ud.waveform_mode = WAVEFORM_MODE_DU;
+                ud.waveform_mode = WAVEFORM_MODE_A2;
             }
 
             ud.update_mode = (doFullUpdate == false) ? UPDATE_MODE_PARTIAL : UPDATE_MODE_FULL ;
@@ -833,7 +833,7 @@ void QKindleFb::exposeRegion(QRegion region, int changing)
             if (fastUpdates && canFastUpdate(dirtyRect, dw, dh))
             {
                 qDebug("Fast update:%d, %d", dirtyRect.width(), dirtyRect.height());
-                ud.waveform_mode = WAVEFORM_MODE_DU;
+                ud.waveform_mode = WAVEFORM_MODE_A2;
             }
 
             ud.update_mode = (doFullUpdate == false) ? UPDATE_MODE_PARTIAL : UPDATE_MODE_FULL ;

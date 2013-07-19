@@ -10,6 +10,7 @@
 #include "common/debug.h"
 #include "url_lineedit.h"
 #include "System/inc/system_manager.h"
+#include "Device/device.h"
 
 using namespace ui::windowsmetrics;
 
@@ -25,6 +26,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     , history_forward_tool_button_(this)
     , menu_tool_button_(this)
     , keyboard_button_(this)
+    , title_label_(this)
     , address_lineedit_(new UrlLineEdit)
     , navigation_toolbar_(new DKToolBar(tr("Navigation"), this))
     , view_(new BrowserView)
@@ -36,6 +38,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     , xiaomi_migration_manager_()
     , home_page_url_(ConstStrings::HOME_PAGE)
     , reader_mode_(false)
+    , mouse_mode_(false)
 {
 #ifndef Q_WS_QWS
     resize(GetWindowMetrics(UIScreenWidthIndex), GetWindowMetrics(UIScreenHeightIndex));
@@ -59,7 +62,7 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     connect(view_, SIGNAL(linkClicked(const QUrl &)), this, SLOT(onLinkClicked(const QUrl &)));
     connect(view_, SIGNAL(urlChanged(const QUrl&)), this, SLOT(onUrlChanged(const QUrl&)));
     connect(view_, SIGNAL(loadFinished(bool)), this, SLOT(onLoadFinished(bool)));
-    connect(view_, SIGNAL(keyboardKeyPressed(void)), this, SLOT(switchKeyboardVisible(void)));
+    connect(view_, SIGNAL(keyboardKeyPressed(void)), this, SLOT(onKeyboardKeyPressed(void)));
     connect(view_, SIGNAL(inputFormFocused(const QString&, const QString&,
                                             const QString&, const QString&,
                                             const QString&, const QString&)),
@@ -70,12 +73,22 @@ BrowserMainWindow::BrowserMainWindow(QWidget *parent)
     connect(view_, SIGNAL(displayTextOnAddressEdit(const QString&)), this, SLOT(onLineEditTextChanged(const QString&)));
     connect(view_, SIGNAL(scaleBegin()), this, SLOT(onViewScaleBegin()));
     connect(view_, SIGNAL(scaleEnd()), this, SLOT(onViewScaleEnd()));
+    connect(view_, SIGNAL(mouseModeEnterd(bool)), this, SLOT(shiftMouseMode(bool)));
+    connect(keyboard_, SIGNAL(keyboardKeyPressed(void)), this, SLOT(switchKeyboardVisibility(void)));
+    connect(keyboard_, SIGNAL(keyboardVisibleChanged(bool)), this, SLOT(onKeyboardVisibleChanged(bool)));
 
     connect(history_page_, SIGNAL(historyPageQuit(const QUrl&)), this, SLOT(hideHistoryPage(const QUrl&)));
 #ifdef Q_WS_QWS
     connect(qApp->desktop(), SIGNAL(resized(int)),
             this, SLOT(onScreenSizeChanged(int)), Qt::QueuedConnection);
 #endif
+    connect(&menu_, SIGNAL(becomeVisible(bool)), this, SLOT(shiftMouseMode(bool)));
+
+    setCursor(QCursor(QPixmap(":/res/cursor.png")));
+
+    view_->installEventFilter(this);
+    history_page_->installEventFilter(this);
+    menu_.installEventFilter(this);
 }
 
 BrowserMainWindow::~BrowserMainWindow()
@@ -203,11 +216,35 @@ void BrowserMainWindow::setupToolBar()
     navigation_toolbar_->setFloatable(false);
     navigation_toolbar_->setMovable(false);
     address_lineedit_->setFixedHeight(GetWindowMetrics(WebBrowserAddressEditHeightIndex));
-    navigation_toolbar_->addWidget(&history_back_tool_button_);
-    navigation_toolbar_->addWidget(&history_forward_tool_button_);
-    navigation_toolbar_->addWidget(address_lineedit_);
-    navigation_toolbar_->addWidget(&keyboard_button_);
-    navigation_toolbar_->addWidget(&menu_tool_button_);
+
+    toolbar_actions_[TBA_Back] = navigation_toolbar_->addWidget(&history_back_tool_button_);
+    toolbar_actions_[TBA_Forward] = navigation_toolbar_->addWidget(&history_forward_tool_button_);
+    toolbar_actions_[TBA_Edit] = navigation_toolbar_->addWidget(address_lineedit_);
+    if (Device::isTouch())
+    {
+        toolbar_actions_[TBA_Keyboard] = navigation_toolbar_->addWidget(&keyboard_button_);
+        toolbar_actions_[TBA_Menu] = navigation_toolbar_->addWidget(&menu_tool_button_);
+    }
+    else
+    {
+        title_label_.setContentsMargins(0, 10, 0, 10);
+        title_label_.setText(tr("History"));
+        title_label_.setFontSize(30);
+        QSizePolicy sp = title_label_.sizePolicy();
+        sp.setHorizontalPolicy(QSizePolicy::Expanding);
+        title_label_.setSizePolicy(sp);
+        title_label_.setAlignment(Qt::AlignCenter);
+        toolbar_actions_[TBA_Title] = navigation_toolbar_->addWidget(&title_label_);
+        toolbar_actions_[TBA_Title]->setVisible(false);
+
+        //just for ui adjusted
+        QLabel* label = new QLabel(navigation_toolbar_);
+        label->setFixedWidth(GetWindowMetrics(UIHorizonMarginIndex));
+        toolbar_actions_[TBA_Space] = navigation_toolbar_->addWidget(label);
+
+        keyboard_button_.setVisible(false);
+        menu_tool_button_.setVisible(false);
+    }
 
     QString styleSheet("QToolButton::enabled{image: url(%1)}"
                        "QToolButton::pressed{image: url(%2)}" 
@@ -239,11 +276,40 @@ void BrowserMainWindow::setupToolBar()
     updateBackForwardButtonStatus();
     connect(&history_back_tool_button_, SIGNAL(clicked()), this, SLOT(showBackHistoryPage()));
     connect(&history_forward_tool_button_, SIGNAL(clicked()), this, SLOT(showForwardHistoryPage()));
-    connect(&menu_tool_button_, SIGNAL(clicked()), this, SLOT(showMenu()));
-    connect(&keyboard_button_, SIGNAL(clicked()), this, SLOT(switchKeyboardVisible()));
+    connect(&menu_tool_button_, SIGNAL(clicked()), this, SLOT(switchMenuVisibility()));
+    connect(&keyboard_button_, SIGNAL(clicked()), this, SLOT(switchKeyboardVisibility()));
 
-    connect(address_lineedit_->lineEdit(), SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
-    connect(address_lineedit_->lineEdit(), SIGNAL(focusSignal(bool)), this, SLOT(onAddressInputFocus(bool)));
+    connect(address_lineedit_, SIGNAL(returnPressed()), this, SLOT(openUrlInAddress()));
+    connect(address_lineedit_, SIGNAL(focusSignal(bool)), this, SLOT(onAddressInputFocus(bool)));
+}
+
+bool BrowserMainWindow::eventFilter(QObject* watched, QEvent* event)
+{
+    if (event->type() == QEvent::KeyPress)
+    {
+        QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+        if (keyEvent->key() == Qt::Key_Escape && watched != &menu_ && watched != keyboard_)
+        {
+            onBackKeyPressed();
+            DebugWB("eventfilter return true;");
+            return true;
+        }
+    }
+
+    return QWidget::eventFilter(watched, event);
+}
+
+void BrowserMainWindow::onBackKeyPressed()
+{
+    DebugWB("menu: %d, keyboard: %d", menu_.isVisible(), keyboard_->isVisible());
+    if (history_page_->isVisible())
+    {
+        showHistoryPage(false);
+    }
+    else if (view_->hasFocus() && view_->isVisible())
+    {
+        showBackHistoryPage();
+    }
 }
 
 void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
@@ -251,16 +317,32 @@ void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
     ke->accept();
     switch (ke->key())
     {
-    case Qt::Key_Escape:
+    //case Qt::Key_Escape:
+        //onBackKeyPressed();
+        //break;
     case Qt::Key_Home:
         exitBrowser();
+        break;
+    case Qt::Key_Menu:
+        switchMenuVisibility();
         break;
     case Qt::Key_Down:
         if (address_lineedit_->hasFocus())
         {
-            view_->setFocus();
-            return;
+            if (view_->isVisible())
+            {
+                view_->setFocus();
+            }
+            else
+            {
+                history_page_->setFocus();
+            }
         }
+        else
+        {
+            QWidget::keyReleaseEvent(ke);
+        }
+        break;
     default:
         QWidget::keyReleaseEvent(ke);
         break;
@@ -270,15 +352,7 @@ void BrowserMainWindow::keyReleaseEvent(QKeyEvent *ke)
 /// The keyPressEvent could be sent from virtual keyboard.
 void BrowserMainWindow::keyPressEvent(QKeyEvent * ke)
 {
-    ke->accept();
-
-    QKeyEvent * key_event = new QKeyEvent(ke->type(), ke->key(), ke->modifiers(), ke->text());
-    QApplication::postEvent(view_, key_event);
-
-    while (QApplication::hasPendingEvents())
-    {
-        QApplication::processEvents();
-    }
+    ke->ignore();
 }
 
 void BrowserMainWindow::closeEvent(QCloseEvent *e)
@@ -298,6 +372,7 @@ void BrowserMainWindow::onInputFormFocused(const QString& form_id,
                                       const QString& input_id,
                                       const QString& input_name)
 {
+    DebugWB("");
     // fill keyboard private data
     //keyboard_priv_.form_action = form_action;
     //keyboard_priv_.form_id     = form_id;
@@ -332,12 +407,20 @@ void BrowserMainWindow::showForwardHistoryPage()
     view_->forward();
 }
 
-void BrowserMainWindow::showMenu()
+void BrowserMainWindow::switchMenuVisibility()
 {
-    showSoftKeyboardIME(false);
-    QPoint popupPoint = navigation_toolbar_->rect().bottomRight();
-    popupPoint.rx() -= menu_.sizeHint().width();
-    menu_.popup(mapToGlobal(popupPoint));
+    if (menu_.isVisible())
+    {
+        menu_.hide();
+    }
+    else
+    {
+        showSoftKeyboardIME(false);
+        QPoint popupPoint = navigation_toolbar_->rect().bottomRight();
+        popupPoint.rx() -= menu_.sizeHint().width();
+        menu_.setActiveAction(menu_actions[MA_BookStore]);
+        menu_.popup(mapToGlobal(popupPoint));
+    }
 }
 
 void BrowserMainWindow::setupMenu()
@@ -349,6 +432,8 @@ void BrowserMainWindow::setupMenu()
     //menu_.addAction(tr("Bookmark manager"), this, SLOT(showBookmarkPage()))->setEnabled(false);
     //menu_.addSeparator();
     menu_actions[MA_History] = menu_.addAction(tr("History"), this, SLOT(showHistoryPage()));
+    menu_.addSeparator();
+    menu_actions[MA_Mouse] = menu_.addAction(tr("Mouse Mode"), this, SLOT(onMouseModeToggled()));
     menu_.addSeparator();
     menu_actions[MA_Reader_Mode] = menu_.addAction(tr("Reader Mode"), this, SLOT(onReaderModeToggled()));
     menu_.addSeparator();
@@ -395,8 +480,6 @@ void BrowserMainWindow::showHistoryPage(bool show)
     updateMenuStatusInHistoryPage(show);
     if (history_page_)
     {
-        history_page_->setVisible(show);
-        view_->setVisible(!show);
         if (show)
         {
             history_page_->setFocus();
@@ -405,6 +488,9 @@ void BrowserMainWindow::showHistoryPage(bool show)
         {
             view_->setFocus();
         }
+        showOnlyTitleOnToolBar(show);
+        history_page_->setVisible(show);
+        view_->setVisible(!show);
     }
 }
 void BrowserMainWindow::hideHistoryPage(const QUrl& url)
@@ -436,6 +522,14 @@ void BrowserMainWindow::onReaderModeToggled()
     view_->enterReaderMode(reader_mode_);
 }
 
+void BrowserMainWindow::onMouseModeToggled()
+{
+    mouse_mode_ = !mouse_mode_;
+    menu_actions[MA_Mouse]->setText(mouse_mode_ ? tr("Keypad Mode") : tr("Mouse Mode"));
+    qDebug("Mouse mode Toggled:%s", mouse_mode_ ? "true" : "false");
+    shiftMouseMode(mouse_mode_);
+}
+
 void BrowserMainWindow::updateBackForwardButtonStatus()
 {
     history_back_tool_button_.setEnabled(view_->history()->canGoBack());
@@ -457,12 +551,13 @@ void BrowserMainWindow::onUrlChanged(const QUrl& url)
 
 void BrowserMainWindow::onLinkClicked(const QUrl &new_url)
 {
+    DebugWB("");
     view_->myLoad(new_url);
 }
 
 void BrowserMainWindow::openUrlInAddress()
 {
-    DebugWB("\t%s", qPrintable(address_lineedit_->lineEdit()->text()));
+    DebugWB("");
     showHistoryPage(false);
     showSoftKeyboardIME(false);
     load(address_lineedit_->lineEdit()->text());
@@ -474,15 +569,11 @@ void BrowserMainWindow::showSoftKeyboardIME(bool show)
     {
         keyboard_->setParent(this);
         keyboard_->setVisible(show);
+        SystemManager::instance()->setFastUpdate(show);
     }
-
-    if (show)
-        SystemManager::instance()->enterKeypadMode();
-    else
-        SystemManager::instance()->enterMouseMode();
 }
 
-void BrowserMainWindow::switchKeyboardVisible()
+void BrowserMainWindow::switchKeyboardVisibility()
 {
     if (keyboard_ != 0)
     {
@@ -496,7 +587,6 @@ void BrowserMainWindow::onInputFormLostFocus()
 {
     keyboard_->attachReceiver(NULL);
     showSoftKeyboardIME(false);
-    //keyboard_status_ = KEYBOARD_FREE;
 }
 
 void BrowserMainWindow::onAddressInputFocus(bool focusIn)
@@ -669,5 +759,58 @@ void BrowserMainWindow::updateMenuStatusOnZoomFactorChanged()
     menu_actions[MA_Zoom_In]->setEnabled(!view_->isMaxiZoomConditionReached());
     menu_actions[MA_Zoom_Out]->setEnabled(!view_->isMiniZoomConditionReached());
 }
+
+void BrowserMainWindow::showOnlyTitleOnToolBar(bool show)
+{
+    //qDebug() << __PRETTY_FUNCTION__ << " ########### " << show;
+    toolbar_actions_[TBA_Back]->setVisible(!show);
+    toolbar_actions_[TBA_Forward]->setVisible(!show);
+    toolbar_actions_[TBA_Edit]->setVisible(!show);
+    toolbar_actions_[TBA_Title]->setVisible(show);
+}
+
+void BrowserMainWindow::onKeyboardKeyPressed()
+{
+    if (!view_->isWebInputFocused())
+    {
+        address_lineedit_->lineEdit()->selectAll();
+        address_lineedit_->setFocus();
+        return;
+    }
+    if (address_lineedit_->lineEdit()->hasFocus())
+    {
+        address_lineedit_->lineEdit()->selectAll();
+    }
+    showSoftKeyboardIME(true);
+}
+
+void BrowserMainWindow::onKeyboardVisibleChanged(bool visible)
+{
+    if (!visible && view_ && view_->isVisible() && view_->hasFocus() && !menu_.isVisible())
+    {
+        shiftMouseMode(true);
+    }
+    else
+    {
+        shiftMouseMode(false);
+    }
+}
+
+void BrowserMainWindow::shiftMouseMode(bool mouse)
+{
+    if (mouse_mode_)
+    {
+        qDebug("BrowserMainWindow::shiftMouseMode (%s)", mouse ? "true" : "false");
+        if (mouse)
+            SystemManager::instance()->enterMouseMode();
+        else
+            SystemManager::instance()->enterKeypadMode();
+    }
+    else if (!mouse)
+    {
+        SystemManager::instance()->enterKeypadMode();
+    }
+}
+
 }
 

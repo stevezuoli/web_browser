@@ -11,15 +11,15 @@ QLabel\
     padding: 0px;                       \
     background: transparent;            \
     font: %1px;                         \
-    color: black;                       \
+    color: %2;                       \
 }\
 QLabel:focus\
 {\
     margin: 0px;                        \
     padding: 0px;                       \
     background: transparent;            \
-    font: %2px;                         \
-    color: white;                       \
+    font: %3px;                         \
+    color: %4;                       \
 }\
 ";
 DKLabel::DKLabel(QWidget* parent)
@@ -39,7 +39,9 @@ void DKLabel::setDKStyleSheet()
 {
     setStyleSheet(LABEL_STYLE.
         arg(GetWindowFontSize(DKLabelIndex)).
-        arg(GetWindowFontSize(DKLabelIndex)));
+        arg("black").
+        arg(GetWindowFontSize(DKLabelIndex)).
+        arg("white"));
 }
 
 void DKLabel::InitDKProperty()
@@ -49,9 +51,20 @@ void DKLabel::InitDKProperty()
 
 void DKLabel::setFontSize(int fontSize)
 {
-    QFont labelFont = font();
-    labelFont.setPixelSize(fontSize);
-    setFont(labelFont);
+    setStyleSheet(LABEL_STYLE.
+        arg(fontSize).
+        arg("black").
+        arg(fontSize).
+        arg("white"));
+}
+
+void DKLabel::setFontColor(const char* color)
+{
+    setStyleSheet(LABEL_STYLE.
+        arg(GetWindowFontSize(DKLabelIndex)).
+        arg(color).
+        arg(GetWindowFontSize(DKLabelIndex)).
+        arg("white"));
 }
 
 }//ui

@@ -1,9 +1,13 @@
 #ifndef __UI_DKSOFTKEYBOARDIME_H__
 #define __UI_DKSOFTKEYBOARDIME_H__
 #include <QtGui>
+#include "ime/IIMEBase.h" 
 
+class QTextCodec;
 namespace ui
 {
+class DKPushButton;
+class DKLabel;
 class DKSoftKeyboardIME : public QWidget
 {
     Q_OBJECT
@@ -49,20 +53,28 @@ public:
         key_receiver_ = receiver;
     }
     virtual void setVisible(bool visible);
+Q_SIGNALS:
+    void keyboardKeyPressed();
+    void keyboardVisibleChanged(bool);
 
 protected:
     virtual void paintEvent(QPaintEvent* e);
     virtual void keyPressEvent(QKeyEvent* event);
+    virtual void keyReleaseEvent(QKeyEvent* event);
 
 private slots:
     void onButtonClicked(int);
+    void onPyCandidateButtonClicked(int);
+    void turnPyCandidateButtonsUp();
+    void turnPyCandidateButtonsDown();
 
 private:
     Q_DISABLE_COPY(DKSoftKeyboardIME)
 
-    void InitUI();
-    void InitLayout();
-    void InitSpecialBtns();
+    void initUI();
+    void initPYUI();
+    void initLayout();
+    void initSpecialBtns();
 
     void setupKeyboardWithType(SoftKeyboardType newType);
     //fast transform
@@ -78,20 +90,60 @@ private:
     void onShiftBtnClicked();
     void onLangBtnClicked();
     void onDigitBtnClicked();
+    void onNormalBtnClicked(int index);
  
     QString getTextByBtnIndex(int, int);
     void onOkKeyPressed();
     void onArrowKeyPressed(int key);
     void handlePrevNextFocus(bool next);
     void handleAdjacentLineFocus(bool next);
+    void postKeyReturnPressedEvent();
 
+    bool processChineseInput(int);
+    bool isChineseMode() const
+    {
+        return current_type_ == SKT_ChineseLower;
+    }
+
+    void clearPinYinData();
+    void clearCandidates();
+    void initPinYinIndexes();
+    void updatePYWordsButton();
+    void handlePYWordsTurnPage(bool pageDown);
+    bool onDelPressedInCnMode();
+    //IME
+    void IMEReset();
+    eProcessResult IMEInputKey(char code);
+    eProcessResult IMEDeleteLastInput();
+    std::string IMEGetStringByIndex(int index);
+    std::string IMEGetInputString();
+    std::string IMEGetResultString();
+    eProcessResult IMESelectIndex(int index);
 private:
     SoftKeyboardType current_type_;
     QButtonGroup keyboard_btns_;
+    QButtonGroup pyCandidate_btns_;
     QHBoxLayout* row_layouts_;
+    QVBoxLayout* py_main_layout_;
+    QHBoxLayout* py_label_layout_;
+    QHBoxLayout* word_btns_layout_;
+    QVBoxLayout* keyboard_layout_;
     QVBoxLayout* main_layout_;
     QObject* key_receiver_;
     int current_btn_index_;
+    bool key_pressed_;
+
+    // 可能的拼音选项每页第一个的索引
+    std::vector<int> pyCandidate_indexes_;
+    int current_pyline_index_;
+    const int max_PyCandidate_Btn_Count_;
+    //std::vector<DKPushButton*> pyButtons_;
+    DKLabel* pyLabel_;
+    DKPushButton* left_btn_;
+    DKPushButton* right_btn_;
+
+    //code iconv
+    QTextCodec* gbk_codec_;
 };
 }//ui
 #endif//__UI_DKSOFTKEYBOARDIME_H__

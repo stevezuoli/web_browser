@@ -12,9 +12,17 @@ class DKButtonGroup : public QWidget
 public:
     DKButtonGroup(QWidget* parent = 0);
     DKPushButton* addButton(const QString& text);
+    void setFocusOnButtonIndex(int index);
+    int getFocusIndex();
 
 protected:
     virtual void paintEvent(QPaintEvent* event);
+    //virtual void keyReleaseEvent(QKeyEvent* event);
+    //virtual void keyPressEvent(QKeyEvent* event);
+    virtual bool eventFilter(QObject* watched, QEvent* event);
+
+private:
+    void focusNextPrevButton(bool next);
 
 private:
     QHBoxLayout layout_;

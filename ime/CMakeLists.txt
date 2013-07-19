@@ -10,9 +10,7 @@ SET(SRCS ${HDRS} ${SRCS})
 ADD_LIBRARY(ime ${SRCS})
 TARGET_LINK_LIBRARIES(ime
     fcitx
+	pthread
     ${ADD_LIB})
 
-ADD_EXECUTABLE(ime_test main.cpp)
-TARGET_LINK_LIBRARIES(ime_test
-    ime
-    ${ADD_LIB})
+add_subdirectory(ime_test)

@@ -13,10 +13,14 @@ namespace windowsmetrics
     MACRO_NAME(UIHorizonMargin, 30, 38)\
     MACRO_NAME(UISoftKeyboardNormalBtnWidth, 50, 64) \
     MACRO_NAME(UISoftKeyboardNormalBtnHeight, 50, 64) \
-    MACRO_NAME(UISoftKeyboardHoriBorder, 10, 12) \
-    MACRO_NAME(UISoftKeyboardBigHoriBorder, 24, 31) \
     MACRO_NAME(UISoftKeyboardSpace, 6, 8) \
+    MACRO_NAME(UISoftKeyboardKeySpace, 6, 8) \
+    MACRO_NAME(UISoftKeyboardHoriSpace, 10, 13) \
     MACRO_NAME(UISoftKeyboardHeight, 230, 295) \
+    MACRO_NAME(UISoftKeyboardPYBottomMargin, 10, 13)\
+    MACRO_NAME(UISoftKeyboardIMEPYLabelHeight, 40, 50)\
+    MACRO_NAME(UISoftKeyboardIMEPYButtonHeight, 40, 50)\
+    MACRO_NAME(UISoftKeyboardTurnPageButtonWidth, 20, 25)\
     MACRO_NAME(WebBrowserNavigationBarIconWidth, 53, 68) \
     MACRO_NAME(WebBrowserNavigationBarIconHeight, 72, 92) \
     MACRO_NAME(WebBrowserNavigationBarMargin, 9, 17) \
@@ -50,7 +54,8 @@ enum WindowMetricsIndex
     MACRO_NAME(DKPushButton, 20, 24)    \
     MACRO_NAME(DKLabel, 16, 20)     \
     MACRO_NAME(DKMenu, 24, 30)      \
-    MACRO_NAME(HistoryDate, 20, 24) 
+    MACRO_NAME(HistoryDate, 20, 24) \
+    MACRO_NAME(PYWordButton, 24, 30) \
 
 enum WindowFontsIndex
 {

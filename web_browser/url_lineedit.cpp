@@ -79,6 +79,9 @@ ExLineEdit::ExLineEdit(QWidget *parent)
     clearPalette.setBrush(QPalette::Base, QBrush(Qt::transparent));
     line_edit_->setPalette(clearPalette);
 
+    connect(line_edit_, SIGNAL(returnPressed()), SIGNAL(returnPressed()));
+    connect(line_edit_, SIGNAL(focusSignal(bool)), SIGNAL(focusSignal(bool)));
+
     // clearButton
     //clear_button_ = new ClearButton(this);
     //connect(clear_button_, SIGNAL(clicked()),
@@ -194,6 +197,23 @@ void ExLineEdit::keyPressEvent(QKeyEvent *event)
         line_edit_->event(event);
         event->accept();
     }
+}
+
+void ExLineEdit::keyReleaseEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Select)
+    {
+        if (line_edit_->selectedText().isEmpty())
+        {
+            emit focusSignal(true);
+        }
+        else
+        {
+            emit returnPressed();
+        }
+        event->accept();
+    }
+    event->ignore();
 }
 
 bool ExLineEdit::event(QEvent *event)

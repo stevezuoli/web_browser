@@ -125,6 +125,9 @@ KindleKeyboard::KindleKeyboard(const QString & driver, const QString & device, Q
 #ifdef BUILD_FOR_ARM
     , QWSKeyboardHandler(device)
 #endif
+    , _sn(NULL)
+    , fiveway_sn(NULL)
+    , k3_sn(NULL)
 {
 #ifdef BUILD_FOR_ARM
     _debug = device.contains("debug", Qt::CaseInsensitive);
@@ -178,7 +181,7 @@ KindleKeyboard::KindleKeyboard(const QString & driver, const QString & device, Q
     alt_just_pressed = false;
     altshift_just_pressed = false;
     is_qt_app_frozen = false;
-    capture_input();
+    //capture_input();
 #endif
 }
 
@@ -187,13 +190,12 @@ KindleKeyboard::~KindleKeyboard()
 #ifdef BUILD_FOR_ARM
     if (!is_qt_app_frozen)
     {
-        qDebug("...resuming CVM") ;
-        release_input() ;
-        resume_cvm(k3_fd != -1) ;
+        //qDebug("...resuming CVM") ;
+        //release_input() ;
+        //resume_cvm(k3_fd != -1) ;
     }
     else
         is_qt_app_frozen = false ;
-
 
     delete _sn;
     close(_fd);
@@ -452,7 +454,7 @@ void KindleKeyboard::activity(int)
 
                     if (is_qt_app_frozen)
                     {
-                        capture_input() ;
+                        //capture_input() ;
                         is_qt_app_frozen = false ;
 
                         _shift = false ;
@@ -466,14 +468,14 @@ void KindleKeyboard::activity(int)
                         isautorpt = 0 ;
 
                         ///system("kill -STP `pidof cvm`") ;
-                        suspend_cvm() ;
+                        //suspend_cvm() ;
 
                         if (_debug)
                             qDebug("---unfreeze Qt App") ;
                     }
                     else
                     {
-                        release_input() ;
+                        //release_input() ;
                         is_qt_app_frozen = true ;
 
                         unicode = 0 ;
@@ -482,7 +484,7 @@ void KindleKeyboard::activity(int)
                         ispressed = 1 ;
                         isautorpt = 0 ;
 
-                        resume_cvm(k3_fd != -1) ;
+                        //resume_cvm(k3_fd != -1) ;
                         /*
                         QString cmdText ;
 

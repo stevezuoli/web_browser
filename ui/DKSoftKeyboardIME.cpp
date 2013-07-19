@@ -1,8 +1,10 @@
-﻿#include "ui/DKSoftKeyboardIME.h"
+#include "ui/DKSoftKeyboardIME.h"
 #include "ui/DKPushButton.h"
+#include "ui/DKLabel.h"
 #include "common/WindowsMetrics.h"
 #include "common/ImageManager.h"
 #include "common/debug.h"
+#include "ime/IMEManager.h"
 #include "Device/device.h"
 #include <algorithm>
 
@@ -91,12 +93,17 @@ DKSoftKeyboardIME::DKSoftKeyboardIME()
       , main_layout_(NULL)
       , key_receiver_(NULL)
       , current_btn_index_(14)
+	  , key_pressed_(false)
+      , current_pyline_index_(-1)
+      , max_PyCandidate_Btn_Count_(15)
+      , gbk_codec_(QTextCodec::codecForName("GB18030"))
 {
-    InitUI();
-    InitLayout();
+    initUI();
+    initLayout();
+    IMEReset();
 }
 
-void DKSoftKeyboardIME::InitUI()
+void DKSoftKeyboardIME::initUI()
 {
     setWindowFlags(Qt::Popup);
     setFocusPolicy(Qt::NoFocus);
@@ -121,8 +128,8 @@ void DKSoftKeyboardIME::InitUI()
         }
     }
 
-    InitSpecialBtns();
-
+    initSpecialBtns();
+    initPYUI();
     setupKeyboardWithType(current_type_);
     connect(&keyboard_btns_, SIGNAL(buttonClicked(int)), this, SLOT(onButtonClicked(int)));
 
@@ -131,12 +138,46 @@ void DKSoftKeyboardIME::InitUI()
     setGeometry(0, GetWindowMetrics(UIScreenHeightIndex) - height, width, height);
 }
 
-void DKSoftKeyboardIME::InitLayout()
+void DKSoftKeyboardIME::initPYUI()
+{
+    pyLabel_ = new DKLabel(this);
+
+    left_btn_ = new DKPushButton(this);
+    left_btn_->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_LEFT_ARROW), ImageManager::GetImagePath(IMAGE_LEFT_ARROW));
+    left_btn_->setVisible(false);
+    left_btn_->setFocusPolicy(Qt::NoFocus);
+
+    right_btn_ = new DKPushButton(this);
+    right_btn_->setBackGroundImagePaths(ImageManager::GetImagePath(IMAGE_RIGHT_ARROW), ImageManager::GetImagePath(IMAGE_RIGHT_ARROW));
+    right_btn_->setVisible(false);
+    right_btn_->setFocusPolicy(Qt::NoFocus);
+
+    for (int i = 0; i < max_PyCandidate_Btn_Count_; ++i)
+    {
+        DKPushButton* btn = new DKPushButton(this);
+        btn->setFontSize(GetWindowFontSize(PYWordButtonIndex));
+        btn->setFocusPolicy(Qt::NoFocus);
+        pyCandidate_btns_.addButton(btn, i);
+        btn->setVisible(false);
+    }
+
+    connect(left_btn_, SIGNAL(clicked()), this, SLOT(turnPyCandidateButtonsUp()));
+    connect(right_btn_, SIGNAL(clicked()), this, SLOT(turnPyCandidateButtonsDown()));
+    connect(&pyCandidate_btns_, SIGNAL(buttonClicked(int)), this, SLOT(onPyCandidateButtonClicked(int)));
+}
+
+void DKSoftKeyboardIME::initLayout()
 {
     Q_ASSERT(keyboard_btns_.buttons().count() == s_btnsCountPerPage);
     int line = 0;
+    const int mainSpace = GetWindowMetrics(UISoftKeyboardSpaceIndex);
     main_layout_ = new QVBoxLayout;
+    keyboard_layout_ = new QVBoxLayout;
     row_layouts_ = new QHBoxLayout[s_keyboardRows];
+    py_label_layout_ = new QHBoxLayout;
+    word_btns_layout_ = new QHBoxLayout;
+    py_main_layout_ = new QVBoxLayout;
+
     for (int i = 0; i < s_btnsCountPerPage; ++i)
     {
         if (i > s_btnsEndIndex[line])
@@ -147,17 +188,43 @@ void DKSoftKeyboardIME::InitLayout()
         row_layouts_[line].addWidget(keyboard_btns_.button(i));
     }
 
-    const int horiBorder = GetWindowMetrics(UISoftKeyboardHoriBorderIndex);
-    const int bigHoriBorder = GetWindowMetrics(UISoftKeyboardBigHoriBorderIndex);
-    const int mainSpace = GetWindowMetrics(UISoftKeyboardSpaceIndex);
+    pyLabel_->setFixedHeight(GetWindowMetrics(UISoftKeyboardIMEPYLabelHeightIndex));
+    py_label_layout_->addSpacing(GetWindowMetrics(UISoftKeyboardHoriSpaceIndex));
+    py_label_layout_->addWidget(pyLabel_);
+    py_label_layout_->addSpacing(GetWindowMetrics(UISoftKeyboardHoriSpaceIndex));
+
+    left_btn_->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    right_btn_->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
+    left_btn_->setFixedSize(
+            QSize(GetWindowMetrics(UISoftKeyboardTurnPageButtonWidthIndex), GetWindowMetrics(UISoftKeyboardIMEPYButtonHeightIndex)));
+    right_btn_->setFixedSize(
+            QSize(GetWindowMetrics(UISoftKeyboardTurnPageButtonWidthIndex), GetWindowMetrics(UISoftKeyboardIMEPYButtonHeightIndex)));
+    word_btns_layout_->addSpacing(GetWindowMetrics(UISoftKeyboardHoriSpaceIndex));
+    word_btns_layout_->addWidget(left_btn_, -1, Qt::AlignLeft | Qt::AlignVCenter);
+    word_btns_layout_->setSpacing(GetWindowMetrics(UISoftKeyboardSpaceIndex));
+    foreach (QAbstractButton* btn, pyCandidate_btns_.buttons())
+    {
+        btn->setFixedHeight(GetWindowMetrics(UISoftKeyboardIMEPYButtonHeightIndex));
+        word_btns_layout_->addWidget(btn, 0, Qt::AlignLeft | Qt::AlignVCenter);
+    }
+    word_btns_layout_->addWidget(right_btn_, -1, Qt::AlignRight | Qt::AlignVCenter);
+    word_btns_layout_->addSpacing(GetWindowMetrics(UISoftKeyboardHoriSpaceIndex));
+    py_main_layout_->addLayout(py_label_layout_);
+    py_main_layout_->setSpacing(mainSpace);
+    py_main_layout_->addLayout(word_btns_layout_);
+
+    main_layout_->addLayout(py_main_layout_);
+    main_layout_->addSpacing(GetWindowMetrics(UISoftKeyboardPYBottomMarginIndex));
     for (int i = 0; i < s_keyboardRows; ++i)
     {
-        row_layouts_[i].insertSpacing(0, i == 1 ? bigHoriBorder : horiBorder);
-        row_layouts_[i].addSpacing(i == 1 ? bigHoriBorder : horiBorder);
-        main_layout_->addLayout(row_layouts_ + i);
+        row_layouts_[i].setSpacing(GetWindowMetrics(UISoftKeyboardKeySpaceIndex));
+        row_layouts_[i].insertStretch(0);
+        row_layouts_[i].addStretch(0);
+        keyboard_layout_->addLayout(row_layouts_ + i);
     }
 
-    main_layout_->setSpacing(mainSpace);
+    keyboard_layout_->setSpacing(mainSpace);
+    main_layout_->addLayout(keyboard_layout_);
     setLayout(main_layout_);
 }
 
@@ -191,6 +258,17 @@ int DKSoftKeyboardIME::getKeyBoardIndex(SoftKeyboardType type) const
 
 void DKSoftKeyboardIME::setupKeyboardWithType(SoftKeyboardType oldType, SoftKeyboardType newType)
 {
+    DebugWB("%x, %x", (int)oldType, (int)newType);
+    if (oldType != newType)
+    {
+        setupKeyboardWithType(newType);
+        if (newType == SKT_ChineseLower || oldType == SKT_ChineseLower)
+        {
+            left_btn_->setVisible(isChineseMode());
+            right_btn_->setVisible(isChineseMode());
+            clearPinYinData();
+        }
+    }
 }
 
 void DKSoftKeyboardIME::onButtonClicked(int index)
@@ -207,17 +285,124 @@ void DKSoftKeyboardIME::onButtonClicked(int index)
             onLangBtnClicked();
             break;
         default:
-            {
-                int keyboardIndex = getKeyBoardIndex(current_type_);
-                if (keyboardIndex >= 0)
-                {
-                    postKeyEvent(index, getTextByBtnIndex(keyboardIndex, index));
-                }
-            }
+            onNormalBtnClicked(index);
             return;
     }
 
     updateSpecialBtn();
+}
+
+void DKSoftKeyboardIME::onNormalBtnClicked(int index)
+{
+    int keyboardIndex = getKeyBoardIndex(current_type_);
+    if (keyboardIndex >= 0)
+    {
+        bool ret = isChineseMode() && processChineseInput(index);
+        if (!ret)
+        {
+            postKeyEvent(index, getTextByBtnIndex(keyboardIndex, index));
+        }
+    }
+}
+
+bool DKSoftKeyboardIME::onDelPressedInCnMode()
+{
+    if (isChineseMode() && !IMEGetInputString().empty())
+    {
+        IMEDeleteLastInput();
+        pyLabel_->setText(gbk_codec_->toUnicode(IMEGetInputString().c_str()));
+        initPinYinIndexes();
+        if (IMEGetInputString().empty())
+        {
+            clearPinYinData();
+        }
+        else
+        {
+            updatePYWordsButton();
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+bool DKSoftKeyboardIME::processChineseInput(int index)
+{
+    switch (index)
+    {
+        case s_delBtnIndex:
+            return onDelPressedInCnMode();
+        case s_enterBtnIndex:
+            if (IMEGetInputString().empty())
+            {
+                return false;
+            }
+
+            postKeyEvent(-1, gbk_codec_->toUnicode(IMEGetInputString().c_str()));
+            clearPinYinData();
+            return true;
+        default:
+            break;
+    }
+
+    //4 is the index of chinese lower
+    eProcessResult res = IMEInputKey(s_keyTables[4][index][0]);
+    switch (res)
+    {
+        case CAN_NOT_PROCESS:
+            {
+                return true;
+            }
+            break;
+        case PROCESSED_WITH_RESULT:
+            {
+                clearPinYinData();
+            }
+            break;
+        default:
+            break;
+
+    }
+    initPinYinIndexes();
+    pyLabel_->setText(gbk_codec_->toUnicode(IMEGetInputString().c_str()));
+    updatePYWordsButton();
+    return true;
+}
+
+eProcessResult DKSoftKeyboardIME::IMEDeleteLastInput()
+{
+    return IMEInputKey(8); // 8 is ascii code for back space
+}
+
+std::string DKSoftKeyboardIME::IMEGetInputString()
+{   
+    return IMEManager::GetActiveIME()->GetInputString();
+}
+
+std::string DKSoftKeyboardIME::IMEGetResultString()
+{   
+    return IMEManager::GetActiveIME()->GetResultString();
+}
+
+std::string DKSoftKeyboardIME::IMEGetStringByIndex(int index)
+{   
+    return IMEManager::GetActiveIME()->GetStringByIndex(index);
+}
+
+eProcessResult DKSoftKeyboardIME::IMEInputKey(char code)
+{
+    return IMEManager::GetActiveIME()->ProcessKeys(code);
+}
+
+eProcessResult DKSoftKeyboardIME::IMESelectIndex(int index)
+{
+    return IMEManager::GetActiveIME()->SelectIndex(index);
+}
+
+void  DKSoftKeyboardIME::IMEReset()
+{
+    IMEManager::GetActiveIME()->Reset();
 }
 
 QString DKSoftKeyboardIME::getTextByBtnIndex(int keyboardIndex, int index)
@@ -235,8 +420,16 @@ QString DKSoftKeyboardIME::getTextByBtnIndex(int keyboardIndex, int index)
     return text;
 }
 
+void DKSoftKeyboardIME::postKeyReturnPressedEvent()
+{
+
+    QKeyEvent* keyEvent = new QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier, QString(QChar(0x0D)));
+    QApplication::postEvent(key_receiver_, keyEvent);
+}
+
 void DKSoftKeyboardIME::postKeyEvent(unsigned int code, const QString& text)
 {
+    DebugWB("%s\n", text.toStdString().c_str());
     if (key_receiver_)
     {
         int key = Qt::Key_Any;
@@ -246,12 +439,8 @@ void DKSoftKeyboardIME::postKeyEvent(unsigned int code, const QString& text)
                 key = Qt::Key_Backspace;
                 break;
             case s_enterBtnIndex:
-                {
-                    key = Qt::Key_Return;
-                    QKeyEvent* keyEvent = new QKeyEvent(QEvent::KeyPress, key, Qt::NoModifier, QString(QChar(0x0D)));
-                    QApplication::postEvent(key_receiver_, keyEvent);
-                    return;
-                }
+                postKeyReturnPressedEvent();
+                return;
             default:
                 break;
         }
@@ -263,47 +452,94 @@ void DKSoftKeyboardIME::postKeyEvent(unsigned int code, const QString& text)
 void DKSoftKeyboardIME::paintEvent(QPaintEvent* e)
 {
     QPainter painter(this);
-    QRect rc(rect());
 
-    painter.fillRect(rc, QBrush(QColor(255,255,255)));
+    painter.fillRect(rect(), Qt::white);
 
     QPen pen(QColor(0,0,0));
     pen.setWidth(2);
     painter.setPen(pen);
-    QPainterPath path;
-    path.addRoundedRect(rc.left() + 10, rc.top() + 2, rc.width() - 20, rc.height() - 2, 10, 10);
-    painter.drawPath(path);
+    painter.drawRoundedRect(keyboard_layout_->geometry().adjusted(0, -5, 0, 5), 10, 10);
+    if (isChineseMode())
+    {
+        painter.drawLine(py_label_layout_->geometry().bottomLeft(), py_label_layout_->geometry().bottomRight());
+        painter.drawRoundedRect(py_main_layout_->geometry().adjusted(0, -5, 0, 5), 10, 10);
+    }
 }
 
 void DKSoftKeyboardIME::keyPressEvent(QKeyEvent* event)
 {
+    DebugWB("");
+    key_pressed_ = true;
+    QWidget::keyPressEvent(event);
     switch (event->key())
     {
         case Qt::Key_Left:
         case Qt::Key_Up:
         case Qt::Key_Right:
         case Qt::Key_Down:
-            onArrowKeyPressed(event->key());
-            return;
-#ifndef Q_WS_QWS
-        case Qt::Key_F1:
-#else
+#ifdef Q_WS_QWS
         case Qt::Key_Select:
-#endif
-            onOkKeyPressed();
-            return;
-#ifndef Q_WS_QWS
-        case Qt::Key_F2:
-#else
         case Qt::Key_AltGr:
+        case Qt::Key_Escape:
 #endif
-            setVisible(false);
             return;
+        default:
+            break;
     }
-    event->ignore();
+
+    if (key_receiver_ != 0)
+    {
+        qDebug("DKSoftKeyboardIME post press event");
+        QKeyEvent* forward = new QKeyEvent(*event);
+        QApplication::postEvent(key_receiver_, forward);
+    }
 }
 
-void DKSoftKeyboardIME::InitSpecialBtns()
+void DKSoftKeyboardIME::keyReleaseEvent(QKeyEvent* event)
+{
+    DebugWB(": %d, %d", event->key(), key_pressed_);
+    bool handled = false;
+    if (key_pressed_)
+    {
+        switch (event->key())
+        {
+            case Qt::Key_Left:
+            case Qt::Key_Up:
+            case Qt::Key_Right:
+            case Qt::Key_Down:
+                onArrowKeyPressed(event->key());
+                handled = true;
+                break;
+#ifndef Q_WS_QWS
+            case Qt::Key_F1:
+#else
+            case Qt::Key_Select:
+#endif
+                onOkKeyPressed();
+                handled = true;
+                break;
+#ifndef Q_WS_QWS
+            case Qt::Key_F2:
+#else
+            case Qt::Key_AltGr:
+            case Qt::Key_Escape:
+#endif
+                emit keyboardKeyPressed();
+                handled = true;
+                break;
+        }
+    }
+    key_pressed_ = false;
+    if (!handled && key_receiver_ != 0)
+    {
+        qDebug("DKSoftKeyboardIME post release event");
+        QKeyEvent* forward = new QKeyEvent(*event);
+        QApplication::postEvent(key_receiver_, forward);
+    }
+    event->accept();
+}
+
+void DKSoftKeyboardIME::initSpecialBtns()
 {
     static const int specialBtnCounts = 5;
     static int specialIndex[specialBtnCounts] = {s_shiftBtnIndex, s_delBtnIndex/*, s_numBtnIndexi*/, s_spaceBtnIndex/*, s_comBtnIndex*/, s_langBtnIndex, s_enterBtnIndex};
@@ -334,7 +570,7 @@ void DKSoftKeyboardIME::InitSpecialBtns()
         }
     }
 
-    keyboard_btns_.button(s_langBtnIndex)->setEnabled(false);
+    //keyboard_btns_.button(s_langBtnIndex)->setEnabled(false);
     DKPushButton* btn = reinterpret_cast<DKPushButton*>(keyboard_btns_.button(s_langBtnIndex));
     if (btn)
     {
@@ -416,26 +652,30 @@ void DKSoftKeyboardIME::updateSpecialBtn()
     updateShiftBtn();
     updateLangBtn();
     updateDigitBtn();
+    update();
 }
 
 void DKSoftKeyboardIME::onShiftBtnClicked()
 {
     int all = SKT_Lower | SKT_Upper;
+    SoftKeyboardType typestore = current_type_;
     current_type_ = (SoftKeyboardType)((current_type_ & ~all) | (~(current_type_ & all) & all));
-    setupKeyboardWithType(current_type_);
+    setupKeyboardWithType(typestore, current_type_);
 }
 
 void DKSoftKeyboardIME::onLangBtnClicked()
 {
+    SoftKeyboardType typestore = current_type_;
     current_type_ = (SoftKeyboardType)((current_type_ & ~SKT_Lang) | (~(current_type_ & SKT_Lang) & SKT_Lang));
-    setupKeyboardWithType(current_type_);
+    setupKeyboardWithType(typestore, current_type_);
 }
 
 void DKSoftKeyboardIME::onDigitBtnClicked()
 {
     int all = SKT_Alpha | SKT_DigSym;
+    SoftKeyboardType typestore = current_type_;
     current_type_ = (SoftKeyboardType)((current_type_ & ~all) | (~(current_type_ & all) & all));
-    setupKeyboardWithType(current_type_);
+    setupKeyboardWithType(typestore, current_type_);
 }
 
 void DKSoftKeyboardIME::setVisible(bool visible)
@@ -450,6 +690,7 @@ void DKSoftKeyboardIME::setVisible(bool visible)
         {
             releaseKeyboard();
         }
+        emit keyboardVisibleChanged(visible);
     }
 
     QWidget::setVisible(visible);
@@ -524,6 +765,110 @@ void DKSoftKeyboardIME::handleAdjacentLineFocus(bool next)
 void DKSoftKeyboardIME::onOkKeyPressed()
 {
     onButtonClicked(current_btn_index_);
+}
+
+void DKSoftKeyboardIME::clearCandidates()
+{
+    DebugWB("%d", pyCandidate_btns_.buttons().size());
+    foreach(QAbstractButton* btn, pyCandidate_btns_.buttons())
+    {
+        btn->setText("");
+        btn->setVisible(false);
+    }
+}
+
+void DKSoftKeyboardIME::clearPinYinData()
+{
+    clearCandidates();
+    pyLabel_->clear();
+    initPinYinIndexes();
+    IMEReset();
+}
+
+void DKSoftKeyboardIME::initPinYinIndexes()
+{
+    current_pyline_index_ = 0;
+    pyCandidate_indexes_.clear();
+    pyCandidate_indexes_.push_back(0);
+}
+
+void handlePYWordsTurnPage(bool pageDown)
+{
+}
+
+void DKSoftKeyboardIME::updatePYWordsButton()
+{
+    DebugWB("%d, %d", current_pyline_index_, pyCandidate_indexes_.size());
+    if (current_pyline_index_ >= pyCandidate_indexes_.size())
+    {
+        return;
+    }
+    int startIndex = pyCandidate_indexes_[current_pyline_index_];
+    std::string pyWord = IMEGetStringByIndex(startIndex);
+    clearCandidates();
+
+    int i = 0;
+    for (; !pyWord.empty() && i < max_PyCandidate_Btn_Count_; ++i)
+    {
+        DebugWB("%d, %s, %x",i, pyWord.c_str(), pyCandidate_btns_.button(i));
+        if (gbk_codec_)
+        {
+            pyCandidate_btns_.button(i)->setText(gbk_codec_->toUnicode(pyWord.c_str()));
+            pyCandidate_btns_.button(i)->setVisible(true);
+        }
+
+        if (word_btns_layout_->sizeHint().width() > word_btns_layout_->contentsRect().width())
+        {
+            pyCandidate_btns_.button(i)->setText("");
+            pyCandidate_btns_.button(i)->setVisible(false);
+            break;
+        }
+
+        ++startIndex;
+        pyWord = IMEGetStringByIndex(startIndex);
+    }
+
+    pyCandidate_indexes_.push_back(startIndex);
+}
+
+void DKSoftKeyboardIME::onPyCandidateButtonClicked(int id)
+{
+    DebugWB("%d, %d", current_pyline_index_, pyCandidate_indexes_.size());
+    if (current_pyline_index_ >= pyCandidate_indexes_.size())
+    {
+        return;
+    }
+    int selectIndex = pyCandidate_indexes_[current_pyline_index_] + id;
+    eProcessResult res = IMESelectIndex(selectIndex);
+    //all characters dealed
+    if (res == PROCESSED_WITH_RESULT)
+    {
+        postKeyEvent(-1, gbk_codec_->toUnicode(IMEGetResultString().c_str()));
+        clearPinYinData();
+    }
+    else
+    {
+        pyLabel_->setText(gbk_codec_->toUnicode(IMEGetInputString().c_str()));
+        initPinYinIndexes();
+        updatePYWordsButton();
+    }
+}
+
+void DKSoftKeyboardIME::turnPyCandidateButtonsUp()
+{
+    DebugWB("%d", current_pyline_index_);
+    if (current_pyline_index_ > 0)
+    {
+        current_pyline_index_--;
+        updatePYWordsButton();
+    }
+}
+
+void DKSoftKeyboardIME::turnPyCandidateButtonsDown()
+{
+    DebugWB("%d", current_pyline_index_);
+    current_pyline_index_++;
+    updatePYWordsButton();
 }
 }
 

@@ -1,6 +1,8 @@
 #include "ui/DKMenu.h"
 #include <QStyleOption>
 #include "common/WindowsMetrics.h"
+#include "common/debug.h"
+#include "System/inc/system_manager.h"
 
 namespace ui
 {
@@ -17,10 +19,13 @@ QMenu                        \
 QMenu::item                       \
 {                           \
     padding: %2px;          \
+    margin-top: 2px;        \
+    margin-bottom:2px;      \
     background-color: transparent;\
 }                           \
 QMenu::item::selected                       \
 {                           \
+    color: white;           \
     background-color: black;\
 }                           \
 QMenu::separator            \
@@ -55,5 +60,40 @@ void DKMenu::setDKStyleSheet()
             arg(GetWindowMetrics(MenuItemPaddingIndex)).
             arg(GetWindowMetrics(MenuSeparatorPaddingIndex)).
             arg(GetWindowMetrics(MenuSeparatorPaddingIndex)));
+}
+
+void DKMenu::setVisible(bool visible)
+{
+    //DebugWB("");
+    emit becomeVisible(visible);
+    QMenu::setVisible(visible);
+}
+
+void DKMenu::keyPressEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Select)
+    {
+        event->accept();
+        QKeyEvent* keyEvent = new QKeyEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier, QString(QChar(0x0D)));
+        QMenu::keyPressEvent(keyEvent);
+    }
+    else
+    {
+        QMenu::keyPressEvent(event);
+    }
+}
+
+void DKMenu::keyReleaseEvent(QKeyEvent* event)
+{
+    if (event->key() == Qt::Key_Select)
+    {
+        event->accept();
+        QKeyEvent* keyEvent = new QKeyEvent(QEvent::KeyRelease, Qt::Key_Return, Qt::NoModifier, QString(QChar(0x0D)));
+        QMenu::keyPressEvent(keyEvent);
+    }
+    else
+    {
+        QMenu::keyReleaseEvent(event);
+    }
 }
 }//ui

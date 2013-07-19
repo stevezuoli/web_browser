@@ -73,8 +73,8 @@ public:
 };
 
 // Chapter, Annotations
-typedef QMultiHash<QString, KindleAnnotationItem> Annotations;
-typedef QList<QString> Chapters;
+typedef QMultiHash<int, KindleAnnotationItem> Annotations;
+typedef QMap<int, QString> Chapters;
 class EvernoteContent
 {
 public:

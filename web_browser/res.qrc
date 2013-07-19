@@ -80,6 +80,10 @@
     <file>res/refresh@kp.png</file>
     <file>res/close@kt.png</file>
     <file>res/close@kp.png</file>
+    <file>res/left_arrow@kp.png</file>
+    <file>res/left_arrow@kt.png</file>
+    <file>res/right_arrow@kp.png</file>
+    <file>res/right_arrow@kt.png</file>
     <file>res/finger.png</file>
     <file>res/cursor.png</file>
     <file>res/jquery.min.js</file>

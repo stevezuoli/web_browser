@@ -19,6 +19,7 @@ public:
     DKPushButton(QWidget* parent = 0);
     DKPushButton(const QString& text, QWidget* parent = 0);
 
+    void setFontSize(int fontsize);
     void setBackGroundImagePaths(const QString& focusInPath, const QString& focusOutPath);
     void setDisableBackGroundImagePath(const QString& disablePath);
     void setPressed(bool press)

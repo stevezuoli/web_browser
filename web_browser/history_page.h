@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include "ui/DKButtonGroup.h"
 #include "ui/DKListWidget.h"
+#include <vector>
 
 using namespace ui;
 namespace webbrowser
@@ -24,6 +25,9 @@ public:
 
 protected:
     virtual void paintEvent(QPaintEvent* event);
+    virtual bool eventFilter(QObject* watched, QEvent* event);
+    //virtual void keyPressEvent(QKeyEvent* event);
+    //virtual void keyReleaseEvent(QKeyEvent* event);
 
 Q_SIGNALS:
     void historyPageQuit(const QUrl&);
@@ -34,15 +38,16 @@ private Q_SLOTS:
     void onCloseButtonClicked(bool);
 
 private:
-    void InitLayout();
-    void InitItems();
+    void initLayout();
+    void initItems();
+    bool onUpDownKeyPressed(bool next);
 
 private:
     DKListWidget history_list_;
     DKButtonGroup bottom_buttons_;
     QVBoxLayout main_layout_;
-    QHBoxLayout bottom_layout_;
     BrowserView* view_;
+    std::vector<DKPushButton*> bottom_buttons_container;
 };
 }//webbrowser
 #endif//WEBBROWSER_HISTORY_PAGE_H_

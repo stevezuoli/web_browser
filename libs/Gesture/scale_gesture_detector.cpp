@@ -87,7 +87,7 @@ bool ScaleGestureDetector::onTouchEvent(TouchEvent* moveEvent)
                 reset();
                 break;
             case TouchEvent::ACTION_POINTER_DOWN:
-            case TouchEvent::ACTION_MOVE:
+            //case TouchEvent::ACTION_MOVE:
                 {
                     if (NULL != prev_event_)
                     {
@@ -140,11 +140,12 @@ bool ScaleGestureDetector::onTouchEvent(TouchEvent* moveEvent)
                 }
                 break;
             case TouchEvent::ACTION_CANCEL:
+                //m_listener->OnScaleEnd(this);
+                //qDebug("scaleEnd");
                 emit scaleEnd();
                 reset();
                 break;
             case TouchEvent::ACTION_UP:
-                emit scaleEnd();
                 reset();
                 break;
             case TouchEvent::ACTION_MOVE:
