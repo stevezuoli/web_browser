@@ -34,7 +34,6 @@ public:
     virtual void resume();
 
     void setKeypadMode(bool keypadMode);
-    bool isKeypadMode() { return _keypadMode; }
 
 private slots:
     void activity(int);

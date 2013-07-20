@@ -1,4 +1,4 @@
-#include "ui/DKSoftKeyboardIME.h"
+﻿#include "ui/DKSoftKeyboardIME.h"
 #include "ui/DKPushButton.h"
 #include "ui/DKLabel.h"
 #include "common/WindowsMetrics.h"
@@ -93,7 +93,6 @@ DKSoftKeyboardIME::DKSoftKeyboardIME()
       , main_layout_(NULL)
       , key_receiver_(NULL)
       , current_btn_index_(14)
-	  , key_pressed_(false)
       , current_pyline_index_(-1)
       , max_PyCandidate_Btn_Count_(15)
       , gbk_codec_(QTextCodec::codecForName("GB18030"))
@@ -239,6 +238,7 @@ void DKSoftKeyboardIME::setupKeyboardWithType(SoftKeyboardType newType)
             keyboard_btns_.button(i)->setText(QString::fromUtf8(s_keyTables[index][i])); 
         }
     }
+
 }
 
 int DKSoftKeyboardIME::getKeyBoardIndex(SoftKeyboardType type) const
@@ -372,37 +372,63 @@ bool DKSoftKeyboardIME::processChineseInput(int index)
 
 eProcessResult DKSoftKeyboardIME::IMEDeleteLastInput()
 {
+#ifdef UNIX_PLATFORM
     return IMEInputKey(8); // 8 is ascii code for back space
+#else
+    return CAN_NOT_PROCESS;
+#endif
 }
 
 std::string DKSoftKeyboardIME::IMEGetInputString()
 {   
+#ifdef UNIX_PLATFORM
     return IMEManager::GetActiveIME()->GetInputString();
+#else
+    return "";
+#endif
 }
 
 std::string DKSoftKeyboardIME::IMEGetResultString()
 {   
+#ifdef UNIX_PLATFORM
     return IMEManager::GetActiveIME()->GetResultString();
+#else
+    return "";
+#endif
 }
 
 std::string DKSoftKeyboardIME::IMEGetStringByIndex(int index)
 {   
+#ifdef UNIX_PLATFORM
     return IMEManager::GetActiveIME()->GetStringByIndex(index);
+#else
+    return "";
+#endif
 }
 
 eProcessResult DKSoftKeyboardIME::IMEInputKey(char code)
 {
+#ifdef UNIX_PLATFORM
     return IMEManager::GetActiveIME()->ProcessKeys(code);
+#else
+    return CAN_NOT_PROCESS;
+#endif
 }
 
 eProcessResult DKSoftKeyboardIME::IMESelectIndex(int index)
 {
+#ifdef UNIX_PLATFORM
     return IMEManager::GetActiveIME()->SelectIndex(index);
+#else
+    return CAN_NOT_PROCESS;
+#endif
 }
 
 void  DKSoftKeyboardIME::IMEReset()
 {
+#ifdef UNIX_PLATFORM
     IMEManager::GetActiveIME()->Reset();
+#endif
 }
 
 QString DKSoftKeyboardIME::getTextByBtnIndex(int keyboardIndex, int index)
@@ -468,75 +494,30 @@ void DKSoftKeyboardIME::paintEvent(QPaintEvent* e)
 
 void DKSoftKeyboardIME::keyPressEvent(QKeyEvent* event)
 {
-    DebugWB("");
-    key_pressed_ = true;
-    QWidget::keyPressEvent(event);
     switch (event->key())
     {
         case Qt::Key_Left:
         case Qt::Key_Up:
         case Qt::Key_Right:
         case Qt::Key_Down:
-#ifdef Q_WS_QWS
-        case Qt::Key_Select:
-        case Qt::Key_AltGr:
-        case Qt::Key_Escape:
-#endif
+            onArrowKeyPressed(event->key());
             return;
-        default:
-            break;
-    }
-
-    if (key_receiver_ != 0)
-    {
-        qDebug("DKSoftKeyboardIME post press event");
-        QKeyEvent* forward = new QKeyEvent(*event);
-        QApplication::postEvent(key_receiver_, forward);
-    }
-}
-
-void DKSoftKeyboardIME::keyReleaseEvent(QKeyEvent* event)
-{
-    DebugWB(": %d, %d", event->key(), key_pressed_);
-    bool handled = false;
-    if (key_pressed_)
-    {
-        switch (event->key())
-        {
-            case Qt::Key_Left:
-            case Qt::Key_Up:
-            case Qt::Key_Right:
-            case Qt::Key_Down:
-                onArrowKeyPressed(event->key());
-                handled = true;
-                break;
 #ifndef Q_WS_QWS
-            case Qt::Key_F1:
+        case Qt::Key_F1:
 #else
-            case Qt::Key_Select:
+        case Qt::Key_Select:
 #endif
-                onOkKeyPressed();
-                handled = true;
-                break;
+            onOkKeyPressed();
+            return;
 #ifndef Q_WS_QWS
-            case Qt::Key_F2:
+        case Qt::Key_F2:
 #else
-            case Qt::Key_AltGr:
-            case Qt::Key_Escape:
+        case Qt::Key_AltGr:
 #endif
-                emit keyboardKeyPressed();
-                handled = true;
-                break;
-        }
+            setVisible(false);
+            return;
     }
-    key_pressed_ = false;
-    if (!handled && key_receiver_ != 0)
-    {
-        qDebug("DKSoftKeyboardIME post release event");
-        QKeyEvent* forward = new QKeyEvent(*event);
-        QApplication::postEvent(key_receiver_, forward);
-    }
-    event->accept();
+    event->ignore();
 }
 
 void DKSoftKeyboardIME::initSpecialBtns()
@@ -690,7 +671,6 @@ void DKSoftKeyboardIME::setVisible(bool visible)
         {
             releaseKeyboard();
         }
-        emit keyboardVisibleChanged(visible);
     }
 
     QWidget::setVisible(visible);

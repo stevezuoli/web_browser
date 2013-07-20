@@ -12,10 +12,19 @@ SET(SRCS ${HDRS} ${SRCS} ${MOC_SRCS})
 
 ADD_LIBRARY(ui ${SRCS})
 
+IF(UNIX OR BUILD_FOR_ARM)
 TARGET_LINK_LIBRARIES(ui
     common
-	system
-	ime
     device
+	ime
+	system
     ${QT_LIBRARIES}
     ${ADD_LIB})
+ELSE (UNIX OR BUILD_FOR_ARM)
+TARGET_LINK_LIBRARIES(ui
+    common
+    device
+	system
+    ${QT_LIBRARIES}
+    ${ADD_LIB})
+ENDIF(UNIX OR BUILD_FOR_ARM)

@@ -53,14 +53,10 @@ public:
         key_receiver_ = receiver;
     }
     virtual void setVisible(bool visible);
-Q_SIGNALS:
-    void keyboardKeyPressed();
-    void keyboardVisibleChanged(bool);
 
 protected:
     virtual void paintEvent(QPaintEvent* e);
     virtual void keyPressEvent(QKeyEvent* event);
-    virtual void keyReleaseEvent(QKeyEvent* event);
 
 private slots:
     void onButtonClicked(int);
@@ -131,9 +127,8 @@ private:
     QVBoxLayout* main_layout_;
     QObject* key_receiver_;
     int current_btn_index_;
-    bool key_pressed_;
 
-    // 可能的拼音选项每页第一个的索引
+    // 鍙兘鐨勬嫾闊抽�夐」姣忛〉绗竴涓殑绱㈠紩
     std::vector<int> pyCandidate_indexes_;
     int current_pyline_index_;
     const int max_PyCandidate_Btn_Count_;

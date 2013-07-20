@@ -8,7 +8,6 @@
 #include "NetworkService/xiaomi_migration_manager.h"
 
 #include "ui/DKMenu.h"
-#include "ui/DKLabel.h"
 #include "ui/DKToolBar.h"
 #include "ui/DKSoftKeyboardIME.h"
 
@@ -57,7 +56,6 @@ protected:
     virtual bool event(QEvent *e);
     virtual void closeEvent(QCloseEvent *e);
     virtual void paintEvent(QPaintEvent *e);
-    virtual bool eventFilter(QObject* watched, QEvent* event);
 
 private Q_SLOTS:
     void onInputFormFocused(const QString & form_id,
@@ -72,13 +70,12 @@ private Q_SLOTS:
     void onLinkClicked(const QUrl& url);
     void onLoadFinished(bool ok);
     void openUrlInAddress();
-    void onBackKeyPressed();
 
     void showBackHistoryPage();
     void showForwardHistoryPage();
-    void switchMenuVisibility();
+    void showMenu();
     void showSoftKeyboardIME(bool show);
-    void switchKeyboardVisibility();
+    void switchKeyboardVisible();
     void setHomePageUrl(const QString& url)
     {
         home_page_url_ = url;
@@ -87,18 +84,12 @@ private Q_SLOTS:
     void onAccountPageChanged(const QString& message);
     void onXiaomiAccountLoadFinished(bool ok);
     void onXiaomiMigrationFinished();
+
     // Evernote account
     void onEvernoteAccountLoadFinished(bool ok);
     
-
-    //set focus in address edit when keyboard key pressed
-    void onKeyboardKeyPressed();
-
     // reader mode
     void onReaderModeToggled();
-
-    // mouse mode
-    void onMouseModeToggled();
 
     // text displayed on line edit
     void onLineEditTextChanged(const QString& message);
@@ -114,22 +105,19 @@ private Q_SLOTS:
     // exit
     void exitBrowser();
 
-    //zoom text
+    // Zoom text
     void zoomIn();
     void zoomOut();
 
+    // Rotate
+    void rotate();
+
     void onViewScaleBegin();
     void onViewScaleEnd();
-
-    //mosue-key mode shift
-    void shiftMouseMode(bool mouse = true);
-
-    void onKeyboardVisibleChanged(bool);
 private:
     void loadThumbnails();
     void thumbnailModel(QStandardItemModel & model);
     void setupToolBar();
-    void showOnlyTitleOnToolBar(bool show);
     void setupMenu();
     void InitLayout();
 
@@ -147,47 +135,33 @@ private:
     {
         MA_BookStore,
         MA_History,
-        MA_Mouse,
         MA_Zoom_In,
         MA_Zoom_Out,
         MA_Reader_Mode,
         MA_Exit,
         MA_Count
     };
-
-    enum ToolBarAction
-    {
-        TBA_Back,
-        TBA_Forward,
-        TBA_Edit,
-        TBA_Keyboard,
-        TBA_Menu,
-        TBA_Title,
-        TBA_Space,
-        TBA_Count
-    };
+    QToolButton                exit_tool_button_;
     QToolButton                history_back_tool_button_;
     QToolButton                history_forward_tool_button_;
     QToolButton                menu_tool_button_;
     QToolButton                keyboard_button_;
-    DKLabel                    title_label_;
     
-    UrlLineEdit*               address_lineedit_;
-    DKToolBar*                 navigation_toolbar_;
-    BrowserView*               view_;
-    DKSoftKeyboardIME*         keyboard_;
-    HistoryPage*               history_page_;
-    DKMenu                     menu_;
-    QVBoxLayout                main_layout_;
-    QAction*                   menu_actions[MA_Count];
-    QAction*                   toolbar_actions_[TBA_Count];
+    UrlLineEdit*           address_lineedit_;
+    DKToolBar*             navigation_toolbar_;
+    BrowserView*           view_;
+    DKSoftKeyboardIME*     keyboard_;
+    HistoryPage*           history_page_;
+    DKMenu                menu_;
+    QVBoxLayout            main_layout_;
+    QStandardItemModel     model_;
+    QAction*               menu_actions[MA_Count];
 
     shared_ptr<XiaomiAccountManager>  xiaomi_account_manager_;
     shared_ptr<EvernoteAccountManager> evernote_account_manager_;
     shared_ptr<XiaomiMigrationManager> xiaomi_migration_manager_;
-    QString                    home_page_url_;
-    bool                       reader_mode_;
-    bool                       mouse_mode_;
+    QString                home_page_url_;
+    bool                   reader_mode_;
 };
 
 };   // namespace webbrowser

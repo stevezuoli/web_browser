@@ -1,7 +1,6 @@
 #include "web_browser/history_list_item.h"
 #include "common/WindowsMetrics.h"
 #include <QPainter>
-#include "Device/device.h"
 using namespace ui::windowsmetrics;
 
 namespace webbrowser
@@ -12,7 +11,6 @@ HistoryListItem::HistoryListItem(const WebThumbnail& webThumbnail, QListWidget* 
     , url_label_(new DKLabel(this))
     , line_pixel_(0)
 {
-    setFocusPolicy(Qt::StrongFocus);
     title_label_->setText(webThumbnail.title());
     url_label_->setText(webThumbnail.url().toString());
     url_ = webThumbnail.url();
@@ -57,7 +55,10 @@ void HistoryListItem::paintEvent(QPaintEvent* event)
             painter.drawLine(0, 0, width(), line_pixel_ - 1);
         }
     }
-    QWidget::paintEvent(event);
+    else
+    {
+        QWidget::paintEvent(event);
+    }
 }
 
 void HistoryListItem::elideTextWithWidth(int w)
@@ -70,31 +71,5 @@ void HistoryListItem::elideTextWithWidth(int w)
         url_label_->setText(fm.elidedText(url_label_->text(), Qt::ElideRight, w));
         title_label_->setText(fm.elidedText(title_label_->text(), Qt::ElideRight, w));
     }
-}
-
-void HistoryListItem::focusInEvent(QFocusEvent* event)
-{
-    if (!Device::isTouch())
-    {
-        if (url_label_ && title_label_)
-        {
-            url_label_->setFontColor("white");
-            title_label_->setFontColor("white");
-        }
-    }
-    QWidget::focusInEvent(event);
-}
-
-void HistoryListItem::focusOutEvent(QFocusEvent* event)
-{
-    if (!Device::isTouch())
-    {
-        if (url_label_ && title_label_)
-        {
-            url_label_->setFontColor("black");
-            title_label_->setFontColor("black");
-        }
-    }
-    QWidget::focusOutEvent(event);
 }
 }

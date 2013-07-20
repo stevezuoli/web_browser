@@ -238,10 +238,10 @@ bool CookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const
         return false;
     }
 
-    //qDebug("\n\nSet Cookies for URL:%s", qPrintable(url.toString()));
-    //foreach(QNetworkCookie dump_cookie, cookieList) {
-    //    qDebug("Raw Data:%s", qPrintable(dump_cookie.toRawForm()));
-    //}
+    qDebug("\n\nSet Cookies for URL:%s", qPrintable(url.toString()));
+    foreach(QNetworkCookie dump_cookie, cookieList) {
+        qDebug("Raw Data:%s", qPrintable(dump_cookie.toRawForm()));
+    }
 
     QString host = url.host();
     bool eBlock = qBinaryFind(exceptions_block_.begin(), exceptions_block_.end(), host) != exceptions_block_.end();

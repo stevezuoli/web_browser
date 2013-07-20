@@ -22,11 +22,13 @@ public:
     void resumeTouch();
     void enterMouseMode();
     void enterKeypadMode();
-    bool isKeypadMode();
 
     void setFullUpdateEvery(int n) ;
     void forceFullUpdate(bool fullScreen = false);
     void setFastUpdate(bool fast = true);
+
+    int  screenTransformation();
+    void setTransformations(int degree);
 
 public Q_SLOTS:
     //void snapshot(const QString &path);

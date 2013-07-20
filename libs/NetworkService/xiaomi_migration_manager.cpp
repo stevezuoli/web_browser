@@ -156,11 +156,13 @@ void XiaomiMigrationManager::addCookiesForEntry(const QUrl& url)
     QNetworkCookie device_id_cookie(device_id_name, device_id);
     device_id_cookie.setDomain(".duokan.com");
     device_id_cookie.setPath("/");
+    qDebug("Add Device ID to Cookie:%s", device_id.constData());
 
     QByteArray user_id_name("user_id");
     QNetworkCookie user_id_cookie(user_id_name, duokan_account_id_.toLocal8Bit());
     user_id_cookie.setDomain(".duokan.com");
     user_id_cookie.setPath("/");
+    qDebug("Add Account ID to Cookie:%s", qPrintable(duokan_account_id_));
     
     cookies.push_back(app_id_cookie);
     cookies.push_back(device_id_cookie);
@@ -277,15 +279,15 @@ void XiaomiMigrationManager::onMigrationFailed()
 void XiaomiMigrationManager::saveResult()
 {
     migration_result_.saveToFile();
-    //if (migration_result_.message() == MIGRATION_MSG_SUCCEED)
-    //{
-    //    XiaomiToken mi_token;
-    //    mi_token.mutableToken() = migration_result_.token();
-    //    mi_token.mutableMessage() = migration_result_.message();
-    //    mi_token.mutableUserId() = migration_result_.miId();
-    //    mi_token.mutableCode() = QString("%1").arg(0);
-    //    mi_token.saveToFile();
-    //}
+    /*if (migration_result_.message() == MIGRATION_MSG_SUCCEED)
+    {
+        XiaomiToken mi_token;
+        mi_token.mutableToken() = migration_result_.token();
+        mi_token.mutableMessage() = migration_result_.message();
+        mi_token.mutableUserId() = migration_result_.miId();
+        mi_token.mutableCode() = QString("%1").arg(0);
+        mi_token.saveToFile();
+    }*/
 }
 
 }

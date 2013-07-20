@@ -13,6 +13,7 @@ ENABLE_TESTING()
 SET(ADD_LIB "")
 IF(UNIX OR BUILD_FOR_ARM)
     ADD_DEFINITIONS(-DSHARE_ROOT="/usr/share")
+    ADD_DEFINITIONS(-DUNIX_PLATFORM)
 ELSE (UNIX OR BUILD_FOR_ARM)
     ADD_DEFINITIONS(-DSHARE_ROOT="")
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
@@ -51,6 +52,7 @@ INCLUDE_DIRECTORIES(BEFORE
     ${CMAKE_SOURCE_DIR}/drivers
     ${CMAKE_SOURCE_DIR}/third_party
     ${CMAKE_SOURCE_DIR}/libs/DkReader/inc
+	${CMAKE_SOURCE_DIR}/framework/inc
 )
 
 # Find thread library for the current platform
@@ -74,11 +76,15 @@ add_subdirectory(third_party)
 add_subdirectory(libs)
 #IF(BUILD_FOR_ARM)
 add_subdirectory(drivers/QKindleFb)
+add_subdirectory(drivers/transformation)
 #ENDIF(BUILD_FOR_ARM)
 add_subdirectory(drivers/KindleTS)
 add_subdirectory(drivers/KindleFiveWay)
 add_subdirectory(drivers/KindleKeyboard)
 add_subdirectory(ui)
+add_subdirectory(framework)
 add_subdirectory(common)
+IF(UNIX OR BUILD_FOR_ARM)
 add_subdirectory(ime)
+ENDIF(UNIX OR BUILD_FOR_ARM)
 

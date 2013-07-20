@@ -27,8 +27,6 @@ public:
 
 protected:
     virtual void paintEvent(QPaintEvent* event);
-    virtual void focusInEvent(QFocusEvent* event);
-    virtual void focusOutEvent(QFocusEvent* event);
 
 private:
     DKLabel* title_label_;

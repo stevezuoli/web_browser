@@ -3,6 +3,7 @@
 #include <QtGui/qwsdisplay_qws.h>
 #include <QWSPointerCalibrationData>
 #include <qwindowsystem_qws.h>
+#include <QProxyScreen>
 #include <unistd.h>
 #endif
 
@@ -41,6 +42,7 @@ void SystemManager::loadDrivers()
     releaseDrivers();
     Device& device = Device::instance();
     Device::MODEL model = device.getModel();
+    qDebug("Device Model:%d", model);
     switch (model)
     {
     case Device::KPW:
@@ -68,13 +70,16 @@ void SystemManager::setupKindleTSMouseHandler()
 {
 #ifdef BUILD_FOR_ARM
     QWSServer::setMouseHandler(kindle_ts_);
+    qDebug("QWSServer::setMouseHandler(kindle_ts_) is Done");
 #endif
     ScaleGestureDetector* detector = ScaleGestureDetector::instance();
     connect(kindle_ts_, SIGNAL(touchEvent(TouchEvent*)), detector, SLOT(onTouchEvent(TouchEvent*)));
+    qDebug("ScaleGestureDetector::instance() is Done");
 }
 
 void SystemManager::setupKindleKeyboardHandler()
 {
+    qDebug("SystemManager::setupKindleKeyboardHandler");
 #ifdef BUILD_FOR_ARM
     QWSServer::setKeyboardHandler(kindle_keyboard_);
 #endif
@@ -82,6 +87,7 @@ void SystemManager::setupKindleKeyboardHandler()
 
 void SystemManager::setupKindleFiveWayHandler()
 {
+    qDebug("SystemManager::setupKindleFiveWayHandler");
 #ifdef BUILD_FOR_ARM
     QWSServer::setMouseHandler(kindle_fiveway_);
 #endif
@@ -139,42 +145,110 @@ void SystemManager::enterKeypadMode()
     kindle_fiveway_->setKeypadMode(true);
 }
 
-bool SystemManager::isKeypadMode()
+static QKindleFb* findKindleFb()
 {
+    QKindleFb* kindle_fb = 0;
 #ifdef BUILD_FOR_ARM
-    QWSMouseHandler* mouse_handler = QWSServer::mouseHandler();
-    if (mouse_handler != kindle_fiveway_)
+    QScreen::ClassId class_id = QScreen::instance()->classId();
+    if (class_id == QScreen::TransformedClass ||
+        class_id == QScreen::VNCClass ||
+        class_id == QScreen::ProxyClass)
     {
-        // NOTE: this function should only effect on non-touch version
-        qDebug("isKeypadMode can only effect on non-touch version");
-        return false;
+        QProxyScreen* proxy = dynamic_cast<QProxyScreen*>(QScreen::instance());
+        kindle_fb = dynamic_cast<QKindleFb*>(proxy->screen());
+    }
+    else
+    {
+        kindle_fb = dynamic_cast<QKindleFb*>(QScreen::instance());
     }
 #endif
-    return kindle_fiveway_->isKeypadMode();
+    return kindle_fb;
 }
 
 void SystemManager::setFullUpdateEvery(int n)
 {
+    QKindleFb* kindle_fb = findKindleFb();
 #ifdef BUILD_FOR_ARM
-    QKindleFb* kindle_fb = dynamic_cast<QKindleFb*>(QScreen::instance());
-    kindle_fb->setFullUpdateEvery(n);
+    if (kindle_fb != 0)
+    {
+        kindle_fb->setFullUpdateEvery(n);
+    }
 #endif
 }
 
 void SystemManager::forceFullUpdate(bool fullScreen)
 {
+    QKindleFb* kindle_fb = findKindleFb();
 #ifdef BUILD_FOR_ARM
-    QKindleFb* kindle_fb = dynamic_cast<QKindleFb*>(QScreen::instance());
-    kindle_fb->forceFullUpdate(fullScreen);
+    if (kindle_fb != 0)
+    {
+        kindle_fb->forceFullUpdate(fullScreen);
+    }
 #endif
 }
 
 void SystemManager::setFastUpdate(bool fast)
 {
+    QKindleFb* kindle_fb = findKindleFb();
 #ifdef BUILD_FOR_ARM
-    QKindleFb* kindle_fb = dynamic_cast<QKindleFb*>(QScreen::instance());
-    kindle_fb->setFastUpdate(fast);
+    if (kindle_fb != 0)
+    {
+        kindle_fb->setFastUpdate(fast);
+    }
 #endif
+}
+
+void SystemManager::setTransformations(int degree)
+{
+#ifdef BUILD_FOR_ARM
+    qDebug("change screen transformation to %d", degree);
+    QWSDisplay::setTransformation(degree / 90);
+
+    // Also write to system conf file.
+    const QString PATH = "/DuoKan/setup";
+    QFile file(PATH);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qWarning("Could not open %s for writing", qPrintable(PATH));
+    }
+    else
+    {
+        QString qws_args = file.readAll();
+        file.close();
+
+        if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+        {
+            QString value = qgetenv("QWS_DISPLAY");
+            value = value.replace(QRegExp(":Rot\\d+"), QString(":Rot%1").arg(degree));
+            QString data;
+            qDebug("DuoKan Setup:%s", qPrintable(qws_args));
+            if (qws_args.isEmpty())
+            {
+                data = "export QWS_DISPLAY=" + value;
+            }
+            else
+            {
+                //replace Rotxx to Rot&degree
+                data = qws_args.replace(QRegExp(":Rot\\d+"), QString(":Rot%1").arg(degree));
+            }
+            qDebug("Updated Data:%s", qPrintable(data));
+            qputenv("QWS_DISPLAY", value.toAscii());
+            qDebug("QWS_DISPLAY : %s", qgetenv("QWS_DISPLAY").constData());
+            file.write(data.toAscii());
+            file.flush();
+            file.close();
+        }
+    }
+#endif
+}
+
+int SystemManager::screenTransformation()
+{
+    int degree = 0;
+#ifdef BUILD_FOR_ARM
+    degree = QScreen::instance()->transformOrientation() * 90;
+#endif
+    return degree;
 }
 
 

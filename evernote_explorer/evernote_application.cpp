@@ -92,6 +92,7 @@ bool EvernoteApplication::exportFile(const QString& path)
     EvernoteContent note;
     if (!note.load(path))
     {
+        qDebug("Failed to load :%s", qPrintable(path));
         return false;
     }
     if (manager_.exportNote(note))

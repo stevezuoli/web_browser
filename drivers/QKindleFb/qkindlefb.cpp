@@ -377,11 +377,11 @@ bool QKindleFb::connect(const QString &displaySpec)
     } else {
         dw=w=vinfo.xres;
         dh=h=vinfo.yres;
-        if (debugMode)
-        {
-            qDebug(".. dw=%d, dh=%d, lstep=%d", dw, dh, lstep) ;
-        }
+    }
 
+    if (debugMode)
+    {
+        qDebug("QKindleFb::connect(): dw=%d, dh=%d, lstep=%d", dw, dh, lstep) ;
     }
 
     if (w == 0 || h == 0) {
@@ -406,7 +406,7 @@ bool QKindleFb::connect(const QString &displaySpec)
     }
 
     if (debugMode)
-        qDebug("physW=%d, physH=%d", physWidth, physHeight) ;
+        qDebug("QKindleFb::connect(): physW=%d, physH=%d", physWidth, physHeight) ;
 
     dataoffset = yoff * lstep + xoff * d / 8;
 
@@ -417,8 +417,11 @@ bool QKindleFb::connect(const QString &displaySpec)
 
     data = (unsigned char *)-1;
     if (d_ptr->fd != -1)
+    {
+        qDebug("map data");
         data = (unsigned char *)mmap(0, mapsize, PROT_READ | PROT_WRITE,
                                      MAP_SHARED , d_ptr->fd, 0);
+    }
 
     if ((long)data == -1) {
         if (QApplication::type() == QApplication::GuiServer) {
@@ -433,11 +436,11 @@ bool QKindleFb::connect(const QString &displaySpec)
 
     canaccel = false ;
 
-    // Now read in palette
+    qDebug("Now read in palette");
     if((vinfo.bits_per_pixel==8) || (vinfo.bits_per_pixel==4)) {
         screencols= (vinfo.bits_per_pixel==8) ? 256 : 16;
 
-        // force screen colors to be 16 if it is K4
+        qDebug("force screen colors to be 16 if it is K4");
         if (isKindle4 || isKindle5)
         {
             screencols = 16 ;
@@ -485,6 +488,7 @@ bool QKindleFb::connect(const QString &displaySpec)
         screencols=0;
     }
 #endif
+    qDebug("QKindleFb::connect is done");
     return true;
 }
 
@@ -575,6 +579,7 @@ void QKindleFb::createPalette(fb_cmap &cmap, fb_var_screeninfo &vinfo, fb_fix_sc
 bool QKindleFb::initDevice()
 {
 #ifdef BUILD_FOR_ARM
+    qDebug("QKindleFb::initDevice()");
     fb_var_screeninfo vinfo;
     fb_fix_screeninfo finfo;
 
@@ -622,15 +627,16 @@ bool QKindleFb::initDevice()
         qt_screencursor = new QKindleCursor(d_ptr->fd, data, dw, dh) ;
 #else
         QScreenCursor::initSoftwareCursor();
-        //if (QScreenCursor::instance())
-        //{
-        //    QWSServer::setCursorVisible(false);
-        //    QScreenCursor::instance()->hide();
-        //}
+        if (QScreenCursor::instance())
+        {
+            QWSServer::setCursorVisible(false);
+            QScreenCursor::instance()->hide();
+        }
 #endif
     }
 #endif
     blank(false);
+    qDebug("QKindleFb::initDevice() is Done");
 #endif
     return true;
 }
@@ -752,15 +758,13 @@ static bool canFastUpdate(const QRect& dirty_area, int screen_width, int screen_
 
 void QKindleFb::exposeRegion(QRegion region, int changing)
 {
-    bool doFullUpdate = flashingUpdates  ;
-
-#ifdef DEBUG_OUTPUT
-    //if (debugMode)
-    //    qDebug("\nExposing ...");
-#endif
+    bool doFullUpdate = flashingUpdates;
 
 #ifdef BUILD_FOR_ARM
-    QScreen::exposeRegion(region, changing);
+    int transform_orient = QScreen::instance()->transformOrientation();
+    //qDebug("Transform Orient:%d", transform_orient);
+    if (transform_orient == 0)
+        QScreen::exposeRegion(region, changing);
 
     if (isFullUpdateForced) {
         doFullUpdate = true;
@@ -806,12 +810,13 @@ void QKindleFb::exposeRegion(QRegion region, int changing)
             ud.update_region.top = dirtyRect.top();
             ud.update_region.width = dirtyRect.width();
             ud.update_region.height = dirtyRect.height();
+            //qDebug("QKindleFb::exposeRegion, Dirty Rect(%d, %d, %d, %d)", dirtyRect.left(), dirtyRect.top(), dirtyRect.width(), dirtyRect.height());
 
             ud.waveform_mode = doFullUpdate ? WAVEFORM_MODE_GC16 : WAVEFORM_MODE_GC16_FAST;
             if (fastUpdates && canFastUpdate(dirtyRect, dw, dh))
             {
                 qDebug("Fast update:%d, %d", dirtyRect.width(), dirtyRect.height());
-                ud.waveform_mode = WAVEFORM_MODE_A2;
+                ud.waveform_mode = WAVEFORM_MODE_DU;
             }
 
             ud.update_mode = (doFullUpdate == false) ? UPDATE_MODE_PARTIAL : UPDATE_MODE_FULL ;
@@ -833,7 +838,7 @@ void QKindleFb::exposeRegion(QRegion region, int changing)
             if (fastUpdates && canFastUpdate(dirtyRect, dw, dh))
             {
                 qDebug("Fast update:%d, %d", dirtyRect.width(), dirtyRect.height());
-                ud.waveform_mode = WAVEFORM_MODE_A2;
+                ud.waveform_mode = WAVEFORM_MODE_DU;
             }
 
             ud.update_mode = (doFullUpdate == false) ? UPDATE_MODE_PARTIAL : UPDATE_MODE_FULL ;
@@ -1041,8 +1046,10 @@ void QKindleFb::blit(const QImage& image, const QPoint& topLeft, const QRegion& 
         imageInverted.invertPixels();
 
 #ifdef DEBUG_OUTPUT
-    //if (debugMode)
-    //    qDebug(">>>>%s%s blit image %dx%dx%d type=%d", (isKindle4)? "K4":"", (isKindle5)? "K5":"",image.width(),image.height(), image.depth() ,image.format()) ;
+    if (debugMode)
+    {
+        qDebug(">>>>%s%s blit image %dx%dx%d type=%d", (isKindle4)? "K4":"", (isKindle5)? "K5":"",image.width(),image.height(), image.depth() ,image.format()) ;
+    }
 #endif
 
     if ((isKindle4) || (isKindle5))

@@ -1,4 +1,3 @@
-#include <QScreenCursor>
 #include "web_application.h"
 #include "browser_mainwindow.h"
 #include "bookmark_model.h"
@@ -17,7 +16,7 @@ namespace webbrowser
 static const int CACHE_MIN_DEAD_CAPACITY = 1024 * 1024;
 static const int CACHE_MAX_DEAD = 3 * 1024 * 1024;
 static const int TOTAL_CAPACITY = 4 * 1024 * 1024;
-static const int FULL_UPDATE_EVERY = 5;
+static const int FULL_UPDATE_EVERY = 10;
 
 QString WebApplication::localStoragePath()
 {
@@ -36,15 +35,16 @@ WebApplication* WebApplication::instance()
 WebApplication::WebApplication(int &argc, char **argv)
     : QApplication(argc, argv)
 {
+    qDebug("WebApplication::WebApplication");
+
     // configure system manager
     SystemManager::instance()->setFullUpdateEvery(FULL_UPDATE_EVERY);
-    SystemManager::instance()->enterKeypadMode();
+    qDebug("SystemManager::instance() is Done");
 
     QTextCodec::setCodecForTr(QTextCodec::codecForName("UTF-8"));
     QTranslator* translator = new QTranslator();
     translator->load(":/res/WebBrowser_Chn");
     installTranslator(translator);
-    //QApplication::setOverrideCursor(QCursor(QPixmap(":/res/cursor.png")));
 
     main_window_ = new BrowserMainWindow();
     bookmark_model_ = new BookmarkModel();
@@ -68,6 +68,8 @@ WebApplication::WebApplication(int &argc, char **argv)
     initTheme();
     loadExternalFonts();
     loadSettings();
+
+    qDebug("WebApplication::WebApplication is Done");
 }
 
 WebApplication::~WebApplication(void)

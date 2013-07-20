@@ -17,7 +17,6 @@ protected:
     virtual void focusInEvent(QFocusEvent* e);
     virtual void focusOutEvent(QFocusEvent* e);
     virtual void mousePressEvent(QMouseEvent* event);
-    virtual void keyPressEvent(QKeyEvent* event);
 
 signals:
     void focusSignal(bool);

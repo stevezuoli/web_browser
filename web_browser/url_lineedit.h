@@ -42,16 +42,10 @@ public:
     }
 
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const;
-
-Q_SIGNALS:
-    void returnPressed();
-    void focusSignal(bool focus);
-
 protected:
     void focusInEvent(QFocusEvent *event);
     void focusOutEvent(QFocusEvent *event);
     void keyPressEvent(QKeyEvent *event);
-    void keyReleaseEvent(QKeyEvent *event);
     void paintEvent(QPaintEvent *event);
     void resizeEvent(QResizeEvent *event);
     void inputMethodEvent(QInputMethodEvent *e);

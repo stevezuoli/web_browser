@@ -111,7 +111,7 @@ static const QString READING_SHARED_COMMENT_SPLIT =
  *     <string name="reading__shared__note">
  <![CDATA[
  <div style=\"font-size:11pt; margin-top:0.2em;\">
- <span style=\"font-weight:bold;\">�? </span>
+ <span style=\"font-weight:bold;\">注: </span>
  <span style=\"color:#888888\">%s</span>
  </div>
  ]]>
@@ -351,7 +351,7 @@ bool EvernoteManager::prepareContent(const EvernoteContent& origin_content,
             QString note_text = item.content;
             QString note_comment = item.comment;
             
-            QString comment_prefix = QString::fromUtf8("注: ");
+            QString comment_prefix = QString::fromLocal8Bit("注: ");
             QString annotation_content = QString(READING_SHARED_COMMENT)
             .arg(border ? READING_SHARED_COMMENT_SPLIT : "")
             .arg(color)
@@ -362,7 +362,7 @@ bool EvernoteManager::prepareContent(const EvernoteContent& origin_content,
         }
     }
     
-    QString foot_prefix = QString::fromUtf8("多看笔记 来自多看阅读 for Kindle");
+    QString foot_prefix = QString::fromLocal8Bit("多看笔记 来自多看阅读 for Kindle");
     QString foot = QString(READING_SHARED_FOOT).arg(foot_prefix).arg(origin_content.book_id);
     content_str += foot;
     
